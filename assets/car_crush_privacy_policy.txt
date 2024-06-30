@@ -1,0 +1,37 @@
+
+Privacy Policy
+
+We value your privacy and are committed to protecting your personal data. Our mobile application (the "Service") does not collect or store any images from your phone or device.
+We will not collect any user data you do not positively provide.
+
+---
+Information We Do Not Collect
+
+We do not collect or store any media from your phone or device, including:
+
+Camera roll
+Photos
+Videos
+Screenshots
+Personal Data (e.g. contacts, email address, health data)
+
+---
+Data Collection and Use
+
+Location Data:
+- If you choose to place a trophy at a location, we will anonymously collect your location data. This data will be used to display the site of your high score on a map and to insert your trophy into other player's games.
+- We use--but do not store--your location to deliver the appropriate high-score for your game.
+
+We only collect and use anonymous, aggregate data for the purpose of improving our Service and providing a better user experience. This data may include information such as:
+
+Device information
+Operating system
+Language preferences
+Location
+
+We do not share your personal data with any third parties except as required by law.
+
+---
+Changes to this Policy
+
+We reserve the right to update this privacy policy at any time. If we make significant changes, we will notify you through an in-app notification.
