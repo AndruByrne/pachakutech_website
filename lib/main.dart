@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'car_crush_privacy_policy_page.dart';
@@ -33,7 +32,7 @@ class MyApp extends StatelessWidget {
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.green, secondary: Colors.orange),
+            seedColor: Colors.green, secondary: Colors.orange.shade400),
         useMaterial3: true,
       ),
       routes: {
