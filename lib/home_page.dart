@@ -67,10 +67,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           child: SvgPicture.asset(
                             'assets/pachakutech_wheel.svg',
                             colorFilter: ColorFilter.mode(
-                              Theme.of(context)
-                                  .colorScheme
-                                  .secondary
-                                  .withAlpha(200),
+                              Theme.of(context).colorScheme.secondary,
                               BlendMode.srcIn,
                             ),
                             semanticsLabel: 'Pachakutech Wheel',
@@ -96,10 +93,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           child: SvgPicture.asset(
                             'assets/pachakutech_wheel.svg',
                             colorFilter: ColorFilter.mode(
-                              Theme.of(context)
-                                  .colorScheme
-                                  .secondary
-                                  .withAlpha(200),
+                              Theme.of(context).colorScheme.secondary,
                               BlendMode.srcIn,
                             ),
                             semanticsLabel: 'Pachakutech Wheel',
