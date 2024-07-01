@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:vector_math/vector_math.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -19,18 +21,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+  var _bodyKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +31,8 @@ class _MyHomePageState extends State<MyHomePage> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
+    var wheelAngle = getAngle(MediaQuery.of(context).size);
+    print('wheel angle: $wheelAngle');
     return Scaffold(
       appBar: AppBar(
         // TRY THIS: Try changing the color here to a specific color (to
@@ -50,29 +43,90 @@ class _MyHomePageState extends State<MyHomePage> {
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Expanded(child: Image.asset('assets/pachakutech_logo.jpg')),
+      body: Container(
+        color: (223 < wheelAngle && wheelAngle < 225)
+            ? Theme.of(context).colorScheme.secondary
+            : Theme.of(context).colorScheme.background,
+        child: Stack(
+          children: [
+            Center(
+              child: Column(
+                // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
+                // action in the IDE, or press "p" in the console), to see the
+                // wireframe for each widget.
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(50.0),
+                      child: Transform.rotate(
+                        key: _bodyKey,
+                        angle: radians(wheelAngle),
+                        child: FittedBox(
+                          fit: BoxFit.contain,
+                          child: SvgPicture.asset(
+                            'assets/pachakutech_wheel.svg',
+                            colorFilter: ColorFilter.mode(
+                              Theme.of(context)
+                                  .colorScheme
+                                  .secondary
+                                  .withAlpha(200),
+                              BlendMode.srcIn,
+                            ),
+                            semanticsLabel: 'Pachakutech Wheel',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(150.0),
+                      child: Transform.rotate(
+                        angle: radians(90.0 - wheelAngle),
+                        child: FittedBox(
+                          fit: BoxFit.contain,
+                          child: SvgPicture.asset(
+                            'assets/pachakutech_wheel.svg',
+                            colorFilter: ColorFilter.mode(
+                              Theme.of(context)
+                                  .colorScheme
+                                  .secondary
+                                  .withAlpha(200),
+                              BlendMode.srcIn,
+                            ),
+                            semanticsLabel: 'Pachakutech Wheel',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Center(
+              child: Column(
+                children: [
+                  Expanded(
+                      child:
+                          Image.asset('assets/pachakutech_dot_logo_alpha.png')),
+                ],
+              ),
+            ),
           ],
         ),
       ),
     );
   }
+}
+
+getAngle(Size size) {
+  return (size.height * size.width / 10000) % 90 * 4;
 }
