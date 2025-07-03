@@ -91,6 +91,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   // Diameters for interpolation
   double _fullscreenWheelDiameter = 0;
   double _headerWheelDiameter = 0;
+  double _dotLogoFixedDiameter = 0;
 
   // Alignments for interpolation
   final Alignment _fullscreenWheelAlignment = Alignment.center;
@@ -135,6 +136,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
     _fullscreenWheelDiameter = _fullscreenHeight * 0.9; // Adjust as needed
     _headerWheelDiameter = _targetHeaderHeightConstant * 0.8;
+    _dotLogoFixedDiameter = _fullscreenWheelDiameter * 0.5; // <<< INITIALIZE IT
 
     // Initialize visual properties based on no scroll
     _updateVisualsFromScroll(0.0); // Initial state before any scroll
@@ -246,7 +248,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     // This widget is built by _MyHomePageState using its current state values
-    Widget dynamicRotatingWheelsNow = Align(
+    Widget dynamicRotatingWheels = Align(
       alignment: _currentWheelAlignment,
       child: SizedBox(
         width: _currentWheelDiameter,
@@ -257,8 +259,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             Transform.rotate(
               angle: radians(_wheelAngle),
               child: SizedBox(
-                width: _currentWheelDiameter * 0.9,
-                height: _currentWheelDiameter * 0.9,
+                width: _currentWheelDiameter * 1.0,
+                height: _currentWheelDiameter * 1.0,
                 child: SvgPicture.asset('assets/pachakutech_wheel.svg',
                     colorFilter: ColorFilter.mode(
                         Theme.of(context).colorScheme.secondary,
@@ -269,39 +271,52 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               angle: radians(90.0 - _wheelAngle),
               // Assuming the second wheel still has this relative rotation
               child: SizedBox(
-                width: _currentWheelDiameter * 0.5,
-                height: _currentWheelDiameter * 0.5,
+                width: _currentWheelDiameter * 0.6,
+                height: _currentWheelDiameter * 0.6,
                 child: SvgPicture.asset('assets/pachakutech_wheel.svg',
                     colorFilter: ColorFilter.mode(
                         Theme.of(context).colorScheme.secondary,
                         BlendMode.srcIn)),
               ),
             ),
-            SizedBox(
-              width: _currentWheelDiameter * 0.3,
-              height: _currentWheelDiameter * 0.3,
-              child: Image.asset('assets/pachakutech_dot_logo_alpha.png'),
-            ),
           ],
         ),
       ),
     );
 
-    // The container for the header content, its background might transition
-    Widget headerContentHolder = SliverPersistentHeader(
-      pinned: true, // Header will stay at the top when collapsed
-      floating: false, // Change if you want different float behavior
+    // --- Build the Standalone Dot Logo ---
+    Widget dotLogo = SizedBox(
+      width: _dotLogoFixedDiameter, // Use the fixed diameter
+      height: _dotLogoFixedDiameter,
+      child: Image.asset('assets/pachakutech_dot_logo_alpha.png'),
+    );
+
+    // The container for the header content, its background might transition.
+    // This is the CHILD for the delegate.
+    Widget headerVisuals = Container(
+      // Color transition for the header background
+      color: (_wheelAngle >= 584) // Your existing color logic
+          ? Theme.of(context).colorScheme.secondary
+          : _wheelAngle < 404
+              ? Theme.of(context).colorScheme.surface
+              : Color.lerp(Theme.of(context).colorScheme.surface,
+                  Theme.of(context).colorScheme.secondary, (_wheelAngle - 404) / 180),
+      child: Stack(
+        alignment: Alignment.center, // Centers the dotLogo
+        children: [
+          dynamicRotatingWheels, // Wheels align based on their own Align widget
+          dotLogo, // Will be centered in this Stack
+        ],
+      ),
+    );
+
+    SliverPersistentHeader headerSliver = SliverPersistentHeader(
+      pinned: true,
+      floating: false,
       delegate: _AnimatedHeaderDelegate(
         minHeight: _targetHeaderHeightConstant,
         maxHeight: _fullscreenHeight,
-        // Initially takes fullscreen
-        child: Container(
-          // Color transition for the header background
-          color: (_wheelAngle >= 223 && _wheelAngle <= 225)
-              ? Theme.of(context).colorScheme.secondary
-              : Theme.of(context).colorScheme.surface,
-          child: dynamicRotatingWheelsNow,
-        ),
+        child: headerVisuals, // Pass the visuals with the new Stack structure
       ),
     );
 
@@ -345,7 +360,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         physics: const BouncingScrollPhysics(),
         // Or AlwaysScrollableScrollPhysics
         slivers: <Widget>[
-          headerContentHolder,
+          headerSliver,
           // Your actual page content as Slivers
           SliverList(
             delegate: mainContentBuilderDelegate,
