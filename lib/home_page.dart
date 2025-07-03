@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:vector_math/vector_math.dart' show radians;
@@ -9,7 +7,8 @@ import 'dart:developer' as developer;
 class _AnimatedHeaderDelegate extends SliverPersistentHeaderDelegate {
   final double minHeight;
   final double maxHeight;
-  final Widget child; // This child is already built and animated by _MyHomePageState
+  final Widget
+      child; // This child is already built and animated by _MyHomePageState
 
   _AnimatedHeaderDelegate({
     required this.minHeight,
@@ -24,8 +23,8 @@ class _AnimatedHeaderDelegate extends SliverPersistentHeaderDelegate {
   double get maxExtent => maxHeight;
 
   @override
-  Widget build(BuildContext context, double shrinkOffset,
-      bool overlapsContent) {
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
     // shrinkOffset: How much the header has scrolled up/shrunk.
     // 0 when fully expanded (maxHeight), increases up to (maxHeight - minHeight).
 
@@ -75,12 +74,14 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   // Define scroll offset points where behavior changes *within the CustomScrollView's content*
   // These are not pixel heights of the header itself initially, but scroll distances.
   double _rotationEndScrollOffset = 0.0;
-  double _transitionEndScrollOffset = 0.0; // Point where header is fully collapsed and content is primary
+  double _transitionEndScrollOffset =
+      0.0; // Point where header is fully collapsed and content is primary
 
   // Visual properties of the wheels/header, derived from scroll offset
   double _currentWheelDiameter = 0;
   Alignment _currentWheelAlignment = Alignment.center;
-  double _currentHeaderVisualHeight = 0; // The visual height of the header content area
+  double _currentHeaderVisualHeight =
+      0; // The visual height of the header content area
   // (from fullscreen down to targetHeaderHeight)
 
   // Target heights
@@ -93,13 +94,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   // Alignments for interpolation
   final Alignment _fullscreenWheelAlignment = Alignment.center;
-  final Alignment _headerWheelAlignment = const Alignment(
-      -0.85, 0.0); // Or whatever you prefer
+  final Alignment _headerWheelAlignment =
+      const Alignment(-0.85, 0.0); // Or whatever you prefer
 
-  Size _getScreenSize() =>
-      MediaQuery
-          .of(context)
-          .size;
+  Size _getScreenSize() => MediaQuery.of(context).size;
 
   @override
   void initState() {
@@ -153,9 +151,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     // of the SliverPersistentHeader.
     // The SliverPersistentHeader's shrinkOffset goes from 0 to (maxExtent - minExtent).
     // Let's use the controller's offset directly if it's within the header's shrink range.
-    double currentGlobalScrollOffset = _mainScrollController.hasClients
-        ? _mainScrollController.offset
-        : 0.0;
+    double currentGlobalScrollOffset =
+        _mainScrollController.hasClients ? _mainScrollController.offset : 0.0;
 
     // We only care about the scroll offset relevant to the header's transformation range.
     // The header's max extent is _fullscreenHeight, min extent is _targetHeaderHeightConstant.
@@ -172,16 +169,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
     // 1. Wheel Rotation Angle
     double newWheelAngle;
-    double rotationProgressRatio = (headerScrollAmount.clamp(
-        0.0, _rotationEndScrollOffset) / _rotationEndScrollOffset).clamp(
-        0.0, 1.0);
-    if (_rotationEndScrollOffset == 0) rotationProgressRatio = 1.0; // Avoid NaN
+    double rotationProgressRatio = (_rotationEndScrollOffset == 0)
+        ? 1.0
+        : (headerScrollAmount / _rotationEndScrollOffset);
     newWheelAngle = rotationProgressRatio * 360.0;
-    if (headerScrollAmount > _rotationEndScrollOffset) {
-      newWheelAngle = 360.0;
-    }
-    newWheelAngle = newWheelAngle.clamp(0.0, 360.0);
-
 
     // 2. Transition Progress (for header content: wheel size, alignment, and header visual bg)
     // This progress is for how much the header *content* has transitioned.
@@ -192,11 +183,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     if (_transitionEndScrollOffset > 0) {
       transitionProgress =
           (headerScrollAmount / _transitionEndScrollOffset).clamp(0.0, 1.0);
-    } else if (headerScrollAmount >=
-        _transitionEndScrollOffset) { // Should only happen if _transitionEndScrollOffset is 0
+    } else if (headerScrollAmount >= _transitionEndScrollOffset) {
+      // Should only happen if _transitionEndScrollOffset is 0
       transitionProgress = 1.0;
     }
-
 
     // 3. Wheel Diameter and Alignment based on transitionProgress
     double newWheelDiameter = lerpDouble(
@@ -212,13 +202,12 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     double newHeaderVisualHeight = lerpDouble(
         _fullscreenHeight, _targetHeaderHeightConstant, transitionProgress)!;
 
-
     bool needsSetState = false;
     if (newWheelAngle != _wheelAngle) {
       _wheelAngle = newWheelAngle;
       needsSetState = true;
-      developer.log("Angle updated to ${_wheelAngle.toStringAsFixed(
-          2)} based on headerScroll ${headerScrollAmount.toStringAsFixed(2)}",
+      developer.log(
+          "Angle updated to ${_wheelAngle.toStringAsFixed(2)} based on headerScroll ${headerScrollAmount.toStringAsFixed(2)}",
           name: "MyHomePageState.Visuals");
     }
     if (newWheelDiameter != _currentWheelDiameter) {
@@ -238,17 +227,11 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       setState(() {});
     }
     developer.log(
-        "_updateVisuals: headerScroll: ${headerScrollAmount.toStringAsFixed(
-            2)}, " +
-            "Angle: ${_wheelAngle.toStringAsFixed(2)}, TP: ${transitionProgress
-                .toStringAsFixed(2)}, " +
-            "WheelDiameter: ${_currentWheelDiameter.toStringAsFixed(
-                2)}, HeaderVisualHeight: ${_currentHeaderVisualHeight
-                .toStringAsFixed(2)}",
-        name: "MyHomePageState.ScrollLogic"
-    );
+        "_updateVisuals: headerScroll: ${headerScrollAmount.toStringAsFixed(2)}, " +
+            "Angle: ${_wheelAngle.toStringAsFixed(2)}, TP: ${transitionProgress.toStringAsFixed(2)}, " +
+            "WheelDiameter: ${_currentWheelDiameter.toStringAsFixed(2)}, HeaderVisualHeight: ${_currentHeaderVisualHeight.toStringAsFixed(2)}",
+        name: "MyHomePageState.ScrollLogic");
   }
-
 
   @override
   void dispose() {
@@ -277,10 +260,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 width: _currentWheelDiameter * 0.9,
                 height: _currentWheelDiameter * 0.9,
                 child: SvgPicture.asset('assets/pachakutech_wheel.svg',
-                    colorFilter: ColorFilter.mode(Theme
-                        .of(context)
-                        .colorScheme
-                        .secondary, BlendMode.srcIn)),
+                    colorFilter: ColorFilter.mode(
+                        Theme.of(context).colorScheme.secondary,
+                        BlendMode.srcIn)),
               ),
             ),
             Transform.rotate(
@@ -290,10 +272,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 width: _currentWheelDiameter * 0.5,
                 height: _currentWheelDiameter * 0.5,
                 child: SvgPicture.asset('assets/pachakutech_wheel.svg',
-                    colorFilter: ColorFilter.mode(Theme
-                        .of(context)
-                        .colorScheme
-                        .secondary, BlendMode.srcIn)),
+                    colorFilter: ColorFilter.mode(
+                        Theme.of(context).colorScheme.secondary,
+                        BlendMode.srcIn)),
               ),
             ),
             SizedBox(
@@ -307,84 +288,67 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     );
 
     // The container for the header content, its background might transition
-    Widget headerContentHolder = Container(
-      // Color transition for the header background
-      color: Color.lerp(
-          Theme
-              .of(context)
-              .colorScheme
-              .surface, // Or Colors.transparent if it's fullscreen
-          Theme
-              .of(context)
-              .colorScheme
-              .surface
-              .withOpacity(0.9), // Final header bg
-          (_currentHeaderVisualHeight <= _targetHeaderHeightConstant * 1.1)
-              ? 1.0
-              : 0.0 // Simplified transition for color
-        // A more accurate transitionProgress for color could be used if needed
+    Widget headerContentHolder = SliverPersistentHeader(
+      pinned: true, // Header will stay at the top when collapsed
+      floating: false, // Change if you want different float behavior
+      delegate: _AnimatedHeaderDelegate(
+        minHeight: _targetHeaderHeightConstant,
+        maxHeight: _fullscreenHeight,
+        // Initially takes fullscreen
+        child: Container(
+          // Color transition for the header background
+          color: (_wheelAngle >= 223 && _wheelAngle <= 225)
+              ? Theme.of(context).colorScheme.secondary
+              : Theme.of(context).colorScheme.surface,
+          child: dynamicRotatingWheelsNow,
+        ),
       ),
-      child: dynamicRotatingWheelsNow,
     );
 
-
+    var mainContentBuilderDelegate = SliverChildBuilderDelegate(
+      (BuildContext context, int index) {
+        // Example content sections
+        List<Widget> contentSections = [
+          Container(
+              height: _getScreenSize().height * 0.8,
+              color: Colors.blueGrey.shade100,
+              child: Center(
+                  child: Text("Content Section 1",
+                      style: Theme.of(context).textTheme.headlineMedium))),
+          Container(
+              height: _getScreenSize().height * 0.8,
+              color: Colors.blueGrey.shade200,
+              child: Center(
+                  child: Text("Content Section 2",
+                      style: Theme.of(context).textTheme.headlineMedium))),
+          Container(
+              height: _getScreenSize().height * 0.8,
+              color: Colors.blueGrey.shade300,
+              child: Center(
+                  child: Text("Content Section 3",
+                      style: Theme.of(context).textTheme.headlineMedium))),
+          Container(
+              height: _getScreenSize().height * 0.8,
+              color: Colors.blueGrey.shade400,
+              child: Center(
+                  child: Text("Content Section 4",
+                      style: Theme.of(context).textTheme.headlineMedium))),
+        ];
+        if (index >= contentSections.length) return null;
+        return contentSections[index];
+      },
+      childCount: 4, // Number of content sections
+    );
     return Scaffold(
       body: CustomScrollView(
         controller: _mainScrollController,
         physics: const BouncingScrollPhysics(),
         // Or AlwaysScrollableScrollPhysics
         slivers: <Widget>[
-          SliverPersistentHeader(
-            pinned: true, // Header will stay at the top when collapsed
-            floating: false, // Change if you want different float behavior
-            delegate: _AnimatedHeaderDelegate(
-              minHeight: _targetHeaderHeightConstant,
-              maxHeight: _fullscreenHeight,
-              // Initially takes fullscreen
-              child: headerContentHolder,
-            ),
-          ),
-
+          headerContentHolder,
           // Your actual page content as Slivers
           SliverList(
-            delegate: SliverChildBuilderDelegate(
-                  (BuildContext context, int index) {
-                // Example content sections
-                List<Widget> contentSections = [
-                  Container(height: _getScreenSize().height * 0.8,
-                      color: Colors.blueGrey.shade100,
-                      child: Center(
-                          child: Text("Content Section 1", style: Theme
-                              .of(context)
-                              .textTheme
-                              .headlineMedium))),
-                  Container(height: _getScreenSize().height * 0.8,
-                      color: Colors.blueGrey.shade200,
-                      child: Center(
-                          child: Text("Content Section 2", style: Theme
-                              .of(context)
-                              .textTheme
-                              .headlineMedium))),
-                  Container(height: _getScreenSize().height * 0.8,
-                      color: Colors.blueGrey.shade300,
-                      child: Center(
-                          child: Text("Content Section 3", style: Theme
-                              .of(context)
-                              .textTheme
-                              .headlineMedium))),
-                  Container(height: _getScreenSize().height * 0.8,
-                      color: Colors.blueGrey.shade400,
-                      child: Center(
-                          child: Text("Content Section 4", style: Theme
-                              .of(context)
-                              .textTheme
-                              .headlineMedium))),
-                ];
-                if (index >= contentSections.length) return null;
-                return contentSections[index];
-              },
-              childCount: 4, // Number of content sections
-            ),
+            delegate: mainContentBuilderDelegate,
           ),
           // Or use SliverToBoxAdapter for single large content blocks if they are not lists
         ],
