@@ -21,7 +21,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  var _bodyKey = GlobalKey();
+  final _bodyKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +46,7 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Container(
         color: (223 < wheelAngle && wheelAngle < 225)
             ? Theme.of(context).colorScheme.secondary
-            : Theme.of(context).colorScheme.background,
+            : Theme.of(context).colorScheme.surface,
         child: Stack(
           children: [
             Center(
