@@ -114,7 +114,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     final screenSize = _getScreenSize();
     _fullscreenHeight = screenSize.height;
     _targetHeaderHeightConstant =
-        screenSize.height * 0.1; // Example: 10% of screen height
+        screenSize.height * 0.18; // Example: 10% of screen height
 
     // Define the scroll distances for each phase.
     // The SliverPersistentHeader will occupy screen height initially.
@@ -139,7 +139,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     _dotLogoFixedDiameter = _fullscreenWheelDiameter * 0.5; // <<< INITIALIZE IT
 
     // Initialize visual properties based on no scroll
-    _updateVisualsFromScroll(0.0); // Initial state before any scroll
+    _updateHeaderFromScroll(0.0); // Initial state before any scroll
 
     developer.log(
       "didChangeDependencies: Screen: $screenSize, FullscreenHeight: $_fullscreenHeight, TargetHeaderHeight: $_targetHeaderHeightConstant, RotationEndOffset: $_rotationEndScrollOffset, TransitionEndOffset (HeaderCollapseDistance): $_transitionEndScrollOffset",
@@ -152,7 +152,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     // However, for the header's animation, what matters is the `shrinkOffset`
     // of the SliverPersistentHeader.
     // The SliverPersistentHeader's shrinkOffset goes from 0 to (maxExtent - minExtent).
-    // Let's use the controller's offset directly if it's within the header's shrink range.
+    // We use the controller's offset directly if it's within the header's shrink range.
     double currentGlobalScrollOffset =
         _mainScrollController.hasClients ? _mainScrollController.offset : 0.0;
 
@@ -162,10 +162,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     double headerRelevantScroll = currentGlobalScrollOffset.clamp(
         0.0, _fullscreenHeight - _targetHeaderHeightConstant);
 
-    _updateVisualsFromScroll(headerRelevantScroll);
+    _updateHeaderFromScroll(headerRelevantScroll);
   }
 
-  void _updateVisualsFromScroll(double headerScrollAmount) {
+  void _updateHeaderFromScroll(double headerScrollAmount) {
     // headerScrollAmount is effectively the `shrinkOffset` for the header behavior.
     // It goes from 0 (fully expanded header) to `_transitionEndScrollOffset` (fully collapsed header).
 
@@ -208,9 +208,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     if (newWheelAngle != _wheelAngle) {
       _wheelAngle = newWheelAngle;
       needsSetState = true;
-      developer.log(
-          "Angle updated to ${_wheelAngle.toStringAsFixed(2)} based on headerScroll ${headerScrollAmount.toStringAsFixed(2)}",
-          name: "MyHomePageState.Visuals");
     }
     if (newWheelDiameter != _currentWheelDiameter) {
       _currentWheelDiameter = newWheelDiameter;
@@ -228,11 +225,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     if (needsSetState) {
       setState(() {});
     }
-    developer.log(
-        "_updateVisuals: headerScroll: ${headerScrollAmount.toStringAsFixed(2)}, " +
-            "Angle: ${_wheelAngle.toStringAsFixed(2)}, TP: ${transitionProgress.toStringAsFixed(2)}, " +
-            "WheelDiameter: ${_currentWheelDiameter.toStringAsFixed(2)}, HeaderVisualHeight: ${_currentHeaderVisualHeight.toStringAsFixed(2)}",
-        name: "MyHomePageState.ScrollLogic");
   }
 
   @override
@@ -247,6 +239,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    var lastHalfTurnLerp = _wheelAngle > 584 ? 1.0 : (_wheelAngle - 404) / 180;
     // This widget is built by _MyHomePageState using its current state values
     Widget dynamicRotatingWheels = Align(
       alignment: _currentWheelAlignment,
@@ -257,25 +250,33 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           alignment: Alignment.center,
           children: [
             Transform.rotate(
-              angle: radians(_wheelAngle),
+              angle: radians(_wheelAngle > 584 ? 584 : _wheelAngle),
               child: SizedBox(
                 width: _currentWheelDiameter * 1.0,
                 height: _currentWheelDiameter * 1.0,
                 child: SvgPicture.asset('assets/pachakutech_wheel.svg',
                     colorFilter: ColorFilter.mode(
-                        Theme.of(context).colorScheme.secondary,
+                        _wheelAngle < 404 ? Theme.of(context).colorScheme.secondary:Color.lerp(
+                            Theme.of(context).colorScheme.secondary,
+                            Theme.of(context).colorScheme.primary,
+                            lastHalfTurnLerp) ??
+                            Theme.of(context).colorScheme.secondary,
                         BlendMode.srcIn)),
               ),
             ),
             Transform.rotate(
-              angle: radians(90.0 - _wheelAngle),
+              angle: radians(90.0 - (_wheelAngle > 584 ? 584 : _wheelAngle)),
               // Assuming the second wheel still has this relative rotation
               child: SizedBox(
                 width: _currentWheelDiameter * 0.6,
                 height: _currentWheelDiameter * 0.6,
                 child: SvgPicture.asset('assets/pachakutech_wheel.svg',
                     colorFilter: ColorFilter.mode(
-                        Theme.of(context).colorScheme.secondary,
+                        _wheelAngle < 404 ? Theme.of(context).colorScheme.secondary:Color.lerp(
+                                Theme.of(context).colorScheme.secondary,
+                                Theme.of(context).colorScheme.primary,
+                                lastHalfTurnLerp) ??
+                            Theme.of(context).colorScheme.secondary,
                         BlendMode.srcIn)),
               ),
             ),
@@ -284,7 +285,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       ),
     );
 
-    // --- Build the Standalone Dot Logo ---
     Widget dotLogo = SizedBox(
       width: _dotLogoFixedDiameter, // Use the fixed diameter
       height: _dotLogoFixedDiameter,
@@ -292,15 +292,16 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     );
 
     // The container for the header content, its background might transition.
-    // This is the CHILD for the delegate.
     Widget headerVisuals = Container(
       // Color transition for the header background
       color: (_wheelAngle >= 584) // Your existing color logic
           ? Theme.of(context).colorScheme.secondary
           : _wheelAngle < 404
               ? Theme.of(context).colorScheme.surface
-              : Color.lerp(Theme.of(context).colorScheme.surface,
-                  Theme.of(context).colorScheme.secondary, (_wheelAngle - 404) / 180),
+              : Color.lerp(
+                  Theme.of(context).colorScheme.surface,
+                  Theme.of(context).colorScheme.secondary,
+                  lastHalfTurnLerp),
       child: Stack(
         alignment: Alignment.center, // Centers the dotLogo
         children: [
