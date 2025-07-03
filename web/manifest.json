@@ -1,11 +1,11 @@
 {
-    "name": "pachakutech_website",
-    "short_name": "pachakutech_website",
+    "name": "testweb",
+    "short_name": "testweb",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "Pachakutech Website",
+    "description": "A new Flutter project.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

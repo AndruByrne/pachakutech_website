@@ -5,15 +5,6 @@ import 'package:vector_math/vector_math.dart';
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
@@ -22,105 +13,146 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final _bodyKey = GlobalKey();
+  final ScrollController _scrollController = ScrollController();
+  double _wheelAngle = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(() {
+      setState(() {
+        // Define scroll distance for a full 360-degree rotation
+        const maxScrollForRotation = 1000.0; // Adjust as needed
+        // Calculate angle: 0 to 360 degrees based on scroll offset
+        double scrollOffset = _scrollController.offset.clamp(0.0, maxScrollForRotation);
+        _wheelAngle = (scrollOffset / maxScrollForRotation) * 360.0;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    var wheelAngle = getAngle(MediaQuery.of(context).size);
-    print('wheel angle: $wheelAngle');
+    final screenHeight = MediaQuery.of(context).size.height;
+    final wheelHeight = screenHeight * 0.9; // Covers 90% of viewport height
+
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
         backgroundColor: Theme.of(context).colorScheme.primary.withAlpha(200),
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
-      body: Container(
-        color: (223 < wheelAngle && wheelAngle < 225)
-            ? Theme.of(context).colorScheme.secondary
-            : Theme.of(context).colorScheme.surface,
-        child: Stack(
-          children: [
-            Center(
-              child: Column(
-                // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-                // action in the IDE, or press "p" in the console), to see the
-                // wireframe for each widget.
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(50.0),
-                      child: Transform.rotate(
-                        key: _bodyKey,
-                        angle: radians(wheelAngle),
-                        child: FittedBox(
-                          fit: BoxFit.contain,
-                          child: SvgPicture.asset(
-                            'assets/pachakutech_wheel.svg',
-                            colorFilter: ColorFilter.mode(
-                              Theme.of(context).colorScheme.secondary,
-                              BlendMode.srcIn,
-                            ),
-                            semanticsLabel: 'Pachakutech Wheel',
-                          ),
-                        ),
-                      ),
+      body: Stack(
+        children: [
+          // Scrollable content
+          SingleChildScrollView(
+            controller: _scrollController,
+            child: Column(
+              children: [
+                // Reserve space for the fixed wheels and logo
+                SizedBox(height: wheelHeight),
+                // Placeholder section
+                Container(
+                  height: screenHeight,
+                  color: Theme.of(context).colorScheme.surface,
+                  child: const Center(
+                    child: Text(
+                      'Placeholder Section\n(Add your content here)',
+                      style: TextStyle(fontSize: 24),
+                      textAlign: TextAlign.center,
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(150.0),
-                      child: Transform.rotate(
-                        angle: radians(90.0 - wheelAngle),
-                        child: FittedBox(
-                          fit: BoxFit.contain,
-                          child: SvgPicture.asset(
-                            'assets/pachakutech_wheel.svg',
-                            colorFilter: ColorFilter.mode(
-                              Theme.of(context).colorScheme.secondary,
-                              BlendMode.srcIn,
-                            ),
-                            semanticsLabel: 'Pachakutech Wheel',
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Center(
-              child: Column(
+          ),
+          // Fixed wheels and logo
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: wheelHeight,
+            child: Container(
+              color: (_wheelAngle >= 223 && _wheelAngle <= 225)
+                  ? Theme.of(context).colorScheme.secondary
+                  : Theme.of(context).colorScheme.surface,
+              child: Stack(
                 children: [
-                  Expanded(
-                      child:
-                          Image.asset('assets/pachakutech_dot_logo_alpha.png')),
+                  // First wheel
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.all(50.0),
+                            child: Transform.rotate(
+                              key: _bodyKey,
+                              angle: radians(_wheelAngle),
+                              child: FittedBox(
+                                fit: BoxFit.contain,
+                                child: SvgPicture.asset(
+                                  'assets/pachakutech_wheel.svg',
+                                  colorFilter: ColorFilter.mode(
+                                    Theme.of(context).colorScheme.secondary,
+                                    BlendMode.srcIn,
+                                  ),
+                                  semanticsLabel: 'Pachakutech Wheel',
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Second wheel (counter-rotating)
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.all(150.0),
+                            child: Transform.rotate(
+                              angle: radians(90.0 - _wheelAngle),
+                              child: FittedBox(
+                                fit: BoxFit.contain,
+                                child: SvgPicture.asset(
+                                  'assets/pachakutech_wheel.svg',
+                                  colorFilter: ColorFilter.mode(
+                                    Theme.of(context).colorScheme.secondary,
+                                    BlendMode.srcIn,
+                                  ),
+                                  semanticsLabel: 'Pachakutech Wheel',
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Dot logo
+                  Center(
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: Image.asset('assets/pachakutech_dot_logo_alpha.png'),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
-}
-
-getAngle(Size size) {
-  return (size.height * size.width / 10000) % 90 * 4;
 }
