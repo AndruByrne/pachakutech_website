@@ -317,37 +317,44 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     var mainContentBuilderDelegate = SliverChildBuilderDelegate(
       (BuildContext context, int index) {
         // Example content sections
+        var sectionHeight = _getScreenSize().height * 0.8;
         List<Widget> contentSections = [
+          Divider(color: Theme.of(context).colorScheme.surface,),
           Container(
-              height: _getScreenSize().height * 0.8,
-              color: Colors.blueGrey.shade100,
+              height: sectionHeight,
+              color: Theme.of(context).colorScheme.surfaceContainer,
               child: Center(
-                  child: Text("Content Section 1",
+                  child: Text("Education",
                       style: Theme.of(context).textTheme.headlineMedium))),
+          Divider(color: Theme.of(context).colorScheme.surface,),
           Container(
-              height: _getScreenSize().height * 0.8,
-              color: Colors.blueGrey.shade200,
+              height: sectionHeight,
+              color: Theme.of(context).colorScheme.surfaceContainer,
               child: Center(
-                  child: Text("Content Section 2",
+                  child: Text("Evaluation/Exploration",
                       style: Theme.of(context).textTheme.headlineMedium))),
+          Divider(color: Theme.of(context).colorScheme.surface,),
           Container(
-              height: _getScreenSize().height * 0.8,
-              color: Colors.blueGrey.shade300,
+              height: sectionHeight,
+              color: Theme.of(context).colorScheme.surfaceContainer,
               child: Center(
-                  child: Text("Content Section 3",
+                  child: Text("Elevation",
                       style: Theme.of(context).textTheme.headlineMedium))),
+          Divider(color: Theme.of(context).colorScheme.surface,),
           Container(
-              height: _getScreenSize().height * 0.8,
-              color: Colors.blueGrey.shade400,
+              height: sectionHeight,
+              color: Theme.of(context).colorScheme.surfaceContainer,
               child: Center(
-                  child: Text("Content Section 4",
+                  child: Text("Contracting",
                       style: Theme.of(context).textTheme.headlineMedium))),
+          Divider(color: Theme.of(context).colorScheme.surface,),
         ];
         if (index >= contentSections.length) return null;
         return contentSections[index];
       },
-      childCount: 4, // Number of content sections
+      childCount: 9, // Number of content sections
     );
+
     return Scaffold(
       body: CustomScrollView(
         controller: _mainScrollController,
