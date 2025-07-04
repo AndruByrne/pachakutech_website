@@ -116,27 +116,15 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     _targetHeaderHeightConstant =
         screenSize.height * 0.18; // Example: 10% of screen height
 
-    // Define the scroll distances for each phase.
-    // The SliverPersistentHeader will occupy screen height initially.
-    // Rotation happens as the user scrolls content *under* this initial view.
-    // This needs careful thought. The SliverPersistentHeader itself will shrink.
-    // The `shrinkOffset` of the delegate IS the relevant scroll.
-
-    // Let's redefine:
-    // `_rotationEndScrollOffset`: The amount of `shrinkOffset` in the delegate
-    //                          at which rotation completes.
-    // `_transitionEndScrollOffset`: The amount of `shrinkOffset` at which the header
-    //                             is fully collapsed to `_targetHeaderHeightConstant`.
-    //                             This would be `_fullscreenHeight - _targetHeaderHeightConstant`.
-
     _rotationEndScrollOffset =
         _fullscreenHeight * 0.5; // Rotate over first 50% of header collapse
     _transitionEndScrollOffset = _fullscreenHeight -
         _targetHeaderHeightConstant; // Full collapse distance
 
-    _fullscreenWheelDiameter = _fullscreenHeight * 0.9; // Adjust as needed
+    _fullscreenWheelDiameter = _fullscreenHeight * 0.9;
     _headerWheelDiameter = _targetHeaderHeightConstant * 0.8;
-    _dotLogoFixedDiameter = _fullscreenWheelDiameter * 0.5; // <<< INITIALIZE IT
+    // _dotLogoFixedDiameter = _fullscreenWheelDiameter * 0.5 ;
+    _dotLogoFixedDiameter = _fullscreenWheelDiameter * 0.5;
 
     // Initialize visual properties based on no scroll
     _updateHeaderFromScroll(0.0); // Initial state before any scroll
@@ -239,7 +227,18 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    var lastHalfTurnLerp = _wheelAngle > 584 ? 1.0 : (_wheelAngle - 404) / 180;
+    var lastHalfTurnLerp = _wheelAngle > 584
+        ? 1.0
+        : _wheelAngle < 404
+            ? 0.0
+            : (_wheelAngle - 404) / 180;
+
+    Widget dotLogo = SizedBox(
+      width: _dotLogoFixedDiameter * (1 + lastHalfTurnLerp / 2),
+      height: _dotLogoFixedDiameter * (1 + lastHalfTurnLerp / 2),
+      child: Image.asset('assets/pachakutech_dot_logo_alpha.png'),
+    );
+
     // This widget is built by _MyHomePageState using its current state values
     Widget dynamicRotatingWheels = Align(
       alignment: _currentWheelAlignment,
@@ -256,11 +255,11 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 height: _currentWheelDiameter * 1.0,
                 child: SvgPicture.asset('assets/pachakutech_wheel.svg',
                     colorFilter: ColorFilter.mode(
-                        _wheelAngle < 404 ? Theme.of(context).colorScheme.secondary:Color.lerp(
-                            Theme.of(context).colorScheme.secondary,
-                            Theme.of(context).colorScheme.primary,
-                            lastHalfTurnLerp) ??
-                            Theme.of(context).colorScheme.secondary,
+                            Color.lerp(
+                                    Theme.of(context).colorScheme.secondary,
+                                    Theme.of(context).colorScheme.primary,
+                                    lastHalfTurnLerp) ??
+                                Theme.of(context).colorScheme.secondary,
                         BlendMode.srcIn)),
               ),
             ),
@@ -272,23 +271,19 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 height: _currentWheelDiameter * 0.6,
                 child: SvgPicture.asset('assets/pachakutech_wheel.svg',
                     colorFilter: ColorFilter.mode(
-                        _wheelAngle < 404 ? Theme.of(context).colorScheme.secondary:Color.lerp(
+                        _wheelAngle < 404
+                            ? Theme.of(context).colorScheme.secondary
+                            : Color.lerp(
+                                    Theme.of(context).colorScheme.secondary,
+                                    Theme.of(context).colorScheme.primary,
+                                    lastHalfTurnLerp) ??
                                 Theme.of(context).colorScheme.secondary,
-                                Theme.of(context).colorScheme.primary,
-                                lastHalfTurnLerp) ??
-                            Theme.of(context).colorScheme.secondary,
                         BlendMode.srcIn)),
               ),
             ),
           ],
         ),
       ),
-    );
-
-    Widget dotLogo = SizedBox(
-      width: _dotLogoFixedDiameter, // Use the fixed diameter
-      height: _dotLogoFixedDiameter,
-      child: Image.asset('assets/pachakutech_dot_logo_alpha.png'),
     );
 
     // The container for the header content, its background might transition.
@@ -298,10 +293,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           ? Theme.of(context).colorScheme.secondary
           : _wheelAngle < 404
               ? Theme.of(context).colorScheme.surface
-              : Color.lerp(
-                  Theme.of(context).colorScheme.surface,
-                  Theme.of(context).colorScheme.secondary,
-                  lastHalfTurnLerp),
+              : Color.lerp(Theme.of(context).colorScheme.surface,
+                  Theme.of(context).colorScheme.secondary, lastHalfTurnLerp),
       child: Stack(
         alignment: Alignment.center, // Centers the dotLogo
         children: [
