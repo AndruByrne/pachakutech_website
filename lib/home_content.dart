@@ -26,33 +26,64 @@ final List<String> partnerLogoPaths = const [
 
 SliverChildBuilderDelegate mainContentBuilder(double sectionHeight) =>
     SliverChildBuilderDelegate(
-          (BuildContext context, int index) {
+      (BuildContext context, int index) {
         final itemIndex = index ~/ 2;
+        final bool isConsultingCard =
+            itemIndex == _myContentSectionsData.length;
+
+        // Determine textAlign for CardTitle based on titleAlignment for the card
+        // Assuming titleAlignment.x < 0 is left, titleAlignment.x > 0 is right, else center
+        TextAlign titleTextAlign;
+        Alignment
+            cardTitleAlignment; // This will be the alignment for the whole card
+
+        if (isConsultingCard) {
+          cardTitleAlignment =
+              Alignment.bottomLeft; // As specified for ConsultingCard
+        } else {
+          cardTitleAlignment =
+              Alignment.bottomLeft; // As specified for ContentSectionCard
+        }
+
+        if (cardTitleAlignment.x < -0.1) {
+          // Allowing for some tolerance around 0 for center
+          titleTextAlign = TextAlign.left;
+        } else if (cardTitleAlignment.x > 0.1) {
+          titleTextAlign = TextAlign.right;
+        } else {
+          titleTextAlign = TextAlign.center;
+        }
 
         if (index.isEven) {
-          // print("printing for index $index, itemindex $itemIndex and content length ${_myContentSectionsData.length}");
           if (itemIndex > _myContentSectionsData.length) return null;
-          if (itemIndex == _myContentSectionsData.length) {
-            // print('printing consulting card');
+
+          if (isConsultingCard) {
+            final consultingTitleWidget = CardTitle(
+              text: 'Consulting',
+              textAlign: titleTextAlign,
+            );
             return ConsultingCard(
               height: sectionHeight,
-              titleAlignment: Alignment
-                  .bottomLeft, // Example: Main title at bottom-left
+              titleAlignment: cardTitleAlignment,
+              titleWidget: consultingTitleWidget, // Pass the widget
             );
           }
+
           final sectionData = _myContentSectionsData[itemIndex];
+          final contentTitleWidget = CardTitle(
+            text: sectionData.title,
+            textAlign: titleTextAlign,
+          );
           return ContentSectionCard(
-            title: sectionData.title,
+            // title: sectionData.title, // REMOVED
+            titleWidget: contentTitleWidget, // Pass the widget
             imagePath: sectionData.imageAsset,
             height: sectionHeight,
-            titleAlignment: Alignment.bottomLeft,
+            titleAlignment: cardTitleAlignment,
           );
         } else {
           return Divider(
-            color: Theme
-                .of(context)
-                .colorScheme
-                .outlineVariant,
+            color: Theme.of(context).colorScheme.outlineVariant,
             height: 20,
             thickness: 0,
             indent: 16,
@@ -65,8 +96,8 @@ SliverChildBuilderDelegate mainContentBuilder(double sectionHeight) =>
 
 class PeriodicGradientPainter extends CustomPainter {
   final int itemCount;
-  final List<
-      Color> waveColors; // Still here, but logic uses fixed colors for now
+  final List<Color>
+      waveColors; // Still here, but logic uses fixed colors for now
   // itemWidthFraction is removed as it wasn't actively used in the refined logic
 
   PeriodicGradientPainter({
@@ -114,8 +145,7 @@ class PeriodicGradientPainter extends CustomPainter {
 
     if (gradientColors.length != gradientStops.length) {
       developer.log(
-          "Warning: Correcting Gradient colors/stops mismatch. Colors: ${gradientColors
-              .length}, Stops: ${gradientStops.length}",
+          "Warning: Correcting Gradient colors/stops mismatch. Colors: ${gradientColors.length}, Stops: ${gradientStops.length}",
           name: "PeriodicGradientPainter");
       if (gradientColors.length > gradientStops.length &&
           gradientStops.isNotEmpty) {
@@ -134,9 +164,6 @@ class PeriodicGradientPainter extends CustomPainter {
       }
     }
 
-    // developer.log("Final Gradient Colors: $gradientColors", name: "PeriodicGradientPainter");
-    // developer.log("Final Gradient Stops: $gradientStops", name: "PeriodicGradientPainter");
-
     if (gradientColors.length >= 2 &&
         gradientStops.length == gradientColors.length) {
       paint.shader = ui.Gradient.linear(
@@ -149,18 +176,17 @@ class PeriodicGradientPainter extends CustomPainter {
       canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
     } else {
       developer.log(
-          "Error: Not enough colors/stops or mismatch for gradient. Colors: ${gradientColors
-              .length}, Stops: ${gradientStops.length}",
+          "Error: Not enough colors/stops or mismatch for gradient. Colors: ${gradientColors.length}, Stops: ${gradientStops.length}",
           name: "PeriodicGradientPainter");
-      canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), Paint()
-        ..color = Colors.grey[800]!);
+      canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height),
+          Paint()..color = Colors.grey[800]!);
     }
   }
 
   @override
   bool shouldRepaint(covariant PeriodicGradientPainter oldDelegate) {
     bool waveColorsChanged = oldDelegate.waveColors.length !=
-        waveColors.length ||
+            waveColors.length ||
         !waveColors
             .asMap()
             .entries
@@ -171,25 +197,22 @@ class PeriodicGradientPainter extends CustomPainter {
 
 class ConsultingCard extends StatelessWidget {
   final double height;
-
-  // scrimColor is removed as the main title will sit directly on the periodic gradient
   final Alignment titleAlignment;
+  final Widget titleWidget; // ADDED
 
   const ConsultingCard({
-    Key? key,
+    super.key,
     required this.height,
-    this.titleAlignment = Alignment
-        .center, // Default alignment for "Consulting" title
-  }) : super(key: key);
+    required this.titleWidget, // ADDED
+    this.titleAlignment = Alignment.center,
+  });
 
   @override
   Widget build(BuildContext context) {
-    // The periodic gradient will be the base background for the entire card
     Widget periodicGradientBackground = CustomPaint(
       painter: PeriodicGradientPainter(
         itemCount: partnerLogoPaths.length,
         waveColors: [
-          // These are passed but painter's internal logic uses fixed colors
           Colors.grey[600]!,
           Colors.white,
           Colors.grey[600]!,
@@ -197,43 +220,32 @@ class ConsultingCard extends StatelessWidget {
           Colors.grey[600]!
         ],
       ),
-      child: Container(), // CustomPaint needs a child for sizing
+      child: Container(),
     );
 
     double overallCardPadding = 16.0;
-    // Calculate logo row height. Since "Partners" label is removed,
-    // logos can potentially take more vertical space, or be centered differently.
-    // Let's make the logo row take a significant portion of the height,
-    // and be centered vertically, with the "Consulting" title overlaid.
-
-    // Assuming the "Consulting" title might be at top/bottom/center.
-    // The logos should be clearly visible.
-    // Let's allocate roughly 50-60% of the card height for the logos, centered.
-    double logoRowHeight = height * 0.5; // Adjust as needed
+    double logoRowHeight = height * 0.5;
     if (logoRowHeight < 0) logoRowHeight = 0;
 
-
     Widget partnerLogosRow = Row(
+      // ... (partnerLogosRow remains the same)
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: partnerLogoPaths.map((logoPath) {
         return Expanded(
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: overallCardPadding / 2),
-            // Some horizontal spacing
             child: Image.asset(
               logoPath,
               height: logoRowHeight,
               fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) =>
-                  Container(
-                    height: logoRowHeight,
-                    color: Colors.grey[300]?.withValues(alpha: 0.5),
-                    child: Center(
-                        child: Icon(Icons.broken_image,
-                            size: logoRowHeight * 0.5, color: Colors
-                                .grey[700])),
-                  ),
+              errorBuilder: (context, error, stackTrace) => Container(
+                height: logoRowHeight,
+                color: Colors.grey[300]?.withValues(alpha: 0.5),
+                child: Center(
+                    child: Icon(Icons.broken_image,
+                        size: logoRowHeight * 0.5, color: Colors.grey[700])),
+              ),
             ),
           ),
         );
@@ -242,62 +254,31 @@ class ConsultingCard extends StatelessWidget {
 
     return Container(
       height: height,
-      // The Stack will manage children fitting to this container's size
       child: Stack(
-        fit: StackFit.expand, // Make children expand to fill the Stack
+        fit: StackFit.expand,
         children: [
-          // 1. Periodic Gradient Background - Fills the entire card
           Positioned.fill(
             child: periodicGradientBackground,
           ),
-
-          // 2. Partner Logos Row - Centered on top of the gradient
-          // We'll use Align or Center to position the logos row.
-          // The "Consulting" title will then be placed according to its alignment.
-          Center( // Center the logos row within the available space
+          Center(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: overallCardPadding),
-              // Horizontal padding for the logo row
-              child: SizedBox( // Constrain the height of the logo row
+              child: SizedBox(
                 height: logoRowHeight,
                 child: partnerLogosRow,
               ),
             ),
           ),
-
-
-          // 3. Main "Consulting" Title Text - Positioned on top of everything
           Padding(
             padding: EdgeInsets.all(overallCardPadding),
-            // Overall padding for the title
+            // Use overallCardPadding
             child: Align(
               alignment: titleAlignment,
-              child: Text(
-                'Consulting',
-                textAlign: titleAlignment == Alignment.center
-                    ? TextAlign.center
-                    : (titleAlignment.x < 0 ? TextAlign.left : TextAlign.right),
-                style: Theme
-                    .of(context)
-                    .textTheme
-                    .headlineMedium
-                    ?.copyWith(
-                  color: Colors.white, // White text should stand out
-                  fontWeight: FontWeight.bold,
-                  shadows: [ // Shadow for readability against varying gradient
-                    Shadow(
-                      blurRadius: 6.0,
-                      color: Colors.black.withValues(alpha: 0.7), // Darker shadow
-                      offset: Offset(1.0, 1.0),
-                    ),
-                    Shadow( // Optional lighter glow for pop
-                      blurRadius: 8.0,
-                      color: Colors.white.withValues(alpha: 0.3),
-                      offset: Offset(0, 0),
-                    ),
-                  ],
-                ),
-              ),
+              // child: Text( // REMOVED
+              //   'Consulting',
+              //   ...
+              // ),
+              child: titleWidget, // ADDED
             ),
           ),
         ],
@@ -307,20 +288,22 @@ class ConsultingCard extends StatelessWidget {
 }
 
 class ContentSectionCard extends StatelessWidget {
-  final String title;
+  // final String title; // REMOVED
+  final Widget titleWidget; // ADDED
   final String imagePath;
   final double height;
   final Color scrimColor;
   final Alignment titleAlignment;
 
   const ContentSectionCard({
-    Key? key,
-    required this.title,
+    super.key,
+    // required this.title, // REMOVED
+    required this.titleWidget, // ADDED
     required this.imagePath,
     required this.height,
     this.scrimColor = Colors.black54,
     this.titleAlignment = Alignment.center,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -341,7 +324,8 @@ class ContentSectionCard extends StatelessWidget {
               );
             },
           ),
-          Container( // Scrim for ContentSectionCard title
+          Container(
+            // Scrim for ContentSectionCard title area
             decoration: BoxDecoration(
               gradient: LinearGradient(
                   colors: [
@@ -351,45 +335,87 @@ class ContentSectionCard extends StatelessWidget {
                   begin: titleAlignment.y < -0.5 // More towards top
                       ? Alignment.topCenter
                       : titleAlignment.y > 0.5 // More towards bottom
-                      ? Alignment.bottomCenter
-                      : Alignment.centerLeft,
-                  // Default for center y or side alignments
+                          ? Alignment.bottomCenter
+                          : Alignment.centerLeft,
                   end: titleAlignment.y < -0.5
                       ? Alignment.bottomCenter
                       : titleAlignment.y > 0.5
-                      ? Alignment.topCenter
-                      : Alignment.centerRight,
-                  stops: [0.0, 0.8]), // Scrim falloff
+                          ? Alignment.topCenter
+                          : Alignment.centerRight,
+                  stops: [0.0, 0.8]),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.all(16.0), // Consistent padding
             child: Align(
               alignment: titleAlignment,
-              child: Text(
-                title,
-                textAlign: titleAlignment == Alignment.center
-                    ? TextAlign.center
-                    : (titleAlignment.x < 0 ? TextAlign.left : TextAlign.right),
-                style: Theme
-                    .of(context)
-                    .textTheme
-                    .headlineMedium
-                    ?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  shadows: [
-                    Shadow(
-                      blurRadius: 8.0,
-                      color: Colors.black.withValues(alpha: 0.5),
-                      offset: Offset(2.0, 2.0),
-                    ),
-                  ],
-                ),
-              ),
+              // child: Text( // REMOVED
+              //   title,
+              //   ...
+              // ),
+              child: titleWidget, // ADDED
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class CardTitle extends StatelessWidget {
+  final String text;
+  final TextAlign textAlign;
+
+  const CardTitle({
+    Key? key,
+    required this.text,
+    this.textAlign = TextAlign.left, // Default, can be overridden
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.65),
+        // Semi-transparent background
+        borderRadius: BorderRadius.circular(8.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.5),
+            blurRadius: 10.0,
+            spreadRadius: 2.0,
+            offset: Offset(2, 2),
+          ),
+          BoxShadow(
+            color: Colors.white.withValues(alpha: 0.15), // Subtle outer glow
+            blurRadius: 12.0,
+            spreadRadius: 1.0,
+            offset: Offset(0, 0),
+          ),
+        ],
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.3), // Faint border
+          width: 0.5,
+        ),
+      ),
+      child: Text(
+        text,
+        textAlign: textAlign,
+        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+          // headlineSmall is a bit larger
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.5,
+          shadows: [
+            // Text shadows for depth (can be subtle if background provides enough contrast)
+            Shadow(
+              blurRadius: 4.0,
+              color: Colors.black.withValues(alpha: 0.7),
+              offset: Offset(1.0, 1.5),
+            ),
+          ],
+        ),
       ),
     );
   }
