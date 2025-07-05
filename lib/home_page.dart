@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'home_content.dart';
 import 'package:vector_math/vector_math.dart' show radians;
 import 'dart:ui' show lerpDouble;
 import 'dart:developer' as developer;
@@ -314,47 +315,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       ),
     );
 
-    var mainContentBuilderDelegate = SliverChildBuilderDelegate(
-      (BuildContext context, int index) {
-        // Example content sections
-        var sectionHeight = _getScreenSize().height * 0.8;
-        List<Widget> contentSections = [
-          Divider(color: Theme.of(context).colorScheme.surface,),
-          Container(
-              height: sectionHeight,
-              color: Theme.of(context).colorScheme.surfaceContainer,
-              child: Center(
-                  child: Text("Education",
-                      style: Theme.of(context).textTheme.headlineMedium))),
-          Divider(color: Theme.of(context).colorScheme.surface,),
-          Container(
-              height: sectionHeight,
-              color: Theme.of(context).colorScheme.surfaceContainer,
-              child: Center(
-                  child: Text("Evaluation/Exploration",
-                      style: Theme.of(context).textTheme.headlineMedium))),
-          Divider(color: Theme.of(context).colorScheme.surface,),
-          Container(
-              height: sectionHeight,
-              color: Theme.of(context).colorScheme.surfaceContainer,
-              child: Center(
-                  child: Text("Elevation",
-                      style: Theme.of(context).textTheme.headlineMedium))),
-          Divider(color: Theme.of(context).colorScheme.surface,),
-          Container(
-              height: sectionHeight,
-              color: Theme.of(context).colorScheme.surfaceContainer,
-              child: Center(
-                  child: Text("Contracting",
-                      style: Theme.of(context).textTheme.headlineMedium))),
-          Divider(color: Theme.of(context).colorScheme.surface,),
-        ];
-        if (index >= contentSections.length) return null;
-        return contentSections[index];
-      },
-      childCount: 9, // Number of content sections
-    );
-
     return Scaffold(
       body: CustomScrollView(
         controller: _mainScrollController,
@@ -364,7 +324,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           headerSliver,
           // Your actual page content as Slivers
           SliverList(
-            delegate: mainContentBuilderDelegate,
+            delegate: mainContentBuilder(_getScreenSize().height * 0.7),
           ),
           // Or use SliverToBoxAdapter for single large content blocks if they are not lists
         ],
