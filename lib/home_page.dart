@@ -11,8 +11,7 @@ import 'dart:developer' as developer;
 class _AnimatedHeaderDelegate extends SliverPersistentHeaderDelegate {
   final double minHeight;
   final double maxHeight;
-  final Widget
-      child; // This child is already built and animated by _MyHomePageState
+  final Widget child;
 
   _AnimatedHeaderDelegate({
     required this.minHeight,
@@ -31,7 +30,6 @@ class _AnimatedHeaderDelegate extends SliverPersistentHeaderDelegate {
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     // shrinkOffset: How much the header has scrolled up/shrunk.
     // 0 when fully expanded (maxHeight), increases up to (maxHeight - minHeight).
-
     // The 'child' widget is already built by _MyHomePageState with all necessary
     // transformations (rotation, size, alignment) based on the global scroll offset.
     // This delegate's primary job is to provide the correctly sized container for it.
@@ -42,15 +40,12 @@ class _AnimatedHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(covariant _AnimatedHeaderDelegate oldDelegate) {
     // Rebuild if minHeight, maxHeight, or the child itself changes.
-    // The child will change if _MyHomePageState.setState is called and
     // it rebuilds headerContentHolder with new visual properties.
     return minHeight != oldDelegate.minHeight ||
         maxHeight != oldDelegate.maxHeight ||
         child != oldDelegate.child;
   }
 
-// No TickerProvider vsync needed here if the delegate itself isn't managing an AnimationController.
-// The onUpdateVisuals callback is also removed as it's no longer necessary with this simpler structure.
 }
 
 enum PagePhase {
@@ -70,7 +65,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
-  // Add TickerProviderStateMixin
   final ScrollController _mainScrollController = ScrollController();
   bool _isScrollingBack = false;
   BaseSectionData?
@@ -92,7 +86,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   // (from fullscreen down to targetHeaderHeight)
 
   // Target heights
-  double _fullscreenHeight = 0; // Typically screen height
+  double _fullscreenHeight = 0;
   double _targetHeaderHeightConstant = 0; // The final small header height
 
   // Diameters for interpolation
@@ -103,7 +97,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   // Alignments for interpolation
   final Alignment _fullscreenWheelAlignment = Alignment.center;
   final Alignment _headerWheelAlignment =
-      const Alignment(-0.85, 0.0); // Or whatever you prefer
+      const Alignment(-0.85, 0.0);
 
   Size _getScreenSize() => MediaQuery.of(context).size;
 
@@ -135,11 +129,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
     // Initialize visual properties based on no scroll
     _updateHeaderFromScroll(0.0); // Initial state before any scroll
-
-    developer.log(
-      "didChangeDependencies: Screen: $screenSize, FullscreenHeight: $_fullscreenHeight, TargetHeaderHeight: $_targetHeaderHeightConstant, RotationEndOffset: $_rotationEndScrollOffset, TransitionEndOffset (HeaderCollapseDistance): $_transitionEndScrollOffset",
-      name: "MyHomePageState.Dimensions",
-    );
   }
 
   void _handleScroll() {
@@ -168,7 +157,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         title: "Detail: ${summaryData.title}",
         originalSummary: summaryData,
         contentBuilder: (context) {
-          // Placeholder detail content widgets
           if (summaryData.id == "edu") {
             return EducationDetailPage(summaryData: summaryData);
           } else if (summaryData.id == "eval") {
@@ -182,20 +170,12 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           }
         },
       );
-      // IMPORTANT: When switching to detail view, ensure the scroll position
-      // allows the header to be in its "collapsed" state, as if the user
-      // had scrolled down. We want the top of the NEW content to be visible.
-      // We also want further scrolling up to expand the header.
-      // Jumping to the header's collapse point is a good start.
+      // Jump to the header's collapse point
       if (_mainScrollController.hasClients) {
-        // Scroll just enough so the header is in its minimized state.
-        // The header's animation range is from 0 to (_fullscreenHeight - _targetHeaderHeightConstant).
-        // Scrolling to (_fullscreenHeight - _targetHeaderHeightConstant) collapses it.
         double targetScrollOffset =
             _fullscreenHeight - _targetHeaderHeightConstant;
         _mainScrollController.jumpTo(targetScrollOffset.clamp(
             0.0, _mainScrollController.position.maxScrollExtent));
-        // We also directly update the header visuals to match this, in case jumpTo doesn't trigger scroll listener immediately.
         _updateHeaderFromScroll(targetScrollOffset);
       }
       developer.log(
@@ -210,8 +190,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     if (mounted) {
       setState(() {
         _isScrollingBack =
-            true; // Still useful to prevent re-entry into this method
-        // and to signal that a programmatic scroll is active.
+            true; // prevent re-entry into this method
       });
     }
 
@@ -219,8 +198,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         "Starting animated scroll back to main list. Current scroll: ${_mainScrollController.hasClients ? _mainScrollController.offset : 'N/A'}",
         name: "MyHomePageState.Navigation");
 
-    // The header will now animate based on the scroll offset changes driven by animateTo,
-    // because _handleScroll will call _updateHeaderFromScroll.
     await _mainScrollController.animateTo(
       0.0,
       duration: const Duration(milliseconds: 500),
@@ -232,12 +209,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       setState(() {
         _activeDetailData = null; // NOW swap the content
         _isScrollingBack = false; // Reset the flag
-        // _updateHeaderFromScroll(0.0); // This should have been naturally handled by the
-        // scroll listener reaching 0.0 during animateTo.
-        // If there's any doubt, it can be kept as a final "snap to position".
-        developer.log(
-            "Returned to main list content after animation. Scroll offset: ${_mainScrollController.hasClients ? _mainScrollController.offset : 'N/A'}",
-            name: "MyHomePageState.Navigation");
       });
       // One final explicit call to ensure the header is perfectly synchronized
       // with the 0.0 scroll offset, especially if the last scroll event didn't coincide
@@ -250,14 +221,13 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     // headerScrollAmount is effectively the `shrinkOffset` for the header behavior.
     // It goes from 0 (fully expanded header) to `_transitionEndScrollOffset` (fully collapsed header).
 
-    // 1. Wheel Rotation Angle
     double newWheelAngle;
     double rotationProgressRatio = (_rotationEndScrollOffset == 0)
         ? 1.0
         : (headerScrollAmount / _rotationEndScrollOffset);
     newWheelAngle = rotationProgressRatio * 360.0;
 
-    // 2. Transition Progress (for header content: wheel size, alignment, and header visual bg)
+    // Transition Progress (for header content: wheel size, alignment, and header visual bg)
     // This progress is for how much the header *content* has transitioned.
     // It should go from 0 (fullscreen appearance) to 1 (shrunken header appearance).
     // The transition happens over the entire collapse of the header,
@@ -271,17 +241,16 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       transitionProgress = 1.0;
     }
 
-    // 3. Wheel Diameter and Alignment based on transitionProgress
+    // Wheel Diameter and Alignment based on transitionProgress
     double newWheelDiameter = lerpDouble(
         _fullscreenWheelDiameter, _headerWheelDiameter, transitionProgress)!;
     Alignment newWheelAlignment = Alignment.lerp(
         _fullscreenWheelAlignment, _headerWheelAlignment, transitionProgress)!;
 
-    // 4. Header Visual Height (for background, etc., if different from Sliver's extent)
+    // Header Visual Height (for background, etc., if different from Sliver's extent)
     // This is how tall the *content area* of the header appears to be.
     // The SliverPersistentHeader itself will manage its actual extent from _fullscreenHeight down to _targetHeaderHeightConstant.
     // This `_currentHeaderVisualHeight` is for the container *inside* the sliver, if needed.
-    // For simplicity, let's assume the content fills the sliver.
     double newHeaderVisualHeight = lerpDouble(
         _fullscreenHeight, _targetHeaderHeightConstant, transitionProgress)!;
 
@@ -331,25 +300,19 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       // Wrap with GestureDetector
       onTap: () {
         if (_activeDetailData != null) {
-          // If in detail view, execute the go back logic
           _goBackToMainList();
-          developer.log("Dot logo tapped in detail view, going back.",
-              name: "MyHomePageState.Interaction");
         } else {
-          // If in main list view, do nothing for now (or some other action)
           developer.log("Dot logo tapped on main list view.",
               name: "MyHomePageState.Interaction");
         }
       },
       child: SizedBox(
-        // Your existing SizedBox and Image
         width: _dotLogoFixedDiameter * (1 + lastHalfTurnLerp / 2),
         height: _dotLogoFixedDiameter * (1 + lastHalfTurnLerp / 2),
         child: Image.asset('assets/pachakutech_dot_logo_alpha.png'),
       ),
     );
 
-    // Core visual representation of the rotating wheels (NO CHANGES HERE)
     Widget rawDynamicRotatingWheels = Stack(
       alignment: Alignment.center,
       children: [
@@ -388,7 +351,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       ],
     );
 
-    // The interactive wheels widget, always with an InkWell (NO CHANGES HERE)
     Widget interactiveRotatingWheels = Align(
       alignment: _currentWheelAlignment,
       child: SizedBox(
@@ -406,15 +368,14 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               }
             },
             customBorder: CircleBorder(),
-            splashColor: Theme.of(context).splashColor.withOpacity(0.3),
-            highlightColor: Theme.of(context).highlightColor.withOpacity(0.2),
+            splashColor: Theme.of(context).splashColor.withValues( alpha: 0.3),
+            highlightColor: Theme.of(context).highlightColor.withValues(alpha: 0.2),
             child: rawDynamicRotatingWheels,
           ),
         ),
       ),
     );
 
-    // The container for the header content (NO CHANGES HERE, dotLogo is already included)
     Widget headerVisuals = Container(
       color: (_wheelAngle >= 584)
           ? Theme.of(context).colorScheme.secondary
@@ -426,12 +387,11 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         alignment: Alignment.center,
         children: [
           interactiveRotatingWheels,
-          dotLogo, // dotLogo (now with GestureDetector) is already in the Stack
+          dotLogo,
         ],
       ),
     );
 
-    // ... (rest of your build method remains the same)
     SliverPersistentHeader headerSliver = SliverPersistentHeader(
       pinned: true,
       floating: false,
@@ -457,15 +417,28 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       );
     }
 
-    return Scaffold(
-      body: CustomScrollView(
-        controller: _mainScrollController,
-        physics: const BouncingScrollPhysics(),
-        slivers: <Widget>[
-          headerSliver,
-          contentSliver,
-        ],
-      ),
+    return PopScope(
+      canPop: _activeDetailData == null,
+      // Allow pop if on main list, otherwise intercept
+      onPopInvokedWithResult: (bool didPop, void result) async {
+        if (didPop) {
+          return;
+        }
+        if (_activeDetailData != null) {
+          await _goBackToMainList();
+        }
+      },
+      child: Scaffold(
+          body: Scaffold(
+        body: CustomScrollView(
+          controller: _mainScrollController,
+          physics: const BouncingScrollPhysics(),
+          slivers: <Widget>[
+            headerSliver,
+            contentSliver,
+          ],
+        ),
+      )),
     );
   }
 }
