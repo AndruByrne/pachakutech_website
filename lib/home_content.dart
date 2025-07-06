@@ -2,18 +2,40 @@ import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 import 'dart:developer' as developer;
 
-class SectionData {
+abstract class BaseSectionData {
   final String title;
-  final String imageAsset;
-
-  SectionData({required this.title, required this.imageAsset});
+  BaseSectionData({required this.title});
 }
 
-final List<SectionData> _myContentSectionsData = [
-  SectionData(title: "Education", imageAsset: "assets/education.jpg"),
-  SectionData(
+class SummarySectionData extends BaseSectionData {
+  final String imageAsset;
+  final String id;
+
+  SummarySectionData({
+    required String title,
+    required this.imageAsset,
+    required this.id,
+  }) : super(title: title);
+}
+
+typedef DetailWidgetBuilder = Widget Function(BuildContext context);
+
+class DetailSectionData extends BaseSectionData {
+  final DetailWidgetBuilder contentBuilder;
+  final SummarySectionData originalSummary;// Keep a reference to what was clicked
+
+  DetailSectionData({
+    required String title,
+    required this.contentBuilder,
+    required this.originalSummary,
+  }) : super(title: title);
+}
+
+final List<SummarySectionData> _myContentSectionsData = [
+  SummarySectionData(id: 'edu', title: "Education", imageAsset: "assets/education.jpg"),
+  SummarySectionData(id: 'eval',
       title: "Evaluation & Exploration", imageAsset: "assets/exploration.jpg"),
-  SectionData(title: "Elevation", imageAsset: "assets/elevation.jpg"),
+  SummarySectionData(id: 'elev', title: "Elevation", imageAsset: "assets/elevation.jpg"),
   // Add more sections as needed
 ];
 
@@ -24,7 +46,9 @@ final List<String> partnerLogoPaths = const [
   "assets/canal_day_logo.png",
 ];
 
-SliverChildBuilderDelegate mainContentBuilder(double sectionHeight) =>
+typedef OnCardTap = void Function(SummarySectionData summaryData);
+
+SliverChildBuilderDelegate mainContentBuilder(double sectionHeight, OnCardTap onCardTap) =>
     SliverChildBuilderDelegate(
       (BuildContext context, int index) {
         final itemIndex = index ~/ 2;
@@ -34,8 +58,7 @@ SliverChildBuilderDelegate mainContentBuilder(double sectionHeight) =>
         // Determine textAlign for CardTitle based on titleAlignment for the card
         // Assuming titleAlignment.x < 0 is left, titleAlignment.x > 0 is right, else center
         TextAlign titleTextAlign;
-        Alignment
-            cardTitleAlignment; // This will be the alignment for the whole card
+        Alignment cardTitleAlignment; // Alignment for the whole card
 
         if (isConsultingCard) {
           cardTitleAlignment =
@@ -69,17 +92,18 @@ SliverChildBuilderDelegate mainContentBuilder(double sectionHeight) =>
             );
           }
 
-          final sectionData = _myContentSectionsData[itemIndex];
+          final summaryData = _myContentSectionsData[itemIndex];
           final contentTitleWidget = CardTitle(
-            text: sectionData.title,
+            text: summaryData.title,
             textAlign: titleTextAlign,
           );
           return ContentSectionCard(
-            // title: sectionData.title, // REMOVED
+            // title: summaryData.title, // REMOVED
             titleWidget: contentTitleWidget, // Pass the widget
-            imagePath: sectionData.imageAsset,
+            imagePath: summaryData.imageAsset,
             height: sectionHeight,
             titleAlignment: cardTitleAlignment,
+            onTap: () => onCardTap(summaryData),
           );
         } else {
           return Divider(
@@ -294,6 +318,7 @@ class ContentSectionCard extends StatelessWidget {
   final double height;
   final Color scrimColor;
   final Alignment titleAlignment;
+  final VoidCallback onTap;
 
   const ContentSectionCard({
     super.key,
@@ -301,62 +326,66 @@ class ContentSectionCard extends StatelessWidget {
     required this.titleWidget, // ADDED
     required this.imagePath,
     required this.height,
+    required this.onTap,
     this.scrimColor = Colors.black54,
     this.titleAlignment = Alignment.center,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: height,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Image.asset(
-            imagePath,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                color: Colors.grey[300],
-                child: Center(
-                    child: Icon(Icons.broken_image,
-                        size: 50, color: Colors.grey[600])),
-              );
-            },
-          ),
-          Container(
-            // Scrim for ContentSectionCard title area
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                  colors: [
-                    scrimColor.withValues(alpha: 0.7),
-                    scrimColor.withValues(alpha: 0.3)
-                  ],
-                  begin: titleAlignment.y < -0.5 // More towards top
-                      ? Alignment.topCenter
-                      : titleAlignment.y > 0.5 // More towards bottom
-                          ? Alignment.bottomCenter
-                          : Alignment.centerLeft,
-                  end: titleAlignment.y < -0.5
-                      ? Alignment.bottomCenter
-                      : titleAlignment.y > 0.5
-                          ? Alignment.topCenter
-                          : Alignment.centerRight,
-                  stops: [0.0, 0.8]),
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        height: height,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.asset(
+              imagePath,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: Colors.grey[300],
+                  child: Center(
+                      child: Icon(Icons.broken_image,
+                          size: 50, color: Colors.grey[600])),
+                );
+              },
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0), // Consistent padding
-            child: Align(
-              alignment: titleAlignment,
-              // child: Text( // REMOVED
-              //   title,
-              //   ...
-              // ),
-              child: titleWidget, // ADDED
+            Container(
+              // Scrim for ContentSectionCard title area
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                    colors: [
+                      scrimColor.withValues(alpha: 0.7),
+                      scrimColor.withValues(alpha: 0.3)
+                    ],
+                    begin: titleAlignment.y < -0.5 // More towards top
+                        ? Alignment.topCenter
+                        : titleAlignment.y > 0.5 // More towards bottom
+                            ? Alignment.bottomCenter
+                            : Alignment.centerLeft,
+                    end: titleAlignment.y < -0.5
+                        ? Alignment.bottomCenter
+                        : titleAlignment.y > 0.5
+                            ? Alignment.topCenter
+                            : Alignment.centerRight,
+                    stops: [0.0, 0.8]),
+              ),
             ),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.all(16.0), // Consistent padding
+              child: Align(
+                alignment: titleAlignment,
+                // child: Text( // REMOVED
+                //   title,
+                //   ...
+                // ),
+                child: titleWidget, // ADDED
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -403,12 +432,10 @@ class CardTitle extends StatelessWidget {
         text,
         textAlign: textAlign,
         style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-          // headlineSmall is a bit larger
           color: Colors.white,
           fontWeight: FontWeight.bold,
           letterSpacing: 0.5,
           shadows: [
-            // Text shadows for depth (can be subtle if background provides enough contrast)
             Shadow(
               blurRadius: 4.0,
               color: Colors.black.withValues(alpha: 0.7),
