@@ -36,7 +36,7 @@ SliverChildBuilderDelegate mainContentBuilder(
           titleTextAlign = TextAlign.center;
         }
 
-        if (index.isEven) {
+        if (index.isOdd) {
           if (itemIndex > _myContentSectionsData.length) return null;
 
           if (isConsultingCard) {
@@ -76,7 +76,7 @@ SliverChildBuilderDelegate mainContentBuilder(
           );
         }
       },
-      childCount: ((_myContentSectionsData.length + 1) * 2) - 1,
+      childCount: ((_myContentSectionsData.length + 1) * 2),
     );
 
 class PeriodicGradientPainter extends CustomPainter {
