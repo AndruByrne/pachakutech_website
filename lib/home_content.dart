@@ -2,53 +2,12 @@ import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 import 'dart:developer' as developer;
 
-abstract class BaseSectionData {
-  final String title;
-  BaseSectionData({required this.title});
-}
-
-class SummarySectionData extends BaseSectionData {
-  final String imageAsset;
-  final String id;
-
-  SummarySectionData({
-    required String title,
-    required this.imageAsset,
-    required this.id,
-  }) : super(title: title);
-}
-
-typedef DetailWidgetBuilder = Widget Function(BuildContext context);
-
-class DetailSectionData extends BaseSectionData {
-  final DetailWidgetBuilder contentBuilder;
-  final SummarySectionData originalSummary;// Keep a reference to what was clicked
-
-  DetailSectionData({
-    required String title,
-    required this.contentBuilder,
-    required this.originalSummary,
-  }) : super(title: title);
-}
-
-final List<SummarySectionData> _myContentSectionsData = [
-  SummarySectionData(id: 'edu', title: "Education", imageAsset: "assets/education.jpg"),
-  SummarySectionData(id: 'eval',
-      title: "Evaluation & Exploration", imageAsset: "assets/exploration.jpg"),
-  SummarySectionData(id: 'elev', title: "Elevation", imageAsset: "assets/elevation.jpg"),
-  // Add more sections as needed
-];
-
-final List<String> partnerLogoPaths = const [
-  "assets/google_logo.png",
-  "assets/atec_logo.png",
-  "assets/hopkins_logo.png",
-  "assets/canal_day_logo.png",
-];
+final String heroTag = "detail_background_image_";
 
 typedef OnCardTap = void Function(SummarySectionData summaryData);
 
-SliverChildBuilderDelegate mainContentBuilder(double sectionHeight, OnCardTap onCardTap) =>
+SliverChildBuilderDelegate mainContentBuilder(
+        double sectionHeight, OnCardTap onCardTap) =>
     SliverChildBuilderDelegate(
       (BuildContext context, int index) {
         final itemIndex = index ~/ 2;
@@ -99,11 +58,13 @@ SliverChildBuilderDelegate mainContentBuilder(double sectionHeight, OnCardTap on
           );
           return ContentSectionCard(
             // title: summaryData.title, // REMOVED
-            titleWidget: contentTitleWidget, // Pass the widget
+            titleWidget: contentTitleWidget,
+            // Pass the widget
             imagePath: summaryData.imageAsset,
             height: sectionHeight,
             titleAlignment: cardTitleAlignment,
             onTap: () => onCardTap(summaryData),
+            id: summaryData.id,
           );
         } else {
           return Divider(
@@ -312,13 +273,13 @@ class ConsultingCard extends StatelessWidget {
 }
 
 class ContentSectionCard extends StatelessWidget {
-  // final String title; // REMOVED
-  final Widget titleWidget; // ADDED
   final String imagePath;
   final double height;
-  final Color scrimColor;
-  final Alignment titleAlignment;
   final VoidCallback onTap;
+  final Color scrimColor;
+  final Widget titleWidget;
+  final Alignment titleAlignment;
+  final String id;
 
   const ContentSectionCard({
     super.key,
@@ -327,6 +288,7 @@ class ContentSectionCard extends StatelessWidget {
     required this.imagePath,
     required this.height,
     required this.onTap,
+    required this.id,
     this.scrimColor = Colors.black54,
     this.titleAlignment = Alignment.center,
   });
@@ -340,17 +302,20 @@ class ContentSectionCard extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.asset(
-              imagePath,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: Colors.grey[300],
-                  child: Center(
-                      child: Icon(Icons.broken_image,
-                          size: 50, color: Colors.grey[600])),
-                );
-              },
+            Hero(
+              tag: heroTag + id,
+              child: Image.asset(
+                imagePath,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey[300],
+                    child: Center(
+                        child: Icon(Icons.broken_image,
+                            size: 50, color: Colors.grey[600])),
+                  );
+                },
+              ),
             ),
             Container(
               // Scrim for ContentSectionCard title area
@@ -447,3 +412,53 @@ class CardTitle extends StatelessWidget {
     );
   }
 }
+
+abstract class BaseSectionData {
+  final String title;
+
+  BaseSectionData({required this.title});
+}
+
+class SummarySectionData extends BaseSectionData {
+  final String imageAsset;
+  final String id;
+
+  SummarySectionData({
+    required String title,
+    required this.imageAsset,
+    required this.id,
+  }) : super(title: title);
+}
+
+typedef DetailWidgetBuilder = Widget Function(BuildContext context);
+
+class DetailSectionData extends BaseSectionData {
+  final DetailWidgetBuilder contentBuilder;
+  final SummarySectionData
+      originalSummary; // Keep a reference to what was clicked
+
+  DetailSectionData({
+    required String title,
+    required this.contentBuilder,
+    required this.originalSummary,
+  }) : super(title: title);
+}
+
+final List<SummarySectionData> _myContentSectionsData = [
+  SummarySectionData(
+      id: 'edu', title: "Education", imageAsset: "assets/education.jpg"),
+  SummarySectionData(
+      id: 'eval',
+      title: "Evaluation & Exploration",
+      imageAsset: "assets/exploration.jpg"),
+  SummarySectionData(
+      id: 'elev', title: "Elevation", imageAsset: "assets/elevation.jpg"),
+  // Add more sections as needed
+];
+
+final List<String> partnerLogoPaths = const [
+  "assets/google_logo.png",
+  "assets/atec_logo.png",
+  "assets/hopkins_logo.png",
+  "assets/canal_day_logo.png",
+];
