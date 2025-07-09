@@ -3,17 +3,24 @@ import 'home_content.dart';
 
 class ElevationDetailPage extends StatelessWidget {
   final SummarySectionData summaryData;
-  const ElevationDetailPage({Key? key, required this.summaryData}) : super(key: key);
+  final ValueNotifier<double> mainScrollNotifier;
+
+  const ElevationDetailPage(
+      {Key? key, required this.summaryData, required this.mainScrollNotifier})
+      : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height * 0.8),
+      constraints:
+          BoxConstraints(minHeight: MediaQuery.of(context).size.height * 0.8),
       padding: EdgeInsets.all(16),
       color: Colors.orange.shade50,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Elevation Details: ${summaryData.title}", style: Theme.of(context).textTheme.headlineMedium),
+          Text("Elevation Details: ${summaryData.title}",
+              style: Theme.of(context).textTheme.headlineMedium),
           SizedBox(height: 20),
           Text("ID: ${summaryData.id}"),
           SizedBox(height: 20),

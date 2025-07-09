@@ -45,7 +45,6 @@ class _AnimatedHeaderDelegate extends SliverPersistentHeaderDelegate {
         maxHeight != oldDelegate.maxHeight ||
         child != oldDelegate.child;
   }
-
 }
 
 enum PagePhase {
@@ -66,6 +65,8 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   final ScrollController _mainScrollController = ScrollController();
+  late ValueNotifier<double> _mainScrollControllerNotifier;
+
   bool _isScrollingBack = false;
   BaseSectionData?
       _activeDetailData; // This holds the currently selected detail, or null for main list
@@ -96,8 +97,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   // Alignments for interpolation
   final Alignment _fullscreenWheelAlignment = Alignment.center;
-  final Alignment _headerWheelAlignment =
-      const Alignment(-0.85, 0.0);
+  final Alignment _headerWheelAlignment = const Alignment(-0.85, 0.0);
 
   Size _getScreenSize() => MediaQuery.of(context).size;
 
@@ -105,6 +105,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _mainScrollController.addListener(_handleScroll);
+    _mainScrollControllerNotifier = ValueNotifier<double>(0.0);
     developer.log("initState: Main scroll listener added",
         name: "MyHomePageState.Lifecycle");
   }
@@ -127,22 +128,31 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     // _dotLogoFixedDiameter = _fullscreenWheelDiameter * 0.5 ;
     _dotLogoFixedDiameter = _fullscreenWheelDiameter * 0.5;
 
-    // Initialize visual properties based on no scroll
-    _updateHeaderFromScroll(0.0); // Initial state before any scroll
+    // Initialize visual properties based on scroll position (or 0 if not available yet)
+    double initialScrollOffset = 0.0;
+    if (_mainScrollController.hasClients &&
+        _mainScrollController.position.haveDimensions) {
+      initialScrollOffset = _mainScrollController.offset;
+    }
+
+    _mainScrollControllerNotifier.value =
+        initialScrollOffset; // Set initial notifier value
+
+    _updateHeaderFromScroll(initialScrollOffset.clamp(
+        0.0, _fullscreenHeight - _targetHeaderHeightConstant));
   }
 
   void _handleScroll() {
-    // The offset here is the overall scroll position of the CustomScrollView
-    // However, for the header's animation, what matters is the `shrinkOffset`
-    // of the SliverPersistentHeader.
-    // The SliverPersistentHeader's shrinkOffset goes from 0 to (maxExtent - minExtent).
-    // We use the controller's offset directly if it's within the header's shrink range.
-    double currentGlobalScrollOffset =
-        _mainScrollController.hasClients ? _mainScrollController.offset : 0.0;
+    if (!_mainScrollController.hasClients ||
+        !_mainScrollController.position.haveDimensions) {
+      // If scroll controller is not ready, don't try to use its offset
+      return;
+    }
+    double currentGlobalScrollOffset = _mainScrollController.offset;
 
-    // We only care about the scroll offset relevant to the header's transformation range.
-    // The header's max extent is _fullscreenHeight, min extent is _targetHeaderHeightConstant.
-    // The maximum shrinkOffset is _fullscreenHeight - _targetHeaderHeightConstant.
+    _mainScrollControllerNotifier.value =
+        currentGlobalScrollOffset; // Update notifier
+
     double headerRelevantScroll = currentGlobalScrollOffset.clamp(
         0.0, _fullscreenHeight - _targetHeaderHeightConstant);
 
@@ -157,12 +167,40 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         title: "Detail: ${summaryData.title}",
         originalSummary: summaryData,
         contentBuilder: (context) {
+          double screenHeight = MediaQuery.of(context).size.height;
+          double availableHeight = screenHeight -
+              _targetHeaderHeightConstant -
+              MediaQuery.of(context)
+                  .padding
+                  .top; // Approximate available height after header
           if (summaryData.id == "edu") {
-            return EducationDetailPage(summaryData: summaryData);
+            return SizedBox(
+              height: availableHeight.clamp(0.0, double.infinity),
+              // Ensure non-negative
+              child: EducationDetailPage(
+                summaryData: summaryData,
+                mainScrollNotifier: _mainScrollControllerNotifier,
+              ),
+            );
           } else if (summaryData.id == "eval") {
-            return EvaluationDetailPage(summaryData: summaryData);
+            return SizedBox(
+              height: availableHeight.clamp(0.0, double.infinity),
+              // Ensure non-negative
+              child: EvaluationDetailPage(
+                summaryData: summaryData,
+                mainScrollNotifier: _mainScrollControllerNotifier,
+                headerCollapseOffset: _transitionEndScrollOffset,
+              ),
+            );
           } else if (summaryData.id == "elev") {
-            return ElevationDetailPage(summaryData: summaryData);
+            return SizedBox(
+              height: availableHeight.clamp(0.0, double.infinity),
+              // Ensure non-negative
+              child: ElevationDetailPage(
+                summaryData: summaryData,
+                mainScrollNotifier: _mainScrollControllerNotifier,
+              ),
+            );
           } else {
             return Center(
                 child: Text("Details for ${summaryData.title}",
@@ -189,8 +227,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
     if (mounted) {
       setState(() {
-        _isScrollingBack =
-            true; // prevent re-entry into this method
+        _isScrollingBack = true; // prevent re-entry into this method
       });
     }
 
@@ -280,6 +317,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   @override
   void dispose() {
     _mainScrollController.removeListener(_handleScroll);
+    _mainScrollControllerNotifier.dispose();
     _mainScrollController.dispose();
     super.dispose();
     developer.log(
@@ -368,8 +406,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               }
             },
             customBorder: CircleBorder(),
-            splashColor: Theme.of(context).splashColor.withValues( alpha: 0.3),
-            highlightColor: Theme.of(context).highlightColor.withValues(alpha: 0.2),
+            splashColor: Theme.of(context).splashColor.withValues(alpha: 0.3),
+            highlightColor:
+                Theme.of(context).highlightColor.withValues(alpha: 0.2),
             child: rawDynamicRotatingWheels,
           ),
         ),
@@ -390,6 +429,36 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           dotLogo,
         ],
       ),
+    );
+
+    Widget mainPageParallaxBackground = ValueListenableBuilder<double>(
+      valueListenable: _mainScrollControllerNotifier,
+
+      // You'll need to create this
+      builder: (context, scrollOffset, child) {
+        double backgroundScrollOffset = scrollOffset * 0.3; // Parallax factor
+        double screenHeight = MediaQuery.of(context).size.height;
+        // Estimate how much "extra" height is needed for the parallax effect.
+        // This is a rough estimate; maxScrollExtent isn't always known upfront easily.
+        // Let's assume the content might scroll up to, say, twice the screen height for a long list.
+        double estimatedMaxContentScroll = screenHeight * 2.5;
+        double parallaxTravel = estimatedMaxContentScroll * 0.3;
+
+        return Positioned(
+          top: -backgroundScrollOffset,
+          left: 0,
+          right: 0,
+          // Make the image container tall enough to show the initial screen height
+          // plus the amount it will effectively "travel" due to parallax.
+          height: screenHeight + parallaxTravel,
+          // MODIFIED
+          child: Image.asset(
+            'assets/main_page_background.jpg',
+            fit: BoxFit.cover,
+            alignment: Alignment.topCenter,
+          ),
+        );
+      },
     );
 
     SliverPersistentHeader headerSliver = SliverPersistentHeader(
@@ -419,7 +488,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
     return PopScope(
       canPop: _activeDetailData == null,
-      // Allow pop if on main list, otherwise intercept
       onPopInvokedWithResult: (bool didPop, void result) async {
         if (didPop) {
           return;
@@ -429,16 +497,80 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         }
       },
       child: Scaffold(
-          body: Scaffold(
-        body: CustomScrollView(
-          controller: _mainScrollController,
-          physics: const BouncingScrollPhysics(),
-          slivers: <Widget>[
-            headerSliver,
-            contentSliver,
+        body: Stack(
+          children: <Widget>[
+            if (_activeDetailData == null) mainPageParallaxBackground,
+            Scaffold(
+              backgroundColor: _activeDetailData == null
+                  ? Colors.transparent
+                  : Theme.of(context).colorScheme.surface,
+              body: NotificationListener<ScrollNotification>(
+                onNotification: (ScrollNotification notification) {
+                  if (_activeDetailData == null) {
+                    return false; // Don't handle, let it bubble
+                  }
+                  // Get the current scroll offset of the main page
+                  final double currentMainScrollOffset = _mainScrollController.offset;
+                  final bool headerIsCollapsingOrExpanding = currentMainScrollOffset < _transitionEndScrollOffset;
+                  final bool headerIsStrictlyCollapsingOrExpanding = currentMainScrollOffset > 0 && currentMainScrollOffset < _transitionEndScrollOffset;
+
+                  // Scenario: User is trying to scroll UP from inner list, and it overscrolls.
+                  // This should ALWAYS try to expand the main header.
+                  if (notification is OverscrollNotification &&
+                      notification.metrics.axis == Axis.vertical &&
+                      notification.overscroll < 0) { // Negative overscroll = pulling up
+                    // Check if the inner scroll view is actually at its top.
+                    // We assume an overscroll up means it is.
+                    if (_mainScrollController.hasClients) {
+                      _mainScrollController.jumpTo(
+                          (_mainScrollController.offset + notification.overscroll).clamp(0.0, _mainScrollController.position.maxScrollExtent)
+                      );
+                      developer.log("Overscroll UP from inner, driving main to expand. Consumed.", name: "ScrollLogic");
+                      return true; // Consume the overscroll as we've handled its effect on the main scroll.
+                    }
+                  }
+
+                  // Scenario: User is trying to scroll DOWN.
+                  if (notification is ScrollUpdateNotification &&
+                      notification.metrics.axis == Axis.vertical &&
+                      notification.scrollDelta != null &&
+                      notification.scrollDelta! > 0) { // Positive scrollDelta = trying to scroll DOWN
+
+                    // If the header is in the process of collapsing (or is partially expanded)
+                    // AND this scroll update is coming from the inner scroll view.
+                    // The key insight: if the main header *should* be reacting (i.e. it's not fully collapsed),
+                    // then it should take precedence for downward scrolls to finish collapsing.
+                    if (headerIsCollapsingOrExpanding && currentMainScrollOffset < (_transitionEndScrollOffset - 0.1) /* Add small tolerance */ ) {
+                      // If the notification depth is > 0, it's from a nested Scrollable.
+                      // Scrollable itself is depth 0. A CustomScrollView inside it would be depth 1.
+                      if (notification.depth > 0) {
+                        developer.log("Downward scroll from INNER while main header not fully collapsed. Forcing main scroll. Consumed.", name: "ScrollLogic");
+                        if (_mainScrollController.hasClients) {
+                          _mainScrollController.jumpTo(
+                              (_mainScrollController.offset + notification.scrollDelta!).clamp(0.0, _mainScrollController.position.maxScrollExtent)
+                          );
+                        }
+                        return true; // Consume this scroll, main controller has handled it.
+                      }
+                    }
+                  }
+
+                  return false; // Let other notifications pass through.
+                },
+                child: CustomScrollView(
+                  controller: _mainScrollController,
+                  physics: const BouncingScrollPhysics(),
+                  slivers: <Widget>[
+                    headerSliver,
+                    contentSliver,
+                    // contentSliver is now correctly built using mainContentBuilder
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
-      )),
+      ),
     );
   }
 }
