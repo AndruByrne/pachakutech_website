@@ -67,13 +67,7 @@ SliverChildBuilderDelegate mainContentBuilder(
             id: summaryData.id,
           );
         } else {
-          return Divider(
-            color: Theme.of(context).colorScheme.outlineVariant,
-            height: 20,
-            thickness: 0,
-            indent: 16,
-            endIndent: 16,
-          );
+          return SizedBox(height: kToolbarHeight);
         }
       },
       childCount: ((_myContentSectionsData.length + 1) * 2),
