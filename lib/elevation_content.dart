@@ -1,34 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:pachakutech_website/evaluation_content.dart';
 import 'home_content.dart';
 
-class ElevationDetailPage extends StatelessWidget {
-  final SummarySectionData summaryData;
-  final ValueNotifier<double> mainScrollNotifier;
+import 'package:flutter/material.dart';
+import 'base_detail_page.dart'; // Import the new base class
 
-  const ElevationDetailPage(
-      {Key? key, required this.summaryData, required this.mainScrollNotifier})
-      : super(key: key);
+class ElevationDetailPage extends BaseDetailPage {
+  const ElevationDetailPage({
+    super.key,
+    required super.summaryData,
+    required super.mainScrollNotifier,
+    required super.headerCollapseOffset,
+  });
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      constraints:
-          BoxConstraints(minHeight: MediaQuery.of(context).size.height * 0.8),
-      padding: EdgeInsets.all(16),
-      color: Colors.orange.shade50,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("Elevation Details: ${summaryData.title}",
-              style: Theme.of(context).textTheme.headlineMedium),
-          SizedBox(height: 20),
-          Text("ID: ${summaryData.id}"),
-          SizedBox(height: 20),
-          Text("Content related to elevation and growth... " * 20),
-          SizedBox(height: MediaQuery.of(context).size.height * 0.5),
-          Text("End of elevation content."),
-        ],
+  State<ElevationDetailPage> createState() => _EvaluationDetailPageState();
+}
+
+class _EvaluationDetailPageState
+    extends BaseDetailPageState<ElevationDetailPage> {
+  @override
+  List<Widget> buildScrollableContent(BuildContext context) {
+    return [
+      SliverPadding(
+        padding: const EdgeInsets.all(16.0),
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              return Card(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Elevation Details: ${widget.summaryData.title}",
+                        style: Theme.of(context).textTheme.headlineMedium),
+                    SizedBox(height: 20),
+                    Text("ID: ${widget.summaryData.id}"),
+                    SizedBox(height: 20),
+                    Text("Content related to elevation and growth... " * 20),
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.5),
+                    Text("End of elevation content."),
+                  ],
+                ),
+              );
+            },
+            childCount: 1, // Your desired child count
+          ),
+        ),
       ),
-    );
+      // Add more slivers specific to EvaluationDetailPage here if needed
+    ];
   }
+
+// Optional: Override scroll physics if needed for this specific page
+// @override
+// ScrollPhysics getScrollPhysics() => const AlwaysScrollableScrollPhysics();
 }

@@ -199,6 +199,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               child: ElevationDetailPage(
                 summaryData: summaryData,
                 mainScrollNotifier: _mainScrollControllerNotifier,
+                headerCollapseOffset: _transitionEndScrollOffset,
               ),
             );
           } else {
