@@ -7,10 +7,7 @@ import 'base_detail_page.dart'; // Import the new base class
 
 class ElevationDetailPage extends BaseDetailPage {
   const ElevationDetailPage({
-    super.key,
-    required super.summaryData,
-    required super.mainScrollNotifier,
-    required super.headerCollapseOffset,
+    super.key, required super.articleId,
   });
 
   @override
@@ -19,6 +16,10 @@ class ElevationDetailPage extends BaseDetailPage {
 
 class _EvaluationDetailPageState
     extends BaseDetailPageState<ElevationDetailPage> {
+
+  @override
+  SubSectionMetaData subSectionMetaData = myContentSectionsData[2]; // Fetch or receive this
+
   @override
   List<Widget> buildScrollableContent(BuildContext context) {
     return [
@@ -31,10 +32,10 @@ class _EvaluationDetailPageState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Elevation Details: ${widget.summaryData.title}",
+                    Text("Elevation Details: ${subSectionMetaData.title}",
                         style: Theme.of(context).textTheme.headlineMedium),
                     SizedBox(height: 20),
-                    Text("ID: ${widget.summaryData.id}"),
+                    Text("ID: ${subSectionMetaData.id}"),
                     SizedBox(height: 20),
                     Text("Content related to elevation and growth... " * 20),
                     SizedBox(height: MediaQuery.of(context).size.height * 0.5),

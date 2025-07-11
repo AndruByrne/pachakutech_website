@@ -1,29 +1,27 @@
 import 'package:flutter/material.dart';
-import 'home_content.dart'; // Assuming SummarySectionData is here
-
-// Define a common prefix for Hero tags if not already globally available
-const String heroTag_detail_background_prefix = "detail_background_";
+import 'home_content.dart';
+import 'hero_util.dart';
 
 abstract class BaseDetailPage extends StatefulWidget {
-  final SummarySectionData summaryData;
-  final ValueNotifier<double> mainScrollNotifier;
-  final double headerCollapseOffset;
+  final String articleId;
 
   const BaseDetailPage({
     super.key,
-    required this.summaryData,
-    required this.mainScrollNotifier,
-    required this.headerCollapseOffset,
+    required this.articleId,
   });
 }
 
 abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
   // Optional: Common internal scroll controller if needed by many subclasses
   final ScrollController _internalScrollController = ScrollController();
+  abstract SubSectionMetaData subSectionMetaData; // Fetch or receive this
+  // Potentially a ValueNotifier for its own scroll offset if needed for internal parallax
+  late ValueNotifier<double> _detailPageScrollNotifier;
 
   @override
   void dispose() {
-    // internalScrollController.dispose();
+    _internalScrollController.dispose();
+    _detailPageScrollNotifier.dispose();
     super.dispose();
   }
 
@@ -33,69 +31,72 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
   // Optional: Subclasses might want to customize physics
   ScrollPhysics getScrollPhysics() => const ClampingScrollPhysics();
 
+
+  @override
+  void initState() {
+    super.initState();
+    _detailPageScrollNotifier = ValueNotifier<double>(0.0);
+    _internalScrollController.addListener(() {
+      _detailPageScrollNotifier.value = _internalScrollController.offset;
+    });
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<double>(
-      valueListenable: widget.mainScrollNotifier,
-      builder: (context, mainPageGlobalScrollOffset, child) {
-        // --- Parallax Calculation for Detail Page Background (driven by main page scroll) ---
-        double detailPageEffectiveScroll =
-        (mainPageGlobalScrollOffset - widget.headerCollapseOffset)
-            .clamp(0.0, double.infinity);
-        double parallaxFactor = 0.4; // Common parallax factor
-        double backgroundScrollOffsetForDetailPage =
-            detailPageEffectiveScroll * parallaxFactor;
+    final canPop = Navigator.of(context).canPop();
 
-        // Attempt to get the rendered height of this widget for parallax calculation
-        // Fallback to screen height if RenderBox not available yet (e.g., during first build)
-        final renderBox = context.findRenderObject() as RenderBox?;
-        double detailViewHeight = renderBox?.hasSize == true
-            ? renderBox!.size.height
-            : MediaQuery
-            .of(context)
-            .size
-            .height;
-
-        double parallaxTravel = detailViewHeight * parallaxFactor;
-        // --- End of Parallax Calculation ---
-
-        return Scaffold(
+    return Scaffold(
           // backgroundColor: Colors.transparent, // Consider if all detail pages need this
           body: Stack(
             children: [
               // --- Parallax Background ---
-              Positioned(
-                top: -backgroundScrollOffsetForDetailPage,
-                left: 0,
-                right: 0,
-                // Ensure height is sufficient for the image and its travel
-                height: detailViewHeight + parallaxTravel + 50,
-                // Added buffer
-                child: Hero(
-                  tag: heroTag_detail_background_prefix + widget.summaryData.id,
-                  child: Image.asset(
-                    widget.summaryData.imageAsset,
-                    // Ensure imageAsset is part of SummarySectionData
-                    fit: BoxFit.cover,
-                    alignment: Alignment.topCenter,
+                Positioned.fill(
+                  child: Hero(
+                    tag: heroTag + subSectionMetaData.id,
+                    createRectTween: (Rect? begin, Rect? end) {
+                      print("Destination Hero (${subSectionMetaData.id}): CREATE_RECT_TWEEN");
+                      print("  HERO-PROVIDED Begin Rect: $begin");
+                      print("  HERO-PROVIDED End Rect: $end");
+                      return CenterExpansionRectTween(begin: begin, end: end);
+                    },
+                    child: Image.asset(
+                      subSectionMetaData.imageAsset,
+                      fit: BoxFit.cover,
+                      alignment: Alignment.center,
+                    ),
                   ),
                 ),
-              ),
 
               // --- Scrollable Detail Content (provided by subclass) ---
               // Optional: Add Scrollbar if content is always scrollable
-              Scrollbar(
-                controller: _internalScrollController,
-                child: CustomScrollView(
+                CustomScrollView(
                   controller: _internalScrollController,
                   physics: getScrollPhysics(),
-                  slivers: buildScrollableContent(context),
+                  slivers: [
+                    SliverAppBar(
+                      title: Text(subSectionMetaData.title), // Or your dot logo
+                      leading: canPop ? IconButton(
+                        icon: const Icon(Icons.arrow_back_ios_new), // Or your preferred back icon
+                        onPressed: () => _handleCustomBackNavigation(context),
+                      ) : null,
+                      backgroundColor: Theme.of(context).colorScheme.secondary, // Collapsed header color
+                      pinned: true, // Keeps it visible at the top
+                      // floating: true, // If you want it to reappear quickly on scroll up
+                      // snap: true, // Only with floating: true
+                    ),
+                    ...buildScrollableContent(context),
+                  ],
                 ),
-              ),
             ],
           ),
         );
-      },
-    );
+  }
+  void _handleCustomBackNavigation(BuildContext context) {
+    // For now, just a standard pop. We'll enhance this.
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
   }
 }

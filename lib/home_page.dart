@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'home_content.dart';
-import 'education_content.dart';
-import 'evaluation_content.dart';
-import 'elevation_content.dart';
 import 'package:vector_math/vector_math.dart' show radians;
 import 'dart:ui' show lerpDouble;
 import 'dart:developer' as developer;
+import 'package:go_router/go_router.dart';
 
 class _AnimatedHeaderDelegate extends SliverPersistentHeaderDelegate {
   final double minHeight;
@@ -55,9 +53,7 @@ enum PagePhase {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
+  const MyHomePage({super.key});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -68,8 +64,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   late ValueNotifier<double> _mainScrollControllerNotifier;
 
   bool _isScrollingBack = false;
-  BaseSectionData?
-      _activeDetailData; // This holds the currently selected detail, or null for main list
 
   double _wheelAngle = 0.0;
 
@@ -106,8 +100,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     super.initState();
     _mainScrollController.addListener(_handleScroll);
     _mainScrollControllerNotifier = ValueNotifier<double>(0.0);
-    developer.log("initState: Main scroll listener added",
-        name: "MyHomePageState.Lifecycle");
   }
 
   @override
@@ -158,101 +150,32 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
     _updateHeaderFromScroll(headerRelevantScroll);
   }
+  void _handleBackTap() {
+    // If the header is in a state where tapping it means "go back to top / main view"
+    // With go_router, if we are on MyHomePage ('/'), tapping the logo when scrolled
+    // might mean "scroll to top". If we were on a different page (not the case here
+    // anymore since _activeDetailData is gone), it would mean context.go('/');
+    if (_mainScrollController.offset > 0) {
+      _mainScrollController.animateTo(
+        0.0,
+        duration: const Duration(milliseconds: 500), // Or your preferred duration
+        curve: Curves.easeOutQuart,
+      );
+    } else {
+      developer.log("Logo/Wheels tapped on main list view (already at top).",
+          name: "MyHomePageState.Interaction");
+    }
+  }
 
-  void _handleSummaryCardTap(SummarySectionData summaryData) {
+
+  void _handleSummaryCardTap(SubSectionMetaData summaryData) {
     setState(() {
       developer.log("Card tapped: ${summaryData.title}",
           name: "MyHomePageState.Navigation");
-      _activeDetailData = DetailSectionData(
-        title: "Detail: ${summaryData.title}",
-        originalSummary: summaryData,
-        contentBuilder: (context) {
-          double screenHeight = MediaQuery.of(context).size.height;
-          double availableHeight = screenHeight -
-              _targetHeaderHeightConstant -
-              MediaQuery.of(context)
-                  .padding
-                  .top; // Approximate available height after header
-          if (summaryData.id == "edu") {
-            return SizedBox(
-              height: availableHeight.clamp(0.0, double.infinity),
-              // Ensure non-negative
-              child: EducationDetailPage(
-                summaryData: summaryData,
-                mainScrollNotifier: _mainScrollControllerNotifier,
-              ),
-            );
-          } else if (summaryData.id == "eval") {
-            return SizedBox(
-              height: availableHeight.clamp(0.0, double.infinity),
-              // Ensure non-negative
-              child: EvaluationDetailPage(
-                summaryData: summaryData,
-                mainScrollNotifier: _mainScrollControllerNotifier,
-                headerCollapseOffset: _transitionEndScrollOffset,
-              ),
-            );
-          } else if (summaryData.id == "elev") {
-            return SizedBox(
-              height: availableHeight.clamp(0.0, double.infinity),
-              // Ensure non-negative
-              child: ElevationDetailPage(
-                summaryData: summaryData,
-                mainScrollNotifier: _mainScrollControllerNotifier,
-                headerCollapseOffset: _transitionEndScrollOffset,
-              ),
-            );
-          } else {
-            return Center(
-                child: Text("Details for ${summaryData.title}",
-                    style: TextStyle(fontSize: 24)));
-          }
-        },
-      );
-      // Jump to the header's collapse point
-      if (_mainScrollController.hasClients) {
-        double targetScrollOffset =
-            _fullscreenHeight - _targetHeaderHeightConstant;
-        _mainScrollController.jumpTo(targetScrollOffset.clamp(
-            0.0, _mainScrollController.position.maxScrollExtent));
-        _updateHeaderFromScroll(targetScrollOffset);
-      }
-      developer.log(
-          "Switched to detail view for ${summaryData.title}. Scroll offset: ${_mainScrollController.hasClients ? _mainScrollController.offset : 'N/A'}",
-          name: "MyHomePageState.Navigation");
+
+      String path = '/${summaryData.id}'; // empty articleId
+      context.go(path, extra: summaryData);
     });
-  }
-
-  Future<void> _goBackToMainList() async {
-    if (_isScrollingBack || !_mainScrollController.hasClients) return;
-
-    if (mounted) {
-      setState(() {
-        _isScrollingBack = true; // prevent re-entry into this method
-      });
-    }
-
-    developer.log(
-        "Starting animated scroll back to main list. Current scroll: ${_mainScrollController.hasClients ? _mainScrollController.offset : 'N/A'}",
-        name: "MyHomePageState.Navigation");
-
-    await _mainScrollController.animateTo(
-      0.0,
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeOutQuart,
-    );
-
-    // After animation completes and header is visually at the top:
-    if (mounted) {
-      setState(() {
-        _activeDetailData = null; // NOW swap the content
-        _isScrollingBack = false; // Reset the flag
-      });
-      // One final explicit call to ensure the header is perfectly synchronized
-      // with the 0.0 scroll offset, especially if the last scroll event didn't coincide
-      // perfectly or if no further scroll events fire after animation completion at 0.0.
-      _updateHeaderFromScroll(0.0);
-    }
   }
 
   void _updateHeaderFromScroll(double headerScrollAmount) {
@@ -337,20 +260,14 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     // MODIFIED: Wrap dotLogo with GestureDetector
     Widget dotLogo = GestureDetector(
       // Wrap with GestureDetector
-      onTap: () {
-        if (_activeDetailData != null) {
-          _goBackToMainList();
-        } else {
-          developer.log("Dot logo tapped on main list view.",
-              name: "MyHomePageState.Interaction");
-        }
-      },
+      onTap: ()  => _handleBackTap,
       child: SizedBox(
         width: _dotLogoFixedDiameter * (1 + lastHalfTurnLerp / 2),
         height: _dotLogoFixedDiameter * (1 + lastHalfTurnLerp / 2),
         child: Image.asset('assets/pachakutech_dot_logo_alpha.png'),
       ),
     );
+
 
     Widget rawDynamicRotatingWheels = Stack(
       alignment: Alignment.center,
@@ -398,14 +315,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: () {
-              if (_activeDetailData != null) {
-                _goBackToMainList();
-              } else {
-                developer.log("Rotating wheels tapped on main list view.",
-                    name: "MyHomePageState.Interaction");
-              }
-            },
+            onTap: () => _handleBackTap,
             customBorder: CircleBorder(),
             splashColor: Theme.of(context).splashColor.withValues(alpha: 0.3),
             highlightColor:
@@ -472,105 +382,26 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       ),
     );
 
-    Widget contentSliver;
-    if (_activeDetailData != null && _activeDetailData is DetailSectionData) {
-      DetailSectionData detailData = _activeDetailData as DetailSectionData;
-      contentSliver = SliverToBoxAdapter(
-        child: detailData.contentBuilder(context),
-      );
-    } else {
-      contentSliver = SliverList(
+    Widget contentSliver = SliverList(
         delegate: mainContentBuilder(
           _getScreenSize().height * 0.7,
           _handleSummaryCardTap,
         ),
       );
-    }
 
-    return PopScope(
-      canPop: _activeDetailData == null,
-      onPopInvokedWithResult: (bool didPop, void result) async {
-        if (didPop) {
-          return;
-        }
-        if (_activeDetailData != null) {
-          await _goBackToMainList();
-        }
-      },
-      child: Scaffold(
-        body: Stack(
-          children: <Widget>[
-            if (_activeDetailData == null) mainPageParallaxBackground,
-            Scaffold(
-              backgroundColor: _activeDetailData == null
-                  ? Colors.transparent
-                  : Theme.of(context).colorScheme.surface,
-              body: NotificationListener<ScrollNotification>(
-                onNotification: (ScrollNotification notification) {
-                  if (_activeDetailData == null) {
-                    return false; // Don't handle, let it bubble
-                  }
-                  // Get the current scroll offset of the main page
-                  final double currentMainScrollOffset = _mainScrollController.offset;
-                  final bool headerIsCollapsingOrExpanding = currentMainScrollOffset < _transitionEndScrollOffset;
-                  final bool headerIsStrictlyCollapsingOrExpanding = currentMainScrollOffset > 0 && currentMainScrollOffset < _transitionEndScrollOffset;
-
-                  // Scenario: User is trying to scroll UP from inner list, and it overscrolls.
-                  // This should ALWAYS try to expand the main header.
-                  if (notification is OverscrollNotification &&
-                      notification.metrics.axis == Axis.vertical &&
-                      notification.overscroll < 0) { // Negative overscroll = pulling up
-                    // Check if the inner scroll view is actually at its top.
-                    // We assume an overscroll up means it is.
-                    if (_mainScrollController.hasClients) {
-                      _mainScrollController.jumpTo(
-                          (_mainScrollController.offset + notification.overscroll).clamp(0.0, _mainScrollController.position.maxScrollExtent)
-                      );
-                      developer.log("Overscroll UP from inner, driving main to expand. Consumed.", name: "ScrollLogic");
-                      return true; // Consume the overscroll as we've handled its effect on the main scroll.
-                    }
-                  }
-
-                  // Scenario: User is trying to scroll DOWN.
-                  if (notification is ScrollUpdateNotification &&
-                      notification.metrics.axis == Axis.vertical &&
-                      notification.scrollDelta != null &&
-                      notification.scrollDelta! > 0) { // Positive scrollDelta = trying to scroll DOWN
-
-                    // If the header is in the process of collapsing (or is partially expanded)
-                    // AND this scroll update is coming from the inner scroll view.
-                    // The key insight: if the main header *should* be reacting (i.e. it's not fully collapsed),
-                    // then it should take precedence for downward scrolls to finish collapsing.
-                    if (headerIsCollapsingOrExpanding && currentMainScrollOffset < (_transitionEndScrollOffset - 0.1) /* Add small tolerance */ ) {
-                      // If the notification depth is > 0, it's from a nested Scrollable.
-                      // Scrollable itself is depth 0. A CustomScrollView inside it would be depth 1.
-                      if (notification.depth > 0) {
-                        developer.log("Downward scroll from INNER while main header not fully collapsed. Forcing main scroll. Consumed.", name: "ScrollLogic");
-                        if (_mainScrollController.hasClients) {
-                          _mainScrollController.jumpTo(
-                              (_mainScrollController.offset + notification.scrollDelta!).clamp(0.0, _mainScrollController.position.maxScrollExtent)
-                          );
-                        }
-                        return true; // Consume this scroll, main controller has handled it.
-                      }
-                    }
-                  }
-
-                  return false; // Let other notifications pass through.
-                },
-                child: CustomScrollView(
-                  controller: _mainScrollController,
-                  physics: const BouncingScrollPhysics(),
-                  slivers: <Widget>[
-                    headerSliver,
-                    contentSliver,
-                    // contentSliver is now correctly built using mainContentBuilder
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+    return Scaffold( // Main Scaffold for MyHomePage
+      body: Stack(
+        children: <Widget>[
+          mainPageParallaxBackground, // Always show for MyHomePage
+          CustomScrollView(
+            controller: _mainScrollController,
+            physics: const BouncingScrollPhysics(),
+            slivers: <Widget>[
+              headerSliver,
+              contentSliver,
+            ],
+          ),
+        ],
       ),
     );
   }

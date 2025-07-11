@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 import 'dart:developer' as developer;
+import 'hero_util.dart';
 
-final String heroTag = "detail_background_image_";
-
-typedef OnCardTap = void Function(SummarySectionData summaryData);
+typedef OnCardTap = void Function(SubSectionMetaData summaryData);
 
 SliverChildBuilderDelegate mainContentBuilder(
         double sectionHeight, OnCardTap onCardTap) =>
@@ -12,7 +11,7 @@ SliverChildBuilderDelegate mainContentBuilder(
       (BuildContext context, int index) {
         final itemIndex = index ~/ 2;
         final bool isConsultingCard =
-            itemIndex == _myContentSectionsData.length;
+            itemIndex == myContentSectionsData.length;
 
         // Determine textAlign for CardTitle based on titleAlignment for the card
         // Assuming titleAlignment.x < 0 is left, titleAlignment.x > 0 is right, else center
@@ -37,7 +36,7 @@ SliverChildBuilderDelegate mainContentBuilder(
         }
 
         if (index.isOdd) {
-          if (itemIndex > _myContentSectionsData.length) return null;
+          if (itemIndex > myContentSectionsData.length) return null;
 
           if (isConsultingCard) {
             final consultingTitleWidget = CardTitle(
@@ -51,7 +50,7 @@ SliverChildBuilderDelegate mainContentBuilder(
             );
           }
 
-          final summaryData = _myContentSectionsData[itemIndex];
+          final summaryData = myContentSectionsData[itemIndex];
           final contentTitleWidget = CardTitle(
             text: summaryData.title,
             textAlign: titleTextAlign,
@@ -70,7 +69,7 @@ SliverChildBuilderDelegate mainContentBuilder(
           return SizedBox(height: kToolbarHeight);
         }
       },
-      childCount: ((_myContentSectionsData.length + 1) * 2),
+      childCount: ((myContentSectionsData.length + 1) * 2),
     );
 
 class PeriodicGradientPainter extends CustomPainter {
@@ -289,6 +288,7 @@ class ContentSectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print("Source Hero ($id) USING TAG: '${heroTag + id}'"); // Log it
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -413,11 +413,11 @@ abstract class BaseSectionData {
   BaseSectionData({required this.title});
 }
 
-class SummarySectionData extends BaseSectionData {
+class SubSectionMetaData extends BaseSectionData {
   final String imageAsset;
   final String id;
 
-  SummarySectionData({
+  SubSectionMetaData({
     required String title,
     required this.imageAsset,
     required this.id,
@@ -428,7 +428,7 @@ typedef DetailWidgetBuilder = Widget Function(BuildContext context);
 
 class DetailSectionData extends BaseSectionData {
   final DetailWidgetBuilder contentBuilder;
-  final SummarySectionData
+  final SubSectionMetaData
       originalSummary; // Keep a reference to what was clicked
 
   DetailSectionData({
@@ -438,14 +438,14 @@ class DetailSectionData extends BaseSectionData {
   }) : super(title: title);
 }
 
-final List<SummarySectionData> _myContentSectionsData = [
-  SummarySectionData(
+final List<SubSectionMetaData> myContentSectionsData = [
+  SubSectionMetaData(
       id: 'edu', title: "Education", imageAsset: "assets/education.jpg"),
-  SummarySectionData(
+  SubSectionMetaData(
       id: 'eval',
       title: "Evaluation & Exploration",
       imageAsset: "assets/exploration.jpg"),
-  SummarySectionData(
+  SubSectionMetaData(
       id: 'elev', title: "Elevation", imageAsset: "assets/elevation.jpg"),
   // Add more sections as needed
 ];

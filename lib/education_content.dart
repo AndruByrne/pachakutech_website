@@ -1,37 +1,58 @@
 import 'package:flutter/material.dart';
+import 'package:pachakutech_website/base_detail_page.dart';
 import 'home_content.dart';
 
-class EducationDetailPage extends StatelessWidget {
-  final SummarySectionData summaryData;
-  final ValueNotifier<double> mainScrollNotifier;
+class EducationDetailPage extends BaseDetailPage {
 
-  const EducationDetailPage(
-      {Key? key, required this.summaryData, required this.mainScrollNotifier})
-      : super(key: key);
+  const EducationDetailPage({Key? super.key, required super.articleId});
+
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      // Give it some min height to see scrolling behavior if content is short
-      constraints:
-          BoxConstraints(minHeight: MediaQuery.of(context).size.height * 0.8),
-      padding: EdgeInsets.all(16),
-      color: Colors.blue.shade50,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("Education Details: ${summaryData.title}",
-              style: Theme.of(context).textTheme.headlineMedium),
-          SizedBox(height: 20),
-          Text("ID: ${summaryData.id}"),
-          SizedBox(height: 20),
-          Text("Here is some more detailed content about education... " * 20),
-          // To make it scrollable
-          SizedBox(height: MediaQuery.of(context).size.height * 0.5),
-          // Extra space
-          Text("End of education content."),
-        ],
+  State<StatefulWidget> createState() => _EducationDetailPageState();
+}
+
+
+class _EducationDetailPageState
+    extends BaseDetailPageState<EducationDetailPage> {
+
+  @override
+  SubSectionMetaData subSectionMetaData = myContentSectionsData[0]; // Fetch or receive this
+
+  @override
+  List<Widget> buildScrollableContent(BuildContext context) {
+    return [
+      SliverPadding(
+        padding: const EdgeInsets.all(16.0),
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate(
+                (context, index) {
+              return Card(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Elevation Details: ${subSectionMetaData.title}",
+                        style: Theme
+                            .of(context)
+                            .textTheme
+                            .headlineMedium),
+                    SizedBox(height: 20),
+                    Text("ID: ${subSectionMetaData.id}"),
+                    SizedBox(height: 20),
+                    Text("Content related to elevation and growth... " * 20),
+                    SizedBox(height: MediaQuery
+                        .of(context)
+                        .size
+                        .height * 0.5),
+                    Text("End of elevation content."),
+                  ],
+                ),
+              );
+            },
+            childCount: 1, // Your desired child count
+          ),
+        ),
       ),
-    );
+      // Add more slivers specific to EvaluationDetailPage here if needed
+    ];
   }
 }

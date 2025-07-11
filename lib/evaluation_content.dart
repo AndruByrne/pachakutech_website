@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'base_detail_page.dart'; // Import the new base class
+import 'base_detail_page.dart';
+import 'home_content.dart';
 
 class EvaluationDetailPage extends BaseDetailPage {
   const EvaluationDetailPage({
     super.key,
-    required super.summaryData,
-    required super.mainScrollNotifier,
-    required super.headerCollapseOffset,
+    required super.articleId,
   });
 
   @override
@@ -15,6 +14,10 @@ class EvaluationDetailPage extends BaseDetailPage {
 
 class _EvaluationDetailPageState
     extends BaseDetailPageState<EvaluationDetailPage> {
+
+  @override
+  SubSectionMetaData subSectionMetaData = myContentSectionsData[1]; // Fetch or receive this
+
   @override
   List<Widget> buildScrollableContent(BuildContext context) {
     return [
@@ -26,7 +29,7 @@ class _EvaluationDetailPageState
               return Card(
                 child: ListTile(
                   title: Text(
-                      "Detail Item ${index + 1} for ${widget.summaryData.title}"),
+                      "Detail Item ${index + 1} for ${subSectionMetaData.title}"),
                 ),
               );
             },
