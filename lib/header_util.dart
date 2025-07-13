@@ -104,11 +104,14 @@ Widget buildAnimatedHeaderContent({
     wheelsWidget = Material(
       // For InkWell ripple effect
       color: Colors.transparent,
-      child: InkWell(
-        onTap: onWheelsTap,
-        customBorder: const CircleBorder(), // If wheels area is circular
-        child: wheelsWidget,
-      ),
+      child: params.wheelAngle1 == AppHeaderLogic.MAX_EFFECTIVE_WHEEL_ANGLE
+          ? InkWell(
+              // todo: remove unless in collapsed or near it
+              onTap: onWheelsTap,
+              customBorder: const CircleBorder(), // If wheels area is circular
+              child: wheelsWidget,
+            )
+          : wheelsWidget,
     );
   }
 
@@ -224,7 +227,7 @@ Widget globalFlightShuttleBuilder({
 class AppHeaderMetrics {
   // --- Core Heights ---
   static double getFullscreenHeaderHeight(BuildContext context) =>
-      MediaQuery.of(context).size.height * 0.9;
+      MediaQuery.of(context).size.height * 0.95;
 
   static double getCollapsedHeaderHeight(BuildContext context) =>
       kToolbarHeight + MediaQuery.of(context).padding.top;
@@ -247,10 +250,11 @@ class AppHeaderMetrics {
       getCollapsedHeaderHeight(context) * 0.8;
 
   static double getBaseDotLogoDiameter(BuildContext context) =>
-      getFullscreenWheelDiameter(context) * 0.5; // Based on fullscreen wheel
+      getFullscreenWheelDiameter(context) * 0.8; // Based on fullscreen wheel
 
   static double getCollapsedLogoDiameter(BuildContext context) =>
-      getCollapsedHeaderHeight(context) * 0.8;
+      getFullscreenWheelDiameter(context) *
+      0.6; // TODO: base the logo size on height, not width!
 
   // --- Alignments ---
   static Alignment getFullscreenWheelAlignment() => Alignment.center;
@@ -320,23 +324,15 @@ class AppHeaderLogic {
       overallTransitionProgress = 1.0;
     }
 
-    // --- Calculate rotation progress specifically for wheel angle effects ---
-    double rotationProgressRatio = 0.0;
-    if (rotationEndScrollOffset > 0) {
-      rotationProgressRatio =
-          (headerEffectiveShrinkOffset / rotationEndScrollOffset)
-              .clamp(0.0, 1.0);
-    } else if (headerEffectiveShrinkOffset > 0) {
-      // If no distance, but scrolled, consider it 100%
-      rotationProgressRatio = 1.0;
-    }
-
-    double effectiveWheelAngle =
-        rotationProgressRatio * MAX_EFFECTIVE_WHEEL_ANGLE;
-
     // Get baseline visual params for fullscreen and collapsed states
     final fsParams = AppHeaderMetrics.getFullscreenHeaderVisualParams(context);
     final colParams = AppHeaderMetrics.getCollapsedHeaderVisualParams(context);
+
+    // --- Wheel Angles ---
+    double currentWheelAngle1 = lerpDouble(fsParams.wheelAngle1,
+        colParams.wheelAngle1, overallTransitionProgress)!;
+    double currentWheelAngle2 = lerpDouble(fsParams.wheelAngle2,
+        colParams.wheelAngle2, overallTransitionProgress)!;
 
     // --- Lerp general properties using overallTransitionProgress ---
     double currentWheelDiameter = lerpDouble(fsParams.wheelDiameter,
@@ -344,24 +340,19 @@ class AppHeaderLogic {
     Alignment currentWheelAlignment = Alignment.lerp(fsParams.wheelAlignment,
         colParams.wheelAlignment, overallTransitionProgress)!;
 
-    // Lerp base dot logo diameter
-    double currentBaseDotLogoDiameter = lerpDouble(fsParams.dotLogoDiameter,
-        colParams.dotLogoDiameter, overallTransitionProgress)!;
-
-    // --- Calculate pulsation and color transitions based on effectiveWheelAngle and lastHalfTurnLerp ---
     double lastHalfTurnLerp = 0.0;
-    if (effectiveWheelAngle >= MAX_EFFECTIVE_WHEEL_ANGLE) {
+    if (currentWheelAngle1 >= MAX_EFFECTIVE_WHEEL_ANGLE) {
       lastHalfTurnLerp = 1.0;
-    } else if (effectiveWheelAngle > LAST_HALF_TURN_START_ANGLE) {
-      lastHalfTurnLerp = ((effectiveWheelAngle - LAST_HALF_TURN_START_ANGLE) /
+    } else if (currentWheelAngle1 > LAST_HALF_TURN_START_ANGLE) {
+      lastHalfTurnLerp = ((currentWheelAngle1 - LAST_HALF_TURN_START_ANGLE) /
               LAST_HALF_TURN_DURATION)
           .clamp(0.0, 1.0);
     }
     // else it remains 0.0 if effectiveWheelAngle <= LAST_HALF_TURN_START_ANGLE
 
-    // Final dot logo diameter with pulsation
-    double finalDotLogoDiameter = currentBaseDotLogoDiameter *
-        (1 + lastHalfTurnLerp / 2.0); // Pulse factor
+    // Lerp base dot logo diameter
+    double currentBaseDotLogoDiameter = lerpDouble(
+        fsParams.dotLogoDiameter, colParams.dotLogoDiameter, lastHalfTurnLerp)!;
 
     // Colors: Lerp based on lastHalfTurnLerp for the color switch effect
     Color wheel1Color = Color.lerp(
@@ -371,36 +362,26 @@ class AppHeaderLogic {
     Color backgroundColor = Color.lerp(
         fsParams.backgroundColor, colParams.backgroundColor, lastHalfTurnLerp)!;
 
-    // --- Wheel Angles ---
-    double currentWheelAngle1 = lerpDouble(fsParams.wheelAngle1, colParams.wheelAngle1,overallTransitionProgress)!;
-    // wheelAngle2 should lerp from its defined fullscreen state to its defined collapsed state
-    // using the overallTransitionProgress, as its rotation isn't necessarily tied to the lastHalfTurnLerp
-    // in the same way colors are, OR it can be relative to wheelAngle1 if that's the design.
-    // Let's stick to the previous refinement for independent lerp for wheelAngle2:
-    double currentWheelAngle2 = lerpDouble(fsParams.wheelAngle2,
-        colParams.wheelAngle2, overallTransitionProgress)!;
-
     // Debugging for scrollOffset = 0 (or any specific value of interest)
     if (scrollOffset < 1.0 && scrollOffset >= 0) {
       // Check for effectively zero
       print("AppHeaderLogic (scrollOffset~0):");
       print("  headerEffectiveShrinkOffset: $headerEffectiveShrinkOffset");
       print("  overallTransitionProgress: $overallTransitionProgress");
-      print("  rotationProgressRatio: $rotationProgressRatio");
-      print("  effectiveWheelAngle: $effectiveWheelAngle");
+      print("  currentWheelAngle1: $currentWheelAngle1");
       print("  lastHalfTurnLerp: $lastHalfTurnLerp");
       print(
           "  fsParams: wheel1Color=${fsParams.wheel1Color}, bgColor=${fsParams.backgroundColor}, logoDia=${fsParams.dotLogoDiameter}");
       print(
           "  colParams: wheel1Color=${colParams.wheel1Color}, bgColor=${colParams.backgroundColor}, logoDia=${colParams.dotLogoDiameter}");
       print(
-          "  Calculated: wheel1Color=$wheel1Color, bgColor=$backgroundColor, finalLogoDia=$finalDotLogoDiameter, angle1=$currentWheelAngle1, angle2=$currentWheelAngle2");
+          "  Calculated: wheel1Color=$wheel1Color, bgColor=$backgroundColor, finalLogoDia=$currentBaseDotLogoDiameter, angle1=$currentWheelAngle1, angle2=$currentWheelAngle2");
     }
 
     return HeaderVisualParams(
       wheelDiameter: currentWheelDiameter,
       wheelAlignment: currentWheelAlignment,
-      dotLogoDiameter: finalDotLogoDiameter,
+      dotLogoDiameter: currentBaseDotLogoDiameter,
       wheelAngle1: currentWheelAngle1,
       wheelAngle2: currentWheelAngle2,
       wheel1Color: wheel1Color,
