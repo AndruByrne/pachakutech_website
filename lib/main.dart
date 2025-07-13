@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:pachakutech_website/home_content.dart';
 
 import 'car_crush_privacy_policy_page.dart';
 import 'home_page.dart';
-import 'home_content.dart';
 import 'education_content.dart';
 import 'evaluation_content.dart';
 import 'elevation_content.dart';
@@ -34,41 +34,77 @@ class MyApp extends StatelessWidget {
 final _router = GoRouter(routes: [
   GoRoute(
     path: '/edu', // Or /edu/:slug
-    builder: (context, state) {
-      return EducationDetailPage(articleId: 'top');
+    pageBuilder: (context, state) {
+      final params = state.extra as Map<String, dynamic>?;
+      final scrollOffset = params?['scrollOffset'] ?? 0.0;
+      Widget pageWidget = EducationDetailPage(
+        articleId: 'top',
+        homePageScrollOffset: scrollOffset,
+      );
+      return fadeTransitionOf(state, pageWidget);
     },
   ),
   GoRoute(
-    path: '/edu/:id', // Or /edu/:slug
-    builder: (context, state) {
-      final id = state.pathParameters['id']!; // Or 'slug'
-      return EducationDetailPage(articleId: id);
+    path: '/edu/:article', // Or /edu/:slug
+    pageBuilder: (context, state) {
+      final id = state.pathParameters['article']!;
+      final params = state.extra as Map<String, dynamic>?;
+      final scrollOffset = params?['scrollOffset'] ?? 0.0;
+      Widget detailPageWidget = EvaluationDetailPage(
+        articleId: id,
+        homePageScrollOffset: scrollOffset,
+      );
+      return fadeTransitionOf(state, detailPageWidget);
     },
   ),
   GoRoute(
     path: '/eval',
-    builder: (context, state) {
-      return EvaluationDetailPage(articleId: 'top');
+    pageBuilder: (context, state) {
+      final params = state.extra as Map<String, dynamic>?;
+      final scrollOffset = params?['scrollOffset'] ?? 0.0;
+      Widget pageWidget = EvaluationDetailPage(
+        articleId: 'top',
+        homePageScrollOffset: scrollOffset,
+      );
+      return fadeTransitionOf(state, pageWidget);
     },
   ),
   GoRoute(
-    path: '/eval/:id',
-    builder: (context, state) {
-      final id = state.pathParameters['id']!;
-      return EvaluationDetailPage(articleId: id);
+    path: '/eval/:article',
+    pageBuilder: (context, state) {
+      final id = state.pathParameters['article']!;
+      final params = state.extra as Map<String, dynamic>?;
+      final scrollOffset = params?['scrollOffset'] ?? 0.0;
+      Widget detailPageWidget = EvaluationDetailPage(
+        articleId: id,
+        homePageScrollOffset: scrollOffset,
+      );
+      return fadeTransitionOf(state, detailPageWidget);
     },
   ),
   GoRoute(
     path: '/elev',
-    builder: (context, state) {
-      return ElevationDetailPage(articleId: 'top');
+    pageBuilder: (context, state) {
+      final params = state.extra as Map<String, dynamic>?;
+      final scrollOffset = params?['scrollOffset'] ?? 0.0;
+      Widget detailPageWidget = ElevationDetailPage(
+        articleId: 'top',
+        homePageScrollOffset: scrollOffset,
+      );
+      return fadeTransitionOf(state, detailPageWidget);
     },
   ),
   GoRoute(
-    path: '/elev/:id',
-    builder: (context, state) {
-      final id = state.pathParameters['id']!;
-      return ElevationDetailPage(articleId: id);
+    path: '/elev/:article',
+    pageBuilder: (context, state) {
+      final id = state.pathParameters['article']!;
+      final params = state.extra as Map<String, dynamic>?;
+      final scrollOffset = params?['scrollOffset'] ?? 0.0;
+      Widget detailPageWidget = ElevationDetailPage(
+        articleId: id,
+        homePageScrollOffset: scrollOffset,
+      );
+      return fadeTransitionOf(state, detailPageWidget);
     },
   ),
   GoRoute(
@@ -79,3 +115,23 @@ final _router = GoRouter(routes: [
       path: '/car_crush_privacy_policy',
       builder: (context, state) => const CarCrushPrivacyPolicyPage())
 ]);
+
+CustomTransitionPage<void> fadeTransitionOf(
+    GoRouterState state, Widget pageWidget) {
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    child: pageWidget,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      // Use a FadeTransition or any other transition you prefer
+      // The Hero animation will happen on top of/concurrently with this.
+      return FadeTransition(
+        opacity: animation,
+        //animation.drive(CurveTween(curve: Curves.easeInOut)),
+        child: child,
+      );
+    },
+    transitionDuration:
+        const Duration(milliseconds: 300), // Match Hero duration or adjust
+    // reverseTransitionDuration: const Duration(milliseconds: 300), // For pop
+  );
+}

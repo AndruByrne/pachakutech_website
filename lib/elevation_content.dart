@@ -7,7 +7,7 @@ import 'base_detail_page.dart'; // Import the new base class
 
 class ElevationDetailPage extends BaseDetailPage {
   const ElevationDetailPage({
-    super.key, required super.articleId,
+    super.key, required super.articleId, required super.homePageScrollOffset,
   });
 
   @override

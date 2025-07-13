@@ -5,7 +5,7 @@ import 'home_content.dart';
 class EvaluationDetailPage extends BaseDetailPage {
   const EvaluationDetailPage({
     super.key,
-    required super.articleId,
+    required super.articleId, required super.homePageScrollOffset,
   });
 
   @override

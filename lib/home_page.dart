@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:pachakutech_website/header_util.dart';
 import 'home_content.dart';
 import 'package:vector_math/vector_math.dart' show radians;
 import 'dart:ui' show lerpDouble;
 import 'dart:developer' as developer;
 import 'package:go_router/go_router.dart';
+import 'hero_util.dart';
+import 'header_util.dart';
 
 class _AnimatedHeaderDelegate extends SliverPersistentHeaderDelegate {
   final double minHeight;
@@ -45,13 +48,6 @@ class _AnimatedHeaderDelegate extends SliverPersistentHeaderDelegate {
   }
 }
 
-enum PagePhase {
-  fullscreenRotating,
-  transitioningToHeader,
-  contentScrolling,
-  transitioningToFullscreen,
-}
-
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
 
@@ -63,38 +59,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   final ScrollController _mainScrollController = ScrollController();
   late ValueNotifier<double> _mainScrollControllerNotifier;
 
-  bool _isScrollingBack = false;
-
-  double _wheelAngle = 0.0;
-
-  // Define scroll offset points where behavior changes *within the CustomScrollView's content*
-  // These are not pixel heights of the header itself initially, but scroll distances.
-  double _rotationEndScrollOffset = 0.0;
-  double _transitionEndScrollOffset =
-      0.0; // Point where header is fully collapsed and content is primary
-
-  // Visual properties of the wheels/header, derived from scroll offset
-  double _currentWheelDiameter = 0;
-  Alignment _currentWheelAlignment = Alignment.center;
-  double _currentHeaderVisualHeight =
-      0; // The visual height of the header content area
-  // (from fullscreen down to targetHeaderHeight)
-
-  // Target heights
-  double _fullscreenHeight = 0;
-  double _targetHeaderHeightConstant = 0; // The final small header height
-
-  // Diameters for interpolation
-  double _fullscreenWheelDiameter = 0;
-  double _headerWheelDiameter = 0;
-  double _dotLogoFixedDiameter = 0;
-
-  // Alignments for interpolation
-  final Alignment _fullscreenWheelAlignment = Alignment.center;
-  final Alignment _headerWheelAlignment = const Alignment(-0.85, 0.0);
-
-  Size _getScreenSize() => MediaQuery.of(context).size;
-
   @override
   void initState() {
     super.initState();
@@ -105,21 +69,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final screenSize = _getScreenSize();
-    _fullscreenHeight = screenSize.height;
-    _targetHeaderHeightConstant =
-        screenSize.height * 0.18; // Example: 10% of screen height
-
-    _rotationEndScrollOffset =
-        _fullscreenHeight * 0.5; // Rotate over first 50% of header collapse
-    _transitionEndScrollOffset = _fullscreenHeight -
-        _targetHeaderHeightConstant; // Full collapse distance
-
-    _fullscreenWheelDiameter = _fullscreenHeight * 0.9;
-    _headerWheelDiameter = _targetHeaderHeightConstant * 0.8;
-    // _dotLogoFixedDiameter = _fullscreenWheelDiameter * 0.5 ;
-    _dotLogoFixedDiameter = _fullscreenWheelDiameter * 0.5;
-
     // Initialize visual properties based on scroll position (or 0 if not available yet)
     double initialScrollOffset = 0.0;
     if (_mainScrollController.hasClients &&
@@ -127,29 +76,23 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       initialScrollOffset = _mainScrollController.offset;
     }
 
-    _mainScrollControllerNotifier.value =
-        initialScrollOffset; // Set initial notifier value
+    _mainScrollControllerNotifier.value = initialScrollOffset;
 
-    _updateHeaderFromScroll(initialScrollOffset.clamp(
-        0.0, _fullscreenHeight - _targetHeaderHeightConstant));
+    _handleScroll();
   }
 
   void _handleScroll() {
     if (!_mainScrollController.hasClients ||
         !_mainScrollController.position.haveDimensions) {
-      // If scroll controller is not ready, don't try to use its offset
       return;
     }
     double currentGlobalScrollOffset = _mainScrollController.offset;
-
-    _mainScrollControllerNotifier.value =
-        currentGlobalScrollOffset; // Update notifier
-
-    double headerRelevantScroll = currentGlobalScrollOffset.clamp(
-        0.0, _fullscreenHeight - _targetHeaderHeightConstant);
-
-    _updateHeaderFromScroll(headerRelevantScroll);
+    _mainScrollControllerNotifier.value = currentGlobalScrollOffset;
+    if (mounted) {
+      setState(() {});
+    }
   }
+
   void _handleBackTap() {
     // If the header is in a state where tapping it means "go back to top / main view"
     // With go_router, if we are on MyHomePage ('/'), tapping the logo when scrolled
@@ -158,7 +101,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     if (_mainScrollController.offset > 0) {
       _mainScrollController.animateTo(
         0.0,
-        duration: const Duration(milliseconds: 500), // Or your preferred duration
+        duration: const Duration(milliseconds: 500),
+        // Or your preferred duration
         curve: Curves.easeOutQuart,
       );
     } else {
@@ -167,75 +111,30 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     }
   }
 
-
-  void _handleSummaryCardTap(SubSectionMetaData summaryData) {
+  void _handleSubsectionCardTap(SubSectionMetaData subsectionMetadata) {
     setState(() {
-      developer.log("Card tapped: ${summaryData.title}",
+      final double currentScrollOffset = _mainScrollController.offset;
+
+      developer.log(
+          "Card tapped: ${subsectionMetadata.title}. Passing scrollOffset: $currentScrollOffset",
           name: "MyHomePageState.Navigation");
 
-      String path = '/${summaryData.id}'; // empty articleId
-      context.go(path, extra: summaryData);
+      String path = '/${subsectionMetadata.id}';
+      context.push(path, extra: {
+        'scrollOffset': currentScrollOffset,
+        // Pass only the scroll offset
+      });
     });
   }
 
-  void _updateHeaderFromScroll(double headerScrollAmount) {
-    // headerScrollAmount is effectively the `shrinkOffset` for the header behavior.
-    // It goes from 0 (fully expanded header) to `_transitionEndScrollOffset` (fully collapsed header).
-
-    double newWheelAngle;
-    double rotationProgressRatio = (_rotationEndScrollOffset == 0)
-        ? 1.0
-        : (headerScrollAmount / _rotationEndScrollOffset);
-    newWheelAngle = rotationProgressRatio * 360.0;
-
-    // Transition Progress (for header content: wheel size, alignment, and header visual bg)
-    // This progress is for how much the header *content* has transitioned.
-    // It should go from 0 (fullscreen appearance) to 1 (shrunken header appearance).
-    // The transition happens over the entire collapse of the header,
-    // from headerScrollAmount = 0 to headerScrollAmount = _transitionEndScrollOffset.
-    double transitionProgress = 0.0;
-    if (_transitionEndScrollOffset > 0) {
-      transitionProgress =
-          (headerScrollAmount / _transitionEndScrollOffset).clamp(0.0, 1.0);
-    } else if (headerScrollAmount >= _transitionEndScrollOffset) {
-      // Should only happen if _transitionEndScrollOffset is 0
-      transitionProgress = 1.0;
+  HeaderVisualParams get currentHeaderVisualParams {
+    double currentScroll = 0.0;
+    if (_mainScrollController.hasClients &&
+        _mainScrollController.position.haveDimensions) {
+      currentScroll = _mainScrollController.offset;
     }
-
-    // Wheel Diameter and Alignment based on transitionProgress
-    double newWheelDiameter = lerpDouble(
-        _fullscreenWheelDiameter, _headerWheelDiameter, transitionProgress)!;
-    Alignment newWheelAlignment = Alignment.lerp(
-        _fullscreenWheelAlignment, _headerWheelAlignment, transitionProgress)!;
-
-    // Header Visual Height (for background, etc., if different from Sliver's extent)
-    // This is how tall the *content area* of the header appears to be.
-    // The SliverPersistentHeader itself will manage its actual extent from _fullscreenHeight down to _targetHeaderHeightConstant.
-    // This `_currentHeaderVisualHeight` is for the container *inside* the sliver, if needed.
-    double newHeaderVisualHeight = lerpDouble(
-        _fullscreenHeight, _targetHeaderHeightConstant, transitionProgress)!;
-
-    bool needsSetState = false;
-    if (newWheelAngle != _wheelAngle) {
-      _wheelAngle = newWheelAngle;
-      needsSetState = true;
-    }
-    if (newWheelDiameter != _currentWheelDiameter) {
-      _currentWheelDiameter = newWheelDiameter;
-      needsSetState = true;
-    }
-    if (newWheelAlignment != _currentWheelAlignment) {
-      _currentWheelAlignment = newWheelAlignment;
-      needsSetState = true;
-    }
-    if (newHeaderVisualHeight != _currentHeaderVisualHeight) {
-      _currentHeaderVisualHeight = newHeaderVisualHeight;
-      needsSetState = true;
-    }
-
-    if (needsSetState) {
-      setState(() {});
-    }
+    return AppHeaderLogic.getDynamicHeaderVisualParams(
+        context: context, scrollOffset: currentScroll);
   }
 
   @override
@@ -244,102 +143,71 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     _mainScrollControllerNotifier.dispose();
     _mainScrollController.dispose();
     super.dispose();
-    developer.log(
-        "dispose: Main scroll listener removed and controller disposed",
-        name: "MyHomePageState.Lifecycle");
   }
 
   @override
   Widget build(BuildContext context) {
-    var lastHalfTurnLerp = _wheelAngle > 584
-        ? 1.0
-        : _wheelAngle < 404
-            ? 0.0
-            : (_wheelAngle - 404) / 180;
 
-    // MODIFIED: Wrap dotLogo with GestureDetector
-    Widget dotLogo = GestureDetector(
-      // Wrap with GestureDetector
-      onTap: ()  => _handleBackTap,
-      child: SizedBox(
-        width: _dotLogoFixedDiameter * (1 + lastHalfTurnLerp / 2),
-        height: _dotLogoFixedDiameter * (1 + lastHalfTurnLerp / 2),
-        child: Image.asset('assets/pachakutech_dot_logo_alpha.png'),
-      ),
+    final HeaderVisualParams currentParams = currentHeaderVisualParams;
+
+    Widget headerVisuals = buildAnimatedHeaderContent(
+      context: context,
+      params: currentParams,
+      onLogoTap: _handleBackTap,
+      onWheelsTap: _handleBackTap,
     );
 
+    Widget headerVisualsWithHero = Hero(
+      tag: headerHeroTag,
+      createRectTween: (begin, end) {
+        return MaterialRectCenterArcTween(begin: begin, end: end);
+      },
+      flightShuttleBuilder: (
+        BuildContext flightCtx,
+        Animation<double> animation,
+        HeroFlightDirection flightDirection,
+        BuildContext fromHeroCtx, // Context of Hero from DetailPage
+        BuildContext toHeroCtx, // Context of this Hero on HomePage
+      ) {
+        print(
+            "_MyHomePageState Hero shuttle (DESTINATION ON POP): Anim Val: ${animation.value.toStringAsFixed(2)}, Direction: $flightDirection");
+        HeaderVisualParams paramsFrom;
+        HeaderVisualParams paramsTo;
 
-    Widget rawDynamicRotatingWheels = Stack(
-      alignment: Alignment.center,
-      children: [
-        Transform.rotate(
-          angle: radians(_wheelAngle > 584 ? 584 : _wheelAngle),
-          child: SizedBox(
-            width: _currentWheelDiameter * 1.0,
-            height: _currentWheelDiameter * 1.0,
-            child: SvgPicture.asset('assets/pachakutech_wheel.svg',
-                colorFilter: ColorFilter.mode(
-                    Color.lerp(
-                            Theme.of(context).colorScheme.secondary,
-                            Theme.of(context).colorScheme.primary,
-                            lastHalfTurnLerp) ??
-                        Theme.of(context).colorScheme.secondary,
-                    BlendMode.srcIn)),
-          ),
-        ),
-        Transform.rotate(
-          angle: radians(90.0 - (_wheelAngle > 584 ? 584 : _wheelAngle)),
-          child: SizedBox(
-            width: _currentWheelDiameter * 0.6,
-            height: _currentWheelDiameter * 0.6,
-            child: SvgPicture.asset('assets/pachakutech_wheel.svg',
-                colorFilter: ColorFilter.mode(
-                    _wheelAngle < 404
-                        ? Theme.of(context).colorScheme.secondary
-                        : Color.lerp(
-                                Theme.of(context).colorScheme.secondary,
-                                Theme.of(context).colorScheme.primary,
-                                lastHalfTurnLerp) ??
-                            Theme.of(context).colorScheme.secondary,
-                    BlendMode.srcIn)),
-          ),
-        ),
-      ],
-    );
+        if (flightDirection == HeroFlightDirection.push) {
+          // This case should ideally not happen if DetailPage's Hero is primary for push.
+          // But if it does, `fromHeroCtx` is this page.
+          // We'd need to know what `currentParams` *was* at the point of push.
+          // This shuttle is for when HomePage is the DESTINATION (on POP).
+          // For POP: fromHeroContext is DetailPage, toHeroContext is HomePage
+          paramsFrom = AppHeaderMetrics.getCollapsedHeaderVisualParams(
+              fromHeroCtx); // Detail's collapsed state
+          paramsTo =
+              this.currentHeaderVisualParams; // Home's current dynamic state
+          print(
+              "  POP: paramsFrom (Detail Collapsed) logoDia: ${paramsFrom.dotLogoDiameter.toStringAsFixed(2)} wheelColor: ${paramsFrom.wheel1Color}");
+          print(
+              "  POP: paramsTo (Home Current) logoDia: ${paramsTo.dotLogoDiameter.toStringAsFixed(2)} wheelColor: ${paramsTo.wheel1Color} scroll: ${_mainScrollController.offset}");
+        } else {
+          // POP (HomePage is destination)
+          paramsFrom = AppHeaderMetrics.getCollapsedHeaderVisualParams(
+              fromHeroCtx); // Detail's collapsed state
+          paramsTo = this
+              .currentHeaderVisualParams; // Home's current dynamic state (as it will be when animation ends)
+          print(
+              "  POP (Direction.pop): paramsFrom (Detail Collapsed) logoDia: ${paramsFrom.dotLogoDiameter.toStringAsFixed(2)} wheelColor: ${paramsFrom.wheel1Color}");
+          print(
+              "  POP (Direction.pop): paramsTo (Home Current) logoDia: ${paramsTo.dotLogoDiameter.toStringAsFixed(2)} wheelColor: ${paramsTo.wheel1Color} scroll: ${_mainScrollController.offset}");
+        }
 
-    Widget interactiveRotatingWheels = Align(
-      alignment: _currentWheelAlignment,
-      child: SizedBox(
-        width: _currentWheelDiameter,
-        height: _currentWheelDiameter,
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => _handleBackTap,
-            customBorder: CircleBorder(),
-            splashColor: Theme.of(context).splashColor.withValues(alpha: 0.3),
-            highlightColor:
-                Theme.of(context).highlightColor.withValues(alpha: 0.2),
-            child: rawDynamicRotatingWheels,
-          ),
-        ),
-      ),
-    );
-
-    Widget headerVisuals = Container(
-      color: (_wheelAngle >= 584)
-          ? Theme.of(context).colorScheme.secondary
-          : _wheelAngle < 404
-              ? Theme.of(context).colorScheme.surface
-              : Color.lerp(Theme.of(context).colorScheme.surface,
-                  Theme.of(context).colorScheme.secondary, lastHalfTurnLerp),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          interactiveRotatingWheels,
-          dotLogo,
-        ],
-      ),
+        return globalFlightShuttleBuilderInternal(
+          flightContext: flightCtx,
+          animation: animation,
+          paramsAtAnimationStart: paramsFrom, // Corrected for POP
+          paramsAtAnimationEnd: paramsTo, // Corrected for POP
+        );
+      },
+      child: headerVisuals,
     );
 
     Widget mainPageParallaxBackground = ValueListenableBuilder<double>(
@@ -376,20 +244,21 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       pinned: true,
       floating: false,
       delegate: _AnimatedHeaderDelegate(
-        minHeight: _targetHeaderHeightConstant,
-        maxHeight: _fullscreenHeight,
-        child: headerVisuals,
+        minHeight: AppHeaderMetrics.getCollapsedHeaderHeight(context),
+        maxHeight: AppHeaderMetrics.getFullscreenHeaderHeight(context),
+        child: headerVisualsWithHero,
       ),
     );
 
     Widget contentSliver = SliverList(
-        delegate: mainContentBuilder(
-          _getScreenSize().height * 0.7,
-          _handleSummaryCardTap,
-        ),
-      );
+      delegate: mainContentBuilder(
+        AppHeaderMetrics.getFullscreenHeaderHeight(context),
+        _handleSubsectionCardTap,
+      ),
+    );
 
-    return Scaffold( // Main Scaffold for MyHomePage
+    return Scaffold(
+      // Main Scaffold for MyHomePage
       body: Stack(
         children: <Widget>[
           mainPageParallaxBackground, // Always show for MyHomePage

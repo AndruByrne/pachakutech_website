@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
-const String heroTag = "detail_background_";
+const String sectionHeroTag = "detail_background_";
+final String headerHeroTag = "appHeaderHero";
 
 class CenterExpansionRectTween extends RectTween {
   final Rect? centerRect;

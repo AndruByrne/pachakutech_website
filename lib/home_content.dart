@@ -288,7 +288,7 @@ class ContentSectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print("Source Hero ($id) USING TAG: '${heroTag + id}'"); // Log it
+    print("Source Hero ($id) USING TAG: '${sectionHeroTag + id}'"); // Log it
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -297,7 +297,7 @@ class ContentSectionCard extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             Hero(
-              tag: heroTag + id,
+              tag: sectionHeroTag + id,
               child: Image.asset(
                 imagePath,
                 fit: BoxFit.cover,
