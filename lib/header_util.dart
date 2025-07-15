@@ -52,7 +52,14 @@ Widget buildAnimatedHeaderContent({
   required HeaderVisualParams params,
   VoidCallback? onLogoTap, // Optional: for the dot logo
   VoidCallback? onWheelsTap, // Optional: for the wheels
+  bool isPopAnimation = false,
 }) {
+  print(
+      "buildAnimatedHeaderContent: isPopAnimation == $isPopAnimation, input angle1=${params.wheelAngle1.toStringAsFixed(2)}, input alignX=${params.wheelAlignment.x.toStringAsFixed(2)}, bgColor=${params.backgroundColor}");
+
+  double finalWheelAngle1 = params.wheelAngle1;
+  Alignment finalWheelAlignment = params.wheelAlignment;
+
   // The dotLogo from MyHomePage had a GestureDetector, let's make it configurable
   Widget dotLogoWidget = SizedBox(
     width: params.dotLogoDiameter,
@@ -133,96 +140,71 @@ Widget globalFlightShuttleBuilderInternal({
   required Animation<double> animation,
   required HeaderVisualParams paramsAtAnimationStart,
   required HeaderVisualParams paramsAtAnimationEnd,
+  required HeroFlightDirection flightDirection,
 }) {
   final HeaderVisualParams interpolatedParams = HeaderVisualParams.lerp(
       paramsAtAnimationStart, paramsAtAnimationEnd, animation.value);
 
-  // Log what's being interpolated
-  print("  ShuttleInternal: t=${animation.value.toStringAsFixed(2)} "
-      "FROM Align: ${paramsAtAnimationStart.wheelAlignment} Dia: ${paramsAtAnimationStart.wheelDiameter.toStringAsFixed(2)} "
-      "TO Align: ${paramsAtAnimationEnd.wheelAlignment} Dia: ${paramsAtAnimationEnd.wheelDiameter.toStringAsFixed(2)}");
-
-  return buildAnimatedHeaderContent(
-    context: flightContext,
-    params: interpolatedParams,
-  );
-}
-
-// In header_util.dart
-Widget globalFlightShuttleBuilder({
-  required BuildContext flightContext,
-  required Animation<double> animation,
-  required HeroFlightDirection flightDirection,
-  required BuildContext fromHeroContext,
-  required BuildContext toHeroContext,
-  HeaderVisualParams? homeParamsAtPush,
-  HeaderVisualParams? homeParamsAtPopTarget,
-}) {
-  double t = animation.value;
-  HeaderVisualParams actualParamsFrom, actualParamsTo;
-
-  print(
-      "globalFlightShuttleBuilder: Received homeParamsAtPush is ${homeParamsAtPush == null ? 'NULL' : 'NOT NULL (Align: ${homeParamsAtPush?.wheelAlignment})'}");
-  print(
-      "globalFlightShuttleBuilder: Received homeParamsAtPopTarget is ${homeParamsAtPopTarget == null ? 'NULL' : 'NOT NULL (Align: ${homeParamsAtPopTarget?.wheelAlignment})'}");
-
-  if (flightDirection == HeroFlightDirection.push) {
-    // PUSHING: fromHeroContext is Home, toHeroContext is Detail
-    // We NEED Home's dynamic state for 'from'.
-    // `homeParamsAtPush` is the best source if available (passed by MyHomePage's Hero).
-    if (homeParamsAtPush != null) {
-      actualParamsFrom = homeParamsAtPush;
-      print("FlightShuttle (Push): Using explicit homeParamsAtPush.");
-    } else {
-      print(
-          "FlightShuttle (Push): homeParamsAtPush was null. Falling back to Fullscreen for FromHero. This might be inaccurate.");
-      actualParamsFrom =
-          AppHeaderMetrics.getFullscreenHeaderVisualParams(fromHeroContext);
-    }
-    // "To" state for push is always the collapsed header of the detail page
-    actualParamsTo =
-        AppHeaderMetrics.getCollapsedHeaderVisualParams(toHeroContext);
-  } else {
-    // POPPING: fromHeroContext is Detail, toHeroContext is Home
-    // "From" state for pop is always the collapsed header of the detail page
-    actualParamsFrom =
-        AppHeaderMetrics.getCollapsedHeaderVisualParams(fromHeroContext);
+  final double t = animation.value;
+  if (t < 0.1 || t > 0.9 || (t > 0.45 && t < 0.55)) {
+    print("  ShuttleInternal: t=${t.toStringAsFixed(2)}");
     print(
-        "FlightShuttle (Pop): actualParamsFrom (Detail Page Collapsed) - Align: ${actualParamsFrom.wheelAlignment}");
-
-    // We NEED Home's dynamic state for 'to'.
-    // `homeParamsAtPopTarget` is the best source if available (passed by MyHomePage's Hero).
-    if (homeParamsAtPopTarget != null) {
-      actualParamsTo = homeParamsAtPopTarget;
-      print("FlightShuttle (Pop): Using explicit homeParamsAtPopTarget.");
-    } else {
-      // If MyHomePage's Hero's shuttle wasn't used, or didn't pass params for the pop target,
-      // this is a fallback. It might be incorrect if Home was scrolled.
-      print(
-          "FlightShuttle (Pop): homeParamsAtPopTarget was null. Falling back to Fullscreen for ToHero. This might be inaccurate.");
-      actualParamsTo =
-          AppHeaderMetrics.getFullscreenHeaderVisualParams(toHeroContext);
-    }
+        "    StartAlign: ${paramsAtAnimationStart.wheelAlignment}, EndAlign: ${paramsAtAnimationEnd.wheelAlignment}, InterpAlign: ${interpolatedParams.wheelAlignment}");
     print(
-        "FlightShuttle (Pop): Final actualParamsTo - Align: ${actualParamsTo.wheelAlignment}");
+        "    StartAngle: ${paramsAtAnimationStart.wheelAngle1.toStringAsFixed(2)}, EndAngle: ${paramsAtAnimationEnd.wheelAngle1.toStringAsFixed(2)}, InterpAngle: ${interpolatedParams.wheelAngle1.toStringAsFixed(2)}");
   }
 
-  // Debugging the chosen parameters:
-  // print("  FROM Params - Align: ${actualParamsFrom.wheelAlignment}, Dia: ${actualParamsFrom.wheelDiameter.toStringAsFixed(2)}");
-  // print("  TO   Params - Align: ${actualParamsTo.wheelAlignment},   Dia: ${actualParamsTo.wheelDiameter.toStringAsFixed(2)}");
+  print(
+      "    StartAlign: x=${paramsAtAnimationStart.wheelAlignment.x.toStringAsFixed(4)}, EndAlign: x=${paramsAtAnimationEnd.wheelAlignment.x.toStringAsFixed(4)}, InterpAlign: x=${interpolatedParams.wheelAlignment.x.toStringAsFixed(4)}");
 
-  final HeaderVisualParams interpolatedParams =
-      HeaderVisualParams.lerp(actualParamsFrom, actualParamsTo, t);
+  return AnimatedBuilder(
+      animation: animation,
+      builder: (context, child) {
+        final t = animation.value;
+        HeaderVisualParams interpolatedDisplayParams;
 
-  return buildAnimatedHeaderContent(
-    context: flightContext, // Use the shuttle's own context for building
-    params: interpolatedParams,
-  );
+        if (flightDirection == HeroFlightDirection.push) {
+          // PUSH: Animate from Start (Home/Expanded) to End (Detail/Collapsed)
+          interpolatedDisplayParams = HeaderVisualParams.lerp(
+              paramsAtAnimationStart, paramsAtAnimationEnd, t);
+          print("Shuttle (PUSH): t=${t.toStringAsFixed(2)}, angle1=${interpolatedDisplayParams.wheelAngle1.toStringAsFixed(2)}, alignX=${interpolatedDisplayParams.wheelAlignment.x.toStringAsFixed(2)}");
+        } else { // HeroFlightDirection.pop
+          // POP:
+          // Raw interpolated params go from Start (Detail/Collapsed) to End (Home/Expanded)
+          // HeaderVisualParams rawPopParams = HeaderVisualParams.lerp(
+          //    paramsAtAnimationStart, paramsAtAnimationEnd, t);
+
+          // THE FIX ATTEMPT:
+          // We want the VISUALS to behave as if they are animating from an "Expanded" state
+          // to a "Collapsed" state, even though the overall Hero transition is Detail to Home.
+          // The `paramsAtAnimationStart` for POP is the DetailPage state (Collapsed-like).
+          // The `paramsAtAnimationEnd` for POP is the HomePage state (Expanded-like).
+          // To make it look like PUSH, we effectively want to play the PUSH animation's parameter sequence.
+          // A PUSH animation goes from `paramsAtAnimationEnd` (Expanded) to `paramsAtAnimationStart` (Collapsed)
+          // IF WE CONSIDER THE POP's ENDPOINTS.
+
+          // So, for POP, we want to lerp from paramsAtAnimationEnd (Home/Expanded)
+          // to paramsAtAnimationStart (Detail/Collapsed) using t.
+          interpolatedDisplayParams = HeaderVisualParams.lerp(
+              paramsAtAnimationEnd,   // Treat POP's destination (Home/Expanded) as the visual start
+              paramsAtAnimationStart, // Treat POP's source (Detail/Collapsed) as the visual end
+              t);                     // Use t directly (0 to 1)
+          print("Shuttle (POP - INVERTED LERP): t=${t.toStringAsFixed(2)}, angle1=${interpolatedDisplayParams.wheelAngle1.toStringAsFixed(2)}, alignX=${interpolatedDisplayParams.wheelAlignment.x.toStringAsFixed(2)}");
+        }
+
+        return KeyedSubtree(
+          // Keying based on flightDirection might still be good practice
+          key: flightDirection == HeroFlightDirection.pop
+              ? const ValueKey('pop_animation_context_fixed')
+              : const ValueKey('push_animation_context_fixed'),
+          child: buildAnimatedHeaderContent(
+            context: flightContext,
+            params: interpolatedDisplayParams, // These are now what the visual widgets expect
+            isPopAnimation: (flightDirection == HeroFlightDirection.pop),
+          ),
+        );
+      });
 }
-
-// lib/header_util.dart
-
-// ... (HeaderVisualParams class remains the same) ...
 
 class AppHeaderMetrics {
   // --- Core Heights ---
@@ -253,8 +235,7 @@ class AppHeaderMetrics {
       getFullscreenWheelDiameter(context) * 0.8; // Based on fullscreen wheel
 
   static double getCollapsedLogoDiameter(BuildContext context) =>
-      getFullscreenWheelDiameter(context) *
-      0.6; // TODO: base the logo size on height, not width!
+      getFullscreenWheelDiameter(context) * 0.5;
 
   // --- Alignments ---
   static Alignment getFullscreenWheelAlignment() => Alignment.center;

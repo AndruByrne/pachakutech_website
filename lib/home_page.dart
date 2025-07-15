@@ -205,6 +205,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           animation: animation,
           paramsAtAnimationStart: paramsFrom, // Corrected for POP
           paramsAtAnimationEnd: paramsTo, // Corrected for POP
+          flightDirection: flightDirection,
         );
       },
       child: headerVisuals,

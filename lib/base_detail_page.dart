@@ -124,18 +124,21 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                         scrollOffset: homeScrollOffset,
                       );
                       print("  Calculated precise paramsFromHome: Align: ${paramsFromHome.wheelAlignment}, Dia: ${paramsFromHome.wheelDiameter}, Angle1: ${paramsFromHome.wheelAngle1}");
+
                     } else {
                       print("  BaseDetailShuttle (PUSH): homePageScrollOffset is NULL. Using Fullscreen FALLBACK.");
                       paramsFromHome= AppHeaderMetrics.getFullscreenHeaderVisualParams(fromHeroCtx);
                     }
                     // Parameters for the end of the animation (this DetailPage's collapsed header)
                     final paramsToDetail = AppHeaderMetrics.getCollapsedHeaderVisualParams(toHeroCtx);
+                    print("  paramsToDetail (Push): Align: ${paramsToDetail.wheelAlignment}, Dia: ${paramsToDetail.wheelDiameter.toStringAsFixed(2)}, Angle1: ${paramsToDetail.wheelAngle1.toStringAsFixed(2)}, Color1: ${paramsToDetail.wheel1Color}, BgColor: ${paramsToDetail.backgroundColor}");
 
                     return globalFlightShuttleBuilderInternal(
                       flightContext: flightCtx,
                       animation: animation,
                       paramsAtAnimationStart: paramsFromHome,
                       paramsAtAnimationEnd: paramsToDetail,
+                      flightDirection: flightDirection,
                     );
                   },
                   child: smallHeaderVisual,
