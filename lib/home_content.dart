@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'dart:ui' as ui;
-import 'dart:developer' as developer;
 import 'hero_util.dart';
+import 'periodic_gradient_painter.dart';
 
 typedef OnCardTap = void Function(SubSectionMetaData summaryData);
 
@@ -13,21 +12,13 @@ SliverChildBuilderDelegate mainContentBuilder(
         final bool isConsultingCard =
             itemIndex == myContentSectionsData.length;
 
-        // Determine textAlign for CardTitle based on titleAlignment for the card
-        // Assuming titleAlignment.x < 0 is left, titleAlignment.x > 0 is right, else center
         TextAlign titleTextAlign;
-        Alignment cardTitleAlignment; // Alignment for the whole card
+        Alignment cardTitleAlignment;
 
-        if (isConsultingCard) {
-          cardTitleAlignment =
-              Alignment.bottomLeft; // As specified for ConsultingCard
-        } else {
-          cardTitleAlignment =
-              Alignment.bottomLeft; // As specified for ContentSectionCard
-        }
+        if (isConsultingCard) { cardTitleAlignment = Alignment.bottomLeft;
+        } else { cardTitleAlignment = Alignment.bottomLeft; }
 
         if (cardTitleAlignment.x < -0.1) {
-          // Allowing for some tolerance around 0 for center
           titleTextAlign = TextAlign.left;
         } else if (cardTitleAlignment.x > 0.1) {
           titleTextAlign = TextAlign.right;
@@ -46,7 +37,7 @@ SliverChildBuilderDelegate mainContentBuilder(
             return ConsultingCard(
               height: sectionHeight,
               titleAlignment: cardTitleAlignment,
-              titleWidget: consultingTitleWidget, // Pass the widget
+              titleWidget: consultingTitleWidget,
             );
           }
 
@@ -56,9 +47,7 @@ SliverChildBuilderDelegate mainContentBuilder(
             textAlign: titleTextAlign,
           );
           return ContentSectionCard(
-            // title: summaryData.title, // REMOVED
             titleWidget: contentTitleWidget,
-            // Pass the widget
             imagePath: summaryData.imageAsset,
             height: sectionHeight,
             titleAlignment: cardTitleAlignment,
@@ -72,116 +61,15 @@ SliverChildBuilderDelegate mainContentBuilder(
       childCount: ((myContentSectionsData.length + 1) * 2),
     );
 
-class PeriodicGradientPainter extends CustomPainter {
-  final int itemCount;
-  final List<Color>
-      waveColors; // Still here, but logic uses fixed colors for now
-  // itemWidthFraction is removed as it wasn't actively used in the refined logic
-
-  PeriodicGradientPainter({
-    required this.itemCount,
-    required this.waveColors,
-  }) : assert(waveColors.length >= 3);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final Paint paint = Paint();
-    List<Color> gradientColors = [];
-    List<double> gradientStops = [];
-
-    final Color grey = Colors.grey[600]!;
-    final Color white = Colors.white;
-    final Color black = Colors.black;
-
-    gradientColors.add(grey);
-    gradientStops.add(0.0);
-
-    if (itemCount <= 0) {
-      gradientColors.add(grey);
-      gradientStops.add(1.0);
-    } else {
-      for (int i = 0; i < itemCount; i++) {
-        double itemStartStop = (i.toDouble() / itemCount);
-        double itemMidStop = itemStartStop + (1.0 / itemCount) * 0.5;
-        double itemEndStop = ((i + 1).toDouble() / itemCount);
-
-        if (i % 2 == 0) {
-          gradientColors.add(white);
-          gradientStops.add(itemMidStop);
-        } else {
-          gradientColors.add(black);
-          gradientStops.add(itemMidStop);
-        }
-        gradientColors.add(grey);
-        gradientStops.add(itemEndStop);
-      }
-    }
-
-    if (gradientStops.isNotEmpty && gradientStops.last < 1.0) {
-      gradientStops.last = 1.0;
-    }
-
-    if (gradientColors.length != gradientStops.length) {
-      developer.log(
-          "Warning: Correcting Gradient colors/stops mismatch. Colors: ${gradientColors.length}, Stops: ${gradientStops.length}",
-          name: "PeriodicGradientPainter");
-      if (gradientColors.length > gradientStops.length &&
-          gradientStops.isNotEmpty) {
-        gradientColors = gradientColors.sublist(0, gradientStops.length);
-      } else if (gradientStops.length > gradientColors.length &&
-          gradientColors.isNotEmpty) {
-        gradientStops = gradientStops.sublist(0, gradientColors.length);
-      }
-      if (gradientColors.length < 2 ||
-          gradientColors.length != gradientStops.length) {
-        developer.log(
-            "Fallback: Using default grey gradient due to persistent list mismatch.",
-            name: "PeriodicGradientPainter");
-        gradientColors = [Colors.grey[600]!, Colors.grey[700]!];
-        gradientStops = [0.0, 1.0];
-      }
-    }
-
-    if (gradientColors.length >= 2 &&
-        gradientStops.length == gradientColors.length) {
-      paint.shader = ui.Gradient.linear(
-        Offset.zero,
-        Offset(size.width, 0),
-        gradientColors,
-        gradientStops,
-        ui.TileMode.clamp,
-      );
-      canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
-    } else {
-      developer.log(
-          "Error: Not enough colors/stops or mismatch for gradient. Colors: ${gradientColors.length}, Stops: ${gradientStops.length}",
-          name: "PeriodicGradientPainter");
-      canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height),
-          Paint()..color = Colors.grey[800]!);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant PeriodicGradientPainter oldDelegate) {
-    bool waveColorsChanged = oldDelegate.waveColors.length !=
-            waveColors.length ||
-        !waveColors
-            .asMap()
-            .entries
-            .every((entry) => entry.value == oldDelegate.waveColors[entry.key]);
-    return oldDelegate.itemCount != itemCount || waveColorsChanged;
-  }
-}
-
 class ConsultingCard extends StatelessWidget {
   final double height;
   final Alignment titleAlignment;
-  final Widget titleWidget; // ADDED
+  final Widget titleWidget;
 
   const ConsultingCard({
     super.key,
     required this.height,
-    required this.titleWidget, // ADDED
+    required this.titleWidget,
     this.titleAlignment = Alignment.center,
   });
 
@@ -206,7 +94,6 @@ class ConsultingCard extends StatelessWidget {
     if (logoRowHeight < 0) logoRowHeight = 0;
 
     Widget partnerLogosRow = Row(
-      // ... (partnerLogosRow remains the same)
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: partnerLogoPaths.map((logoPath) {
@@ -230,7 +117,7 @@ class ConsultingCard extends StatelessWidget {
       }).toList(),
     );
 
-    return Container(
+    return SizedBox(
       height: height,
       child: Stack(
         fit: StackFit.expand,
@@ -249,14 +136,9 @@ class ConsultingCard extends StatelessWidget {
           ),
           Padding(
             padding: EdgeInsets.all(overallCardPadding),
-            // Use overallCardPadding
             child: Align(
               alignment: titleAlignment,
-              // child: Text( // REMOVED
-              //   'Consulting',
-              //   ...
-              // ),
-              child: titleWidget, // ADDED
+              child: titleWidget,
             ),
           ),
         ],
@@ -276,8 +158,7 @@ class ContentSectionCard extends StatelessWidget {
 
   const ContentSectionCard({
     super.key,
-    // required this.title, // REMOVED
-    required this.titleWidget, // ADDED
+    required this.titleWidget,
     required this.imagePath,
     required this.height,
     required this.onTap,
@@ -287,11 +168,9 @@ class ContentSectionCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    print("Source Hero ($id) USING TAG: '${sectionHeroTag + id}'"); // Log it
-    return InkWell(
+  Widget build(BuildContext context) => InkWell(
       onTap: onTap,
-      child: Container(
+      child: SizedBox(
         height: height,
         child: Stack(
           fit: StackFit.expand,
@@ -347,7 +226,6 @@ class ContentSectionCard extends StatelessWidget {
         ),
       ),
     );
-  }
 }
 
 class CardTitle extends StatelessWidget {
@@ -355,18 +233,16 @@ class CardTitle extends StatelessWidget {
   final TextAlign textAlign;
 
   const CardTitle({
-    Key? key,
+    super.key,
     required this.text,
-    this.textAlign = TextAlign.left, // Default, can be overridden
-  }) : super(key: key);
+    this.textAlign = TextAlign.left,
+  });
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
+  Widget build(BuildContext context) => Container(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.65),
-        // Semi-transparent background
         borderRadius: BorderRadius.circular(8.0),
         boxShadow: [
           BoxShadow(
@@ -376,14 +252,14 @@ class CardTitle extends StatelessWidget {
             offset: Offset(2, 2),
           ),
           BoxShadow(
-            color: Colors.white.withValues(alpha: 0.15), // Subtle outer glow
+            color: Colors.white.withValues(alpha: 0.15),
             blurRadius: 12.0,
             spreadRadius: 1.0,
             offset: Offset(0, 0),
           ),
         ],
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.3), // Faint border
+          color: Colors.white.withValues(alpha: 0.3),
           width: 0.5,
         ),
       ),
@@ -404,7 +280,6 @@ class CardTitle extends StatelessWidget {
         ),
       ),
     );
-  }
 }
 
 abstract class BaseSectionData {
@@ -418,10 +293,10 @@ class SubSectionMetaData extends BaseSectionData {
   final String id;
 
   SubSectionMetaData({
-    required String title,
+    required super.title,
     required this.imageAsset,
     required this.id,
-  }) : super(title: title);
+  });
 }
 
 typedef DetailWidgetBuilder = Widget Function(BuildContext context);
@@ -429,13 +304,13 @@ typedef DetailWidgetBuilder = Widget Function(BuildContext context);
 class DetailSectionData extends BaseSectionData {
   final DetailWidgetBuilder contentBuilder;
   final SubSectionMetaData
-      originalSummary; // Keep a reference to what was clicked
+      originalSummary;
 
   DetailSectionData({
-    required String title,
+    required super.title,
     required this.contentBuilder,
     required this.originalSummary,
-  }) : super(title: title);
+  });
 }
 
 final List<SubSectionMetaData> myContentSectionsData = [
@@ -447,7 +322,6 @@ final List<SubSectionMetaData> myContentSectionsData = [
       imageAsset: "assets/exploration.jpg"),
   SubSectionMetaData(
       id: 'elev', title: "Elevation", imageAsset: "assets/elevation.jpg"),
-  // Add more sections as needed
 ];
 
 final List<String> partnerLogoPaths = const [

@@ -7,7 +7,7 @@ import 'package:vector_math/vector_math.dart' show radians;
 // Import MyHomePageState to access _currentHeaderVisualParams if needed by the shuttle
 // This creates a slight coupling, but is pragmatic for the shuttle.
 // Alternatively, use a state management solution to provide params.
-import 'package:pachakutech_website/home_page.dart'; // Adjust import path as necessary
+// Adjust import path as necessary
 
 // --- HeaderVisualParams Data Class ---
 class HeaderVisualParams {
@@ -54,12 +54,6 @@ Widget buildAnimatedHeaderContent({
   VoidCallback? onWheelsTap, // Optional: for the wheels
   bool isPopAnimation = false,
 }) {
-  print(
-      "buildAnimatedHeaderContent: isPopAnimation == $isPopAnimation, input angle1=${params.wheelAngle1.toStringAsFixed(2)}, input alignX=${params.wheelAlignment.x.toStringAsFixed(2)}, bgColor=${params.backgroundColor}");
-
-  double finalWheelAngle1 = params.wheelAngle1;
-  Alignment finalWheelAlignment = params.wheelAlignment;
-
   // The dotLogo from MyHomePage had a GestureDetector, let's make it configurable
   Widget dotLogoWidget = SizedBox(
     width: params.dotLogoDiameter,
@@ -146,16 +140,6 @@ Widget globalFlightShuttleBuilderInternal({
       paramsAtAnimationStart, paramsAtAnimationEnd, animation.value);
 
   final double t = animation.value;
-  if (t < 0.1 || t > 0.9 || (t > 0.45 && t < 0.55)) {
-    print("  ShuttleInternal: t=${t.toStringAsFixed(2)}");
-    print(
-        "    StartAlign: ${paramsAtAnimationStart.wheelAlignment}, EndAlign: ${paramsAtAnimationEnd.wheelAlignment}, InterpAlign: ${interpolatedParams.wheelAlignment}");
-    print(
-        "    StartAngle: ${paramsAtAnimationStart.wheelAngle1.toStringAsFixed(2)}, EndAngle: ${paramsAtAnimationEnd.wheelAngle1.toStringAsFixed(2)}, InterpAngle: ${interpolatedParams.wheelAngle1.toStringAsFixed(2)}");
-  }
-
-  print(
-      "    StartAlign: x=${paramsAtAnimationStart.wheelAlignment.x.toStringAsFixed(4)}, EndAlign: x=${paramsAtAnimationEnd.wheelAlignment.x.toStringAsFixed(4)}, InterpAlign: x=${interpolatedParams.wheelAlignment.x.toStringAsFixed(4)}");
 
   return AnimatedBuilder(
       animation: animation,
@@ -167,7 +151,6 @@ Widget globalFlightShuttleBuilderInternal({
           // PUSH: Animate from Start (Home/Expanded) to End (Detail/Collapsed)
           interpolatedDisplayParams = HeaderVisualParams.lerp(
               paramsAtAnimationStart, paramsAtAnimationEnd, t);
-          print("Shuttle (PUSH): t=${t.toStringAsFixed(2)}, angle1=${interpolatedDisplayParams.wheelAngle1.toStringAsFixed(2)}, alignX=${interpolatedDisplayParams.wheelAlignment.x.toStringAsFixed(2)}");
         } else { // HeroFlightDirection.pop
           // POP:
           // Raw interpolated params go from Start (Detail/Collapsed) to End (Home/Expanded)
@@ -189,7 +172,6 @@ Widget globalFlightShuttleBuilderInternal({
               paramsAtAnimationEnd,   // Treat POP's destination (Home/Expanded) as the visual start
               paramsAtAnimationStart, // Treat POP's source (Detail/Collapsed) as the visual end
               t);                     // Use t directly (0 to 1)
-          print("Shuttle (POP - INVERTED LERP): t=${t.toStringAsFixed(2)}, angle1=${interpolatedDisplayParams.wheelAngle1.toStringAsFixed(2)}, alignX=${interpolatedDisplayParams.wheelAlignment.x.toStringAsFixed(2)}");
         }
 
         return KeyedSubtree(
@@ -346,17 +328,6 @@ class AppHeaderLogic {
     // Debugging for scrollOffset = 0 (or any specific value of interest)
     if (scrollOffset < 1.0 && scrollOffset >= 0) {
       // Check for effectively zero
-      print("AppHeaderLogic (scrollOffset~0):");
-      print("  headerEffectiveShrinkOffset: $headerEffectiveShrinkOffset");
-      print("  overallTransitionProgress: $overallTransitionProgress");
-      print("  currentWheelAngle1: $currentWheelAngle1");
-      print("  lastHalfTurnLerp: $lastHalfTurnLerp");
-      print(
-          "  fsParams: wheel1Color=${fsParams.wheel1Color}, bgColor=${fsParams.backgroundColor}, logoDia=${fsParams.dotLogoDiameter}");
-      print(
-          "  colParams: wheel1Color=${colParams.wheel1Color}, bgColor=${colParams.backgroundColor}, logoDia=${colParams.dotLogoDiameter}");
-      print(
-          "  Calculated: wheel1Color=$wheel1Color, bgColor=$backgroundColor, finalLogoDia=$currentBaseDotLogoDiameter, angle1=$currentWheelAngle1, angle2=$currentWheelAngle2");
     }
 
     return HeaderVisualParams(

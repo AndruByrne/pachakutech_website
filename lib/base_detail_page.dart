@@ -80,13 +80,14 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
             physics: getScrollPhysics(),
             slivers: [
               SliverAppBar(
+                // TODO: how is back arrow still here?
                 // title: Text(subSectionMetaData.title), // Can be removed if headerHero is the title
-                leading: canPop
-                    ? IconButton(
-                        icon: const Icon(Icons.arrow_back_ios_new),
-                        onPressed: () => _handleCustomBackNavigation(context),
-                      )
-                    : null,
+                // leading: canPop
+                //     ? IconButton(
+                //         icon: const Icon(Icons.arrow_back_ios_new),
+                //         onPressed: () => _handleCustomBackNavigation(context),
+                //       )
+                //     : null,
                 backgroundColor: Theme.of(context).colorScheme.secondary,
                 // Or your desired collapsed header bg
                 pinned: true,
@@ -115,21 +116,16 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                     print("BaseDetailPage Hero shuttle (DESTINATION ON PUSH): Anim Val: ${animation.value.toStringAsFixed(2)}");
 
                     HeaderVisualParams paramsFromHome;
-                    final double? homeScrollOffset = widget.homePageScrollOffset; // Get from widget/extra
+                    final double homeScrollOffset = widget.homePageScrollOffset; // Get from widget/extra
 
-                    if (homeScrollOffset != null) {
-                      print("  BaseDetailShuttle (PUSH): Using PRECISE scrollOffset: $homeScrollOffset");
-                      paramsFromHome= AppHeaderLogic.getDynamicHeaderVisualParams(
-                        context: fromHeroCtx,
-                        scrollOffset: homeScrollOffset,
-                      );
-                      print("  Calculated precise paramsFromHome: Align: ${paramsFromHome.wheelAlignment}, Dia: ${paramsFromHome.wheelDiameter}, Angle1: ${paramsFromHome.wheelAngle1}");
+                    print("  BaseDetailShuttle (PUSH): Using PRECISE scrollOffset: $homeScrollOffset");
+                    paramsFromHome= AppHeaderLogic.getDynamicHeaderVisualParams(
+                      context: fromHeroCtx,
+                      scrollOffset: homeScrollOffset,
+                    );
+                    print("  Calculated precise paramsFromHome: Align: ${paramsFromHome.wheelAlignment}, Dia: ${paramsFromHome.wheelDiameter}, Angle1: ${paramsFromHome.wheelAngle1}");
 
-                    } else {
-                      print("  BaseDetailShuttle (PUSH): homePageScrollOffset is NULL. Using Fullscreen FALLBACK.");
-                      paramsFromHome= AppHeaderMetrics.getFullscreenHeaderVisualParams(fromHeroCtx);
-                    }
-                    // Parameters for the end of the animation (this DetailPage's collapsed header)
+                                      // Parameters for the end of the animation (this DetailPage's collapsed header)
                     final paramsToDetail = AppHeaderMetrics.getCollapsedHeaderVisualParams(toHeroCtx);
                     print("  paramsToDetail (Push): Align: ${paramsToDetail.wheelAlignment}, Dia: ${paramsToDetail.wheelDiameter.toStringAsFixed(2)}, Angle1: ${paramsToDetail.wheelAngle1.toStringAsFixed(2)}, Color1: ${paramsToDetail.wheel1Color}, BgColor: ${paramsToDetail.backgroundColor}");
 

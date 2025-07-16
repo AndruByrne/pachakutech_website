@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pachakutech_website/home_content.dart';
 
 import 'car_crush_privacy_policy_page.dart';
 import 'home_page.dart';

@@ -7,10 +7,10 @@ class CenterExpansionRectTween extends RectTween {
   final Rect? centerRect;
 
   CenterExpansionRectTween({
-    required Rect? begin,
-    required Rect? end,
+    required super.begin,
+    required super.end,
     this.centerRect, // Optional: if you want to force an initial center point
-  }) : super(begin: begin, end: end);
+  });
 
   // In CenterExpansionRectTween
   @override

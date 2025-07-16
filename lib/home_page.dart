@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:pachakutech_website/header_util.dart';
 import 'home_content.dart';
-import 'package:vector_math/vector_math.dart' show radians;
-import 'dart:ui' show lerpDouble;
 import 'dart:developer' as developer;
 import 'package:go_router/go_router.dart';
 import 'hero_util.dart';
-import 'header_util.dart';
 
 class _AnimatedHeaderDelegate extends SliverPersistentHeaderDelegate {
   final double minHeight;
@@ -147,7 +143,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-
     final HeaderVisualParams currentParams = currentHeaderVisualParams;
 
     Widget headerVisuals = buildAnimatedHeaderContent(
@@ -169,8 +164,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         BuildContext fromHeroCtx, // Context of Hero from DetailPage
         BuildContext toHeroCtx, // Context of this Hero on HomePage
       ) {
-        print(
-            "_MyHomePageState Hero shuttle (DESTINATION ON POP): Anim Val: ${animation.value.toStringAsFixed(2)}, Direction: $flightDirection");
         HeaderVisualParams paramsFrom;
         HeaderVisualParams paramsTo;
 
@@ -183,28 +176,21 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           paramsFrom = AppHeaderMetrics.getCollapsedHeaderVisualParams(
               fromHeroCtx); // Detail's collapsed state
           paramsTo =
-              this.currentHeaderVisualParams; // Home's current dynamic state
-          print(
-              "  POP: paramsFrom (Detail Collapsed) logoDia: ${paramsFrom.dotLogoDiameter.toStringAsFixed(2)} wheelColor: ${paramsFrom.wheel1Color}");
-          print(
-              "  POP: paramsTo (Home Current) logoDia: ${paramsTo.dotLogoDiameter.toStringAsFixed(2)} wheelColor: ${paramsTo.wheel1Color} scroll: ${_mainScrollController.offset}");
+              currentHeaderVisualParams; // Home's current dynamic state
         } else {
           // POP (HomePage is destination)
           paramsFrom = AppHeaderMetrics.getCollapsedHeaderVisualParams(
               fromHeroCtx); // Detail's collapsed state
-          paramsTo = this
-              .currentHeaderVisualParams; // Home's current dynamic state (as it will be when animation ends)
-          print(
-              "  POP (Direction.pop): paramsFrom (Detail Collapsed) logoDia: ${paramsFrom.dotLogoDiameter.toStringAsFixed(2)} wheelColor: ${paramsFrom.wheel1Color}");
-          print(
-              "  POP (Direction.pop): paramsTo (Home Current) logoDia: ${paramsTo.dotLogoDiameter.toStringAsFixed(2)} wheelColor: ${paramsTo.wheel1Color} scroll: ${_mainScrollController.offset}");
+          paramsTo = currentHeaderVisualParams; // Home's current state (as it will be when animation ends)
         }
 
         return globalFlightShuttleBuilderInternal(
           flightContext: flightCtx,
           animation: animation,
-          paramsAtAnimationStart: paramsFrom, // Corrected for POP
-          paramsAtAnimationEnd: paramsTo, // Corrected for POP
+          paramsAtAnimationStart: paramsFrom,
+          // Corrected for POP
+          paramsAtAnimationEnd: paramsTo,
+          // Corrected for POP
           flightDirection: flightDirection,
         );
       },
@@ -231,7 +217,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           // Make the image container tall enough to show the initial screen height
           // plus the amount it will effectively "travel" due to parallax.
           height: screenHeight + parallaxTravel,
-          // MODIFIED
           child: Image.asset(
             'assets/main_page_background.jpg',
             fit: BoxFit.cover,
@@ -253,7 +238,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
     Widget contentSliver = SliverList(
       delegate: mainContentBuilder(
-        AppHeaderMetrics.getFullscreenHeaderHeight(context),
+        getSectionHeaderHeight(context),
         _handleSubsectionCardTap,
       ),
     );
@@ -276,3 +261,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     );
   }
 }
+
+double getSectionHeaderHeight(BuildContext context) =>
+    AppHeaderMetrics.getFullscreenHeaderHeight(context) * 0.65;

@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:pachakutech_website/evaluation_content.dart';
 import 'home_content.dart';
-
-import 'package:flutter/material.dart';
-import 'base_detail_page.dart'; // Import the new base class
+import 'base_detail_page.dart';
 
 class ElevationDetailPage extends BaseDetailPage {
   const ElevationDetailPage({
