@@ -28,7 +28,7 @@ class _EvaluationDetailPageState
   @override
   void initState() {
     super.initState();
-    _blogEntries = widget.contentRepo.fetchEduBlogEntries();
+    _blogEntries = widget.contentRepo.fetchBlogEntries(appSection: widget.appSection);
     _linkTreeEntries = widget.contentRepo.fetchEvalLinkTree();
   }
 

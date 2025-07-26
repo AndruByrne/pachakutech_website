@@ -19,32 +19,37 @@ enum AppSection {
     id: 'edu',
     title: 'Education',
     imageAsset: 'assets/education.jpg',
-    firestoreCollection: 'edu_blog',
+    bloggingCollection: 'edu_blog',
+    linktreeCollection: 'edu_links',
   ),
   evaluation(
     id: 'eval',
     title: 'Evaluation & Exploration',
     imageAsset: 'assets/exploration.jpg',
-    firestoreCollection: 'eval_blog',
+    bloggingCollection: 'eval_blog',
+    linktreeCollection: 'eval_links',
   ),
   elevation(
     id: 'elev',
     title: 'Elevation',
     imageAsset: 'assets/elevation.jpg',
-    firestoreCollection: 'elev_blog',
+    bloggingCollection: '',
+    linktreeCollection: '',
   );
 
   const AppSection({
     required this.id,
     required this.title,
     required this.imageAsset,
-    required this.firestoreCollection,
+    required this.bloggingCollection,
+    required this.linktreeCollection,
   });
 
   final String id;
   final String title;
   final String imageAsset;
-  final String firestoreCollection;
+  final String bloggingCollection;
+  final String linktreeCollection;
 
   String get routePath => '/$id'; // e.g. /edu
   String get articleRoutePath => '/$id/:articleId'; // e.g. /edu/:articleId

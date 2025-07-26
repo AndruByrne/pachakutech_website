@@ -24,9 +24,10 @@ class ContentRepository {
     }
   }
 
-  Future<List<BlogEntry>> fetchEduBlogEntries({String? articleId}) async {
+  Future<List<BlogEntry>> fetchBlogEntries(
+      {required AppSection appSection, String? articleId}) async {
+    var collectionName = appSection.bloggingCollection;
     try {
-      var collectionName = AppSection.education.firestoreCollection;
       Query query = _db.collection(collectionName);
       final snapshot = await query.get();
       return snapshot.docs.map<BlogEntry>((doc) {
@@ -38,8 +39,7 @@ class ContentRepository {
           return BlogEntry();
         }
 
-        final String jsonStringFromFirestore =
-            dataMap['entry'] as String;
+        final String jsonStringFromFirestore = dataMap['entry'] as String;
 
         try {
           // --- Deserialize using the Protobuf generated .fromJson() ---
@@ -51,7 +51,7 @@ class ContentRepository {
         }
       }).toList();
     } catch (e, s) {
-      print("Error fetching edu blog entries: $e");
+      print("Error fetching $collectionName blog entries: $e");
       print("Stack trace: $s");
       return [];
     }
@@ -62,21 +62,6 @@ class ContentRepository {
     try {
       Query query =
           _db.collection('edu_links').orderBy('created', descending: true);
-      final snapshot = await query.get();
-      return snapshot.docs
-          .map((doc) => doc.data() as Map<String, dynamic>)
-          .toList();
-    } catch (e) {
-      print("Error fetching edu blog entries: $e");
-      return [];
-    }
-  }
-
-  Future<List<Map<String, dynamic>>> fetchEvalBlogEntries(
-      {String? articleId}) async {
-    try {
-      Query query =
-          _db.collection('eval_blog').orderBy('created', descending: true);
       final snapshot = await query.get();
       return snapshot.docs
           .map((doc) => doc.data() as Map<String, dynamic>)

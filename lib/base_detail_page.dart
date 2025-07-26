@@ -1,8 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'content_repo.dart';
 import 'header_util.dart';
-import 'home_content.dart';
 import 'hero_util.dart';
 
 abstract class BaseDetailPage extends StatefulWidget {

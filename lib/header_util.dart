@@ -136,13 +136,7 @@ Widget globalFlightShuttleBuilderInternal({
   required HeaderVisualParams paramsAtAnimationStart,
   required HeaderVisualParams paramsAtAnimationEnd,
   required HeroFlightDirection flightDirection,
-}) {
-  final HeaderVisualParams interpolatedParams = HeaderVisualParams.lerp(
-      paramsAtAnimationStart, paramsAtAnimationEnd, animation.value);
-
-  final double t = animation.value;
-
-  return AnimatedBuilder(
+}) => AnimatedBuilder(
       animation: animation,
       builder: (context, child) {
         final t = animation.value;
@@ -187,7 +181,6 @@ Widget globalFlightShuttleBuilderInternal({
           ),
         );
       });
-}
 
 class AppHeaderMetrics {
   // --- Core Heights ---
@@ -267,8 +260,6 @@ class AppHeaderLogic {
     required double scrollOffset,
   }) {
     // Get transition definition points from AppHeaderMetrics
-    final double rotationEndScrollOffset =
-        AppHeaderMetrics.getRotationEndScrollOffset(context);
     final double transitionEndScrollOffset =
         AppHeaderMetrics.getTransitionEndScrollOffset(context);
 
