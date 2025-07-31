@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pachakutech_website/app_sections.dart';
 import 'package:pachakutech_website/base_detail_page.dart';
 import 'package:pachakutech_website/proto/blog_entry.pb.dart';
+import 'blog_entry_card.dart';
 import 'content_repo.dart';
 
 class EducationDetailPage extends BaseDetailPage {
@@ -46,11 +47,7 @@ class _EducationDetailPageState
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
                     if (index < blogEntries.length) {
-                      final entry = blogEntries[index];
-                      return ListTile(
-                        title: Text(entry['content']?[0]?['title'] ??
-                            'No Title'), // just testing
-                      );
+                      return BlogEntryCard(blogEntry: blogEntries?[index]);
                     } else {
                       return Card(
                         child: Column(

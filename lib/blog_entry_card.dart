@@ -42,7 +42,6 @@ class BlogEntryCard extends StatelessWidget {
                                     child: InkWell(
                                       child: Column(
                                         children: [
-                                          Text('WHERE IS THIS'),
                                           Image.network(imgUrl),
                                         ],
                                       ),
@@ -174,7 +173,6 @@ wrapAsBodyTextSpan(String text) =>
 InkWell _hyperlinkedImage(String imgUrl, String linkUrl) => InkWell(
       child: Column(
         children: [
-          Text('WHERE TFTFT IS THIS'),
           Image.network(imgUrl),
         ],
       ),
