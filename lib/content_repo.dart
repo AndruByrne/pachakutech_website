@@ -12,15 +12,15 @@ class ContentRepository {
   ContentRepository({required FirebaseFirestore db}) : _db = db;
 
   // Example: Fetching generic messages (like your current 'messages' collection)
-  Future<String> fetchTickerMessages() async {
+  Future<Map<String, dynamic>> fetchTickerMessages() async {
     try {
       final snapshot = await _db.collection('messages').get();
       return snapshot.docs
-          .map((doc) => doc.get('message') as String)
-          .join('...');
+          .map((doc) => doc.get('tickers') )
+          .first;
     } catch (e) {
       print("Error fetching ticker messages: $e");
-      return '...'; // Or throw a custom exception
+      return {};
     }
   }
 

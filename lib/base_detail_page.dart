@@ -22,7 +22,7 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
 
   // Potentially a ValueNotifier for its own scroll offset if needed for internal parallax
   late ValueNotifier<double> _detailPageScrollNotifier;
-  late Future<String> _tickerFuture;
+  late Future<Map<String, dynamic>> _tickerFuture;
 
   /// Provides the path to the background image asset for this detail page.
   String get backgroundImageAsset;
@@ -151,9 +151,8 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                   child: FutureBuilder<Widget>(
                       future: _tickerFuture.then((ticker) =>
                           buildAnimatedHeaderContent(
-                              context: context,
                               params: detailHeaderParams,
-                              ticker: ticker)),
+                              ticker: ticker[sectionId] ?? '')),
                       builder: (context, asyncSnapshot) {
                         return asyncSnapshot.hasData
                             ? asyncSnapshot.data ??

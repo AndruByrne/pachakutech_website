@@ -48,7 +48,6 @@ class HeaderVisualParams {
 
 // --- Shared Widget Builder for the Animated Header Content ---
 Widget buildAnimatedHeaderContent({
-  required BuildContext context,
   required HeaderVisualParams params,
   VoidCallback? onLogoTap, // Optional: for the dot logo
   VoidCallback? onWheelsTap, // Optional: for the wheels
@@ -175,7 +174,6 @@ Widget globalFlightShuttleBuilderInternal({
               ? const ValueKey('pop_animation_context_fixed')
               : const ValueKey('push_animation_context_fixed'),
           child: buildAnimatedHeaderContent(
-            context: flightContext,
             params: interpolatedDisplayParams, // These are now what the visual widgets expect
             isPopAnimation: (flightDirection == HeroFlightDirection.pop),
           ),

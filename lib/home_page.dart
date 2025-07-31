@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:pachakutech_website/app_sections.dart';
+import 'package:pachakutech_website/content_repo.dart';
 import 'package:pachakutech_website/header_util.dart';
 import 'home_content.dart';
 import 'dart:developer' as developer;
@@ -50,6 +51,7 @@ class _AnimatedHeaderDelegate extends SliverPersistentHeaderDelegate {
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({super.key});
+
   final db = FirebaseFirestore.instance;
 
   @override
@@ -96,12 +98,12 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   }
 
   void _handleWheelsTap() {
-    if(kIsWeb){
+    if (kIsWeb) {
       _handleBackTap();
     } else {
       setState(() {
         // replace main content with author UI
-       _showAuthorUI = !_showAuthorUI;
+        _showAuthorUI = !_showAuthorUI;
       });
     }
   }
@@ -162,7 +164,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     final HeaderVisualParams currentParams = currentHeaderVisualParams;
 
     Widget headerVisuals = buildAnimatedHeaderContent(
-      context: context,
       params: currentParams,
       onLogoTap: _handleWheelsTap,
       onWheelsTap: _handleWheelsTap,
@@ -191,13 +192,13 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           // For POP: fromHeroContext is DetailPage, toHeroContext is HomePage
           paramsFrom = AppHeaderMetrics.getCollapsedHeaderVisualParams(
               fromHeroCtx); // Detail's collapsed state
-          paramsTo =
-              currentHeaderVisualParams; // Home's current dynamic state
+          paramsTo = currentHeaderVisualParams; // Home's current dynamic state
         } else {
           // POP (HomePage is destination)
           paramsFrom = AppHeaderMetrics.getCollapsedHeaderVisualParams(
               fromHeroCtx); // Detail's collapsed state
-          paramsTo = currentHeaderVisualParams; // Home's current state (as it will be when animation ends)
+          paramsTo =
+              currentHeaderVisualParams; // Home's current state (as it will be when animation ends)
         }
 
         return globalFlightShuttleBuilderInternal(
@@ -256,24 +257,27 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       delegate: mainContentBuilder(
         getSectionHeaderHeight(context),
         _handleSubsectionCardTap,
+        ContentRepository(db: widget.db).fetchTickerMessages(),
       ),
     );
 
     return Scaffold(
       // Main Scaffold for MyHomePage
-      body: _showAuthorUI ? AuthorControls(db: widget.db) : Stack(
-        children: <Widget>[
-          mainPageParallaxBackground, // Always show for MyHomePage
-          CustomScrollView(
-            controller: _mainScrollController,
-            physics: const BouncingScrollPhysics(),
-            slivers: <Widget>[
-              headerSliver,
-              contentSliver,
-            ],
-          ),
-        ],
-      ),
+      body: _showAuthorUI
+          ? AuthorControls(db: widget.db)
+          : Stack(
+              children: <Widget>[
+                mainPageParallaxBackground, // Always show for MyHomePage
+                CustomScrollView(
+                  controller: _mainScrollController,
+                  physics: const BouncingScrollPhysics(),
+                  slivers: <Widget>[
+                    headerSliver,
+                    contentSliver,
+                  ],
+                ),
+              ],
+            ),
     );
   }
 }

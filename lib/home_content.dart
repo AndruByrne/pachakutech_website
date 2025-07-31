@@ -6,7 +6,10 @@ import 'periodic_gradient_painter.dart';
 typedef OnCardTap = void Function(AppSection appSection);
 
 SliverChildBuilderDelegate mainContentBuilder(
-    double sectionHeight, OnCardTap onCardTap) {
+  double sectionHeight,
+  OnCardTap onCardTap,
+  Future<Map<String, dynamic>> sectionTickers,
+) {
   final List<AppSection> displayableSections = AppSection.values.toList();
   return SliverChildBuilderDelegate(
     (BuildContext context, int index) {
@@ -37,6 +40,7 @@ SliverChildBuilderDelegate mainContentBuilder(
         if (isConsultingCard) {
           final consultingTitleWidget = CardTitle(
             text: 'Consulting',
+            ticker: 'Happy Customers',
             textAlign: titleTextAlign,
           );
           return ConsultingCard(
@@ -47,10 +51,16 @@ SliverChildBuilderDelegate mainContentBuilder(
         }
 
         final AppSection section = displayableSections[itemIndex];
-        final contentTitleWidget = CardTitle(
-          text: section.title,
-          textAlign: titleTextAlign,
-        );
+        final contentTitleWidget = FutureBuilder(
+            future: sectionTickers,
+            builder: (_, snapshot) {
+              return CardTitle(
+                text: section.title,
+                textAlign: titleTextAlign,
+                ticker:
+                    snapshot.hasData ? (snapshot.data?[section.id] ?? '') : '',
+              );
+            });
         return ContentSectionCard(
           titleWidget: contentTitleWidget,
           imagePath: section.imageAsset,
@@ -60,7 +70,12 @@ SliverChildBuilderDelegate mainContentBuilder(
           id: section.id,
         );
       } else {
-        return SizedBox(height: kToolbarHeight);
+        return SizedBox(
+          height: kToolbarHeight,
+          child: Container(
+            color: Colors.white38,
+          ),
+        );
       }
     },
     childCount: ((displayableSections.length + 1) * 2),
@@ -221,11 +236,7 @@ class ContentSectionCard extends StatelessWidget {
                 padding: const EdgeInsets.all(16.0), // Consistent padding
                 child: Align(
                   alignment: titleAlignment,
-                  // child: Text( // REMOVED
-                  //   title,
-                  //   ...
-                  // ),
-                  child: titleWidget, // ADDED
+                  child: titleWidget,
                 ),
               ),
             ],
@@ -236,57 +247,81 @@ class ContentSectionCard extends StatelessWidget {
 
 class CardTitle extends StatelessWidget {
   final String text;
+  final String ticker;
   final TextAlign textAlign;
 
   const CardTitle({
     super.key,
     required this.text,
+    required this.ticker,
     this.textAlign = TextAlign.left,
   });
 
   @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.65),
-          borderRadius: BorderRadius.circular(8.0),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.5),
-              blurRadius: 10.0,
-              spreadRadius: 2.0,
-              offset: Offset(2, 2),
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+          decoration: blackSquircleDecoration,
+          child: Text(
+            text,
+            textAlign: textAlign,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: Colors.white,
+              // fontFamily: 'Pachakutech',
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
+              shadows: [
+                Shadow(
+                  blurRadius: 4.0,
+                  color: Colors.black.withValues(alpha: 0.7),
+                  offset: Offset(1.0, 1.5),
+                ),
+              ],
             ),
-            BoxShadow(
-              color: Colors.white.withValues(alpha: 0.15),
-              blurRadius: 12.0,
-              spreadRadius: 1.0,
-              offset: Offset(0, 0),
-            ),
-          ],
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.3),
-            width: 0.5,
           ),
         ),
-        child: Text(
-          text,
-          textAlign: textAlign,
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 0.5,
-            shadows: [
-              Shadow(
-                blurRadius: 4.0,
-                color: Colors.black.withValues(alpha: 0.7),
-                offset: Offset(1.0, 1.5),
-              ),
-            ],
+        if (ticker.isNotEmpty)
+          Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+            decoration: blackSquircleDecoration,
+            child: Text(
+              ticker,
+              style: Theme.of(context)
+                  .textTheme
+                  .headlineSmall
+                  ?.copyWith(color: Colors.white),
+            ),
           ),
-        ),
-      );
+      ],
+    );
+  }
 }
+
+var blackSquircleDecoration = BoxDecoration(
+  color: Colors.black.withValues(alpha: 0.65),
+  borderRadius: BorderRadius.circular(8.0),
+  boxShadow: [
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.5),
+      blurRadius: 10.0,
+      spreadRadius: 2.0,
+      offset: Offset(2, 2),
+    ),
+    BoxShadow(
+      color: Colors.white.withValues(alpha: 0.15),
+      blurRadius: 12.0,
+      spreadRadius: 1.0,
+      offset: Offset(0, 0),
+    ),
+  ],
+  border: Border.all(
+    color: Colors.white.withValues(alpha: 0.3),
+    width: 0.5,
+  ),
+);
 
 abstract class BaseSectionData {
   final String title;
