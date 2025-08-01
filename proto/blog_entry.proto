@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+message BlogEntry {
+  repeated ContentBlock content = 1;
+
+  message ContentBlock {
+    optional string title = 1;
+    optional string link_url = 2;
+    optional string image_url = 3;
+  }
+}
