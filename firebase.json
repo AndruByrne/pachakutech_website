@@ -1,0 +1,35 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "pachakutech-website-blogs",
+          "appId": "1:933921576315:android:4ad0148008e1b27b5399de",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "pachakutech-website-blogs",
+          "appId": "1:933921576315:ios:de32a62d20bebdd15399de",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "pachakutech-website-blogs",
+          "configurations": {
+            "android": "1:933921576315:android:4ad0148008e1b27b5399de",
+            "ios": "1:933921576315:ios:de32a62d20bebdd15399de",
+            "web": "1:933921576315:web:8964a985c414cef05399de"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
+}

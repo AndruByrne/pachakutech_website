@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "933921576315",
+    "project_id": "pachakutech-website-blogs",
+    "storage_bucket": "pachakutech-website-blogs.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:933921576315:android:4ad0148008e1b27b5399de",
+        "android_client_info": {
+          "package_name": "com.pachakutech.pachakutech_website"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAM2uNY9rgOhlrdqNdqrrMB35D15shTaaQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
