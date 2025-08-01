@@ -49,9 +49,9 @@ class HeaderVisualParams {
 // --- Shared Widget Builder for the Animated Header Content ---
 Widget buildAnimatedHeaderContent({
   required HeaderVisualParams params,
+  required Future<String> tickerFuture,
   VoidCallback? onLogoTap, // Optional: for the dot logo
   VoidCallback? onWheelsTap, // Optional: for the wheels
-  String ticker = '',
   bool isPopAnimation = false,
 }) {
   // The dotLogo from MyHomePage had a GestureDetector, let's make it configurable
@@ -174,7 +174,8 @@ Widget globalFlightShuttleBuilderInternal({
               ? const ValueKey('pop_animation_context_fixed')
               : const ValueKey('push_animation_context_fixed'),
           child: buildAnimatedHeaderContent(
-            params: interpolatedDisplayParams, // These are now what the visual widgets expect
+            params: interpolatedDisplayParams,
+            tickerFuture: Future.value(''),
             isPopAnimation: (flightDirection == HeroFlightDirection.pop),
           ),
         );

@@ -165,6 +165,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
     Widget headerVisuals = buildAnimatedHeaderContent(
       params: currentParams,
+      tickerFuture: Future.value(''),
       onLogoTap: _handleWheelsTap,
       onWheelsTap: _handleWheelsTap,
     );

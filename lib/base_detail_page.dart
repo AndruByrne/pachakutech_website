@@ -115,6 +115,7 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                     BuildContext toHeroCtx,
                     // Context of this Hero on DetailPage
                   ) {
+                    // This code does not run
                     // This builder is called when DetailPage is the DESTINATION (i.e., on PUSH)
                     print(
                         "BaseDetailPage Hero shuttle (DESTINATION ON PUSH): Anim Val: ${animation.value.toStringAsFixed(2)}");
@@ -148,19 +149,10 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                       flightDirection: flightDirection,
                     );
                   },
-                  child: FutureBuilder<Widget>(
-                      future: _tickerFuture.then((ticker) =>
-                          buildAnimatedHeaderContent(
-                              params: detailHeaderParams,
-                              ticker: ticker[sectionId] ?? '')),
-                      builder: (context, asyncSnapshot) {
-                        return asyncSnapshot.hasData
-                            ? asyncSnapshot.data ??
-                                Container(child: Text('null data'))
-                            : Container(
-                                child: Text('no data'),
-                              );
-                      }),
+                  // child: buildAnimatedHeaderContent(
+                  //       params: detailHeaderParams,
+                  //       tickerFuture: Future.value(''),),
+                  child: Container(),
                 ),
               ),
               ...buildScrollableContent(context),
