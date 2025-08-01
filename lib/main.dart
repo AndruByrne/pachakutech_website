@@ -1,18 +1,26 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'car_crush_privacy_policy_page.dart';
+import 'firebase_options.dart';
 import 'home_page.dart';
 import 'education_content.dart';
 import 'evaluation_content.dart';
 import 'elevation_content.dart';
 
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  final db = FirebaseFirestore.instance;
+  runApp(MyApp(db: db));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final FirebaseFirestore db;
+
+  const MyApp({super.key, required this.db});
 
   @override
   Widget build(BuildContext context) {
