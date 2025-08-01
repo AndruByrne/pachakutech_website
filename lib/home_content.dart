@@ -1,65 +1,71 @@
 import 'package:flutter/material.dart';
+import 'app_sections.dart';
 import 'hero_util.dart';
 import 'periodic_gradient_painter.dart';
 
-typedef OnCardTap = void Function(SubSectionMetaData summaryData);
+typedef OnCardTap = void Function(AppSection appSection);
 
 SliverChildBuilderDelegate mainContentBuilder(
-        double sectionHeight, OnCardTap onCardTap) =>
-    SliverChildBuilderDelegate(
-      (BuildContext context, int index) {
-        final itemIndex = index ~/ 2;
-        final bool isConsultingCard =
-            itemIndex == myContentSectionsData.length;
+    double sectionHeight, OnCardTap onCardTap) {
+  final List<AppSection> displayableSections = AppSection.values.toList();
+  return SliverChildBuilderDelegate(
+    (BuildContext context, int index) {
+      final itemIndex = index ~/ 2;
 
-        TextAlign titleTextAlign;
-        Alignment cardTitleAlignment;
+      final bool isConsultingCard = itemIndex == displayableSections.length;
 
-        if (isConsultingCard) { cardTitleAlignment = Alignment.bottomLeft;
-        } else { cardTitleAlignment = Alignment.bottomLeft; }
+      TextAlign titleTextAlign;
+      Alignment cardTitleAlignment;
 
-        if (cardTitleAlignment.x < -0.1) {
-          titleTextAlign = TextAlign.left;
-        } else if (cardTitleAlignment.x > 0.1) {
-          titleTextAlign = TextAlign.right;
-        } else {
-          titleTextAlign = TextAlign.center;
-        }
+      if (isConsultingCard) {
+        cardTitleAlignment = Alignment.bottomLeft;
+      } else {
+        cardTitleAlignment = Alignment.bottomLeft;
+      }
 
-        if (index.isOdd) {
-          if (itemIndex > myContentSectionsData.length) return null;
+      if (cardTitleAlignment.x < -0.1) {
+        titleTextAlign = TextAlign.left;
+      } else if (cardTitleAlignment.x > 0.1) {
+        titleTextAlign = TextAlign.right;
+      } else {
+        titleTextAlign = TextAlign.center;
+      }
 
-          if (isConsultingCard) {
-            final consultingTitleWidget = CardTitle(
-              text: 'Consulting',
-              textAlign: titleTextAlign,
-            );
-            return ConsultingCard(
-              height: sectionHeight,
-              titleAlignment: cardTitleAlignment,
-              titleWidget: consultingTitleWidget,
-            );
-          }
+      if (index.isOdd) {
+        if (itemIndex > displayableSections.length) return null;
 
-          final summaryData = myContentSectionsData[itemIndex];
-          final contentTitleWidget = CardTitle(
-            text: summaryData.title,
+        if (isConsultingCard) {
+          final consultingTitleWidget = CardTitle(
+            text: 'Consulting',
             textAlign: titleTextAlign,
           );
-          return ContentSectionCard(
-            titleWidget: contentTitleWidget,
-            imagePath: summaryData.imageAsset,
+          return ConsultingCard(
             height: sectionHeight,
             titleAlignment: cardTitleAlignment,
-            onTap: () => onCardTap(summaryData),
-            id: summaryData.id,
+            titleWidget: consultingTitleWidget,
           );
-        } else {
-          return SizedBox(height: kToolbarHeight);
         }
-      },
-      childCount: ((myContentSectionsData.length + 1) * 2),
-    );
+
+        final AppSection section = displayableSections[itemIndex];
+        final contentTitleWidget = CardTitle(
+          text: section.title,
+          textAlign: titleTextAlign,
+        );
+        return ContentSectionCard(
+          titleWidget: contentTitleWidget,
+          imagePath: section.imageAsset,
+          height: sectionHeight,
+          titleAlignment: cardTitleAlignment,
+          onTap: () => onCardTap(section),
+          id: section.id,
+        );
+      } else {
+        return SizedBox(height: kToolbarHeight);
+      }
+    },
+    childCount: ((displayableSections.length + 1) * 2),
+  );
+}
 
 class ConsultingCard extends StatelessWidget {
   final double height;
@@ -169,63 +175,63 @@ class ContentSectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => InkWell(
-      onTap: onTap,
-      child: SizedBox(
-        height: height,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Hero(
-              tag: sectionHeroTag + id,
-              child: Image.asset(
-                imagePath,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: Colors.grey[300],
-                    child: Center(
-                        child: Icon(Icons.broken_image,
-                            size: 50, color: Colors.grey[600])),
-                  );
-                },
+        onTap: onTap,
+        child: SizedBox(
+          height: height,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Hero(
+                tag: sectionHeroTag + id,
+                child: Image.asset(
+                  imagePath,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.grey[300],
+                      child: Center(
+                          child: Icon(Icons.broken_image,
+                              size: 50, color: Colors.grey[600])),
+                    );
+                  },
+                ),
               ),
-            ),
-            Container(
-              // Scrim for ContentSectionCard title area
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                    colors: [
-                      scrimColor.withValues(alpha: 0.7),
-                      scrimColor.withValues(alpha: 0.3)
-                    ],
-                    begin: titleAlignment.y < -0.5 // More towards top
-                        ? Alignment.topCenter
-                        : titleAlignment.y > 0.5 // More towards bottom
-                            ? Alignment.bottomCenter
-                            : Alignment.centerLeft,
-                    end: titleAlignment.y < -0.5
-                        ? Alignment.bottomCenter
-                        : titleAlignment.y > 0.5
-                            ? Alignment.topCenter
-                            : Alignment.centerRight,
-                    stops: [0.0, 0.8]),
+              Container(
+                // Scrim for ContentSectionCard title area
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                      colors: [
+                        scrimColor.withValues(alpha: 0.7),
+                        scrimColor.withValues(alpha: 0.3)
+                      ],
+                      begin: titleAlignment.y < -0.5 // More towards top
+                          ? Alignment.topCenter
+                          : titleAlignment.y > 0.5 // More towards bottom
+                              ? Alignment.bottomCenter
+                              : Alignment.centerLeft,
+                      end: titleAlignment.y < -0.5
+                          ? Alignment.bottomCenter
+                          : titleAlignment.y > 0.5
+                              ? Alignment.topCenter
+                              : Alignment.centerRight,
+                      stops: [0.0, 0.8]),
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0), // Consistent padding
-              child: Align(
-                alignment: titleAlignment,
-                // child: Text( // REMOVED
-                //   title,
-                //   ...
-                // ),
-                child: titleWidget, // ADDED
+              Padding(
+                padding: const EdgeInsets.all(16.0), // Consistent padding
+                child: Align(
+                  alignment: titleAlignment,
+                  // child: Text( // REMOVED
+                  //   title,
+                  //   ...
+                  // ),
+                  child: titleWidget, // ADDED
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
+      );
 }
 
 class CardTitle extends StatelessWidget {
@@ -240,46 +246,46 @@ class CardTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.65),
-        borderRadius: BorderRadius.circular(8.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.5),
-            blurRadius: 10.0,
-            spreadRadius: 2.0,
-            offset: Offset(2, 2),
-          ),
-          BoxShadow(
-            color: Colors.white.withValues(alpha: 0.15),
-            blurRadius: 12.0,
-            spreadRadius: 1.0,
-            offset: Offset(0, 0),
-          ),
-        ],
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.3),
-          width: 0.5,
-        ),
-      ),
-      child: Text(
-        text,
-        textAlign: textAlign,
-        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 0.5,
-          shadows: [
-            Shadow(
-              blurRadius: 4.0,
-              color: Colors.black.withValues(alpha: 0.7),
-              offset: Offset(1.0, 1.5),
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.65),
+          borderRadius: BorderRadius.circular(8.0),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.5),
+              blurRadius: 10.0,
+              spreadRadius: 2.0,
+              offset: Offset(2, 2),
+            ),
+            BoxShadow(
+              color: Colors.white.withValues(alpha: 0.15),
+              blurRadius: 12.0,
+              spreadRadius: 1.0,
+              offset: Offset(0, 0),
             ),
           ],
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.3),
+            width: 0.5,
+          ),
         ),
-      ),
-    );
+        child: Text(
+          text,
+          textAlign: textAlign,
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+            shadows: [
+              Shadow(
+                blurRadius: 4.0,
+                color: Colors.black.withValues(alpha: 0.7),
+                offset: Offset(1.0, 1.5),
+              ),
+            ],
+          ),
+        ),
+      );
 }
 
 abstract class BaseSectionData {
@@ -287,42 +293,6 @@ abstract class BaseSectionData {
 
   BaseSectionData({required this.title});
 }
-
-class SubSectionMetaData extends BaseSectionData {
-  final String imageAsset;
-  final String id;
-
-  SubSectionMetaData({
-    required super.title,
-    required this.imageAsset,
-    required this.id,
-  });
-}
-
-typedef DetailWidgetBuilder = Widget Function(BuildContext context);
-
-class DetailSectionData extends BaseSectionData {
-  final DetailWidgetBuilder contentBuilder;
-  final SubSectionMetaData
-      originalSummary;
-
-  DetailSectionData({
-    required super.title,
-    required this.contentBuilder,
-    required this.originalSummary,
-  });
-}
-
-final List<SubSectionMetaData> myContentSectionsData = [
-  SubSectionMetaData(
-      id: 'edu', title: "Education", imageAsset: "assets/education.jpg"),
-  SubSectionMetaData(
-      id: 'eval',
-      title: "Evaluation & Exploration",
-      imageAsset: "assets/exploration.jpg"),
-  SubSectionMetaData(
-      id: 'elev', title: "Elevation", imageAsset: "assets/elevation.jpg"),
-];
 
 final List<String> partnerLogoPaths = const [
   "assets/google_logo.png",

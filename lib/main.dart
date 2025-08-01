@@ -2,13 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:pachakutech_website/app_sections.dart';
 
 import 'car_crush_privacy_policy_page.dart';
 import 'firebase_options.dart';
 import 'home_page.dart';
-import 'education_content.dart';
-import 'evaluation_content.dart';
-import 'elevation_content.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,95 +31,54 @@ class MyApp extends StatelessWidget {
             surfaceContainer: Colors.blueGrey.shade50),
         useMaterial3: true,
       ),
-      routerConfig: _router,
+      routerConfig: GoRouter(routes: [
+        GoRoute(
+          path: '/',
+          builder: (context, state) => MyHomePage(),
+        ),
+        GoRoute(
+            path: '/car_crush_privacy_policy',
+            builder: (context, state) => const CarCrushPrivacyPolicyPage()),
+        ...AppSection.values.expand<RouteBase>((section) {
+          // For each section, we return a list containing its two routes
+          return [
+            // Route for the section overview (e.g., /edu)
+            GoRoute(
+              path: section.routePath,
+              pageBuilder: (context, state) {
+                final params = state.extra as Map<String, dynamic>?;
+                final scrollOffset = params?['scrollOffset'] as double? ?? 0.0;
+                Widget pageWidget = section.buildDetailPage(
+                  context: context,
+                  db: db,
+                  articleId: null, // For overview
+                  homePageScrollOffset: scrollOffset,
+                );
+                return fadeTransitionOf(state, pageWidget);
+              },
+            ),
+            // Route for a specific article (e.g., /edu/:articleId)
+            GoRoute(
+              path: section.articleRoutePath,
+              pageBuilder: (context, state) {
+                final articleId = state.pathParameters['articleId']!;
+                final params = state.extra as Map<String, dynamic>?;
+                final scrollOffset = params?['scrollOffset'] as double? ?? 0.0;
+                Widget pageWidget = section.buildDetailPage(
+                  context: context,
+                  db: db,
+                  articleId: articleId,
+                  homePageScrollOffset: scrollOffset,
+                );
+                return fadeTransitionOf(state, pageWidget);
+              },
+            ),
+          ];
+        }),
+      ]),
     );
   }
 }
-
-final _router = GoRouter(routes: [
-  GoRoute(
-    path: '/edu', // Or /edu/:slug
-    pageBuilder: (context, state) {
-      final params = state.extra as Map<String, dynamic>?;
-      final scrollOffset = params?['scrollOffset'] ?? 0.0;
-      Widget pageWidget = EducationDetailPage(
-        articleId: 'top',
-        homePageScrollOffset: scrollOffset,
-      );
-      return fadeTransitionOf(state, pageWidget);
-    },
-  ),
-  GoRoute(
-    path: '/edu/:article', // Or /edu/:slug
-    pageBuilder: (context, state) {
-      final id = state.pathParameters['article']!;
-      final params = state.extra as Map<String, dynamic>?;
-      final scrollOffset = params?['scrollOffset'] ?? 0.0;
-      Widget detailPageWidget = EvaluationDetailPage(
-        articleId: id,
-        homePageScrollOffset: scrollOffset,
-      );
-      return fadeTransitionOf(state, detailPageWidget);
-    },
-  ),
-  GoRoute(
-    path: '/eval',
-    pageBuilder: (context, state) {
-      final params = state.extra as Map<String, dynamic>?;
-      final scrollOffset = params?['scrollOffset'] ?? 0.0;
-      Widget pageWidget = EvaluationDetailPage(
-        articleId: 'top',
-        homePageScrollOffset: scrollOffset,
-      );
-      return fadeTransitionOf(state, pageWidget);
-    },
-  ),
-  GoRoute(
-    path: '/eval/:article',
-    pageBuilder: (context, state) {
-      final id = state.pathParameters['article']!;
-      final params = state.extra as Map<String, dynamic>?;
-      final scrollOffset = params?['scrollOffset'] ?? 0.0;
-      Widget detailPageWidget = EvaluationDetailPage(
-        articleId: id,
-        homePageScrollOffset: scrollOffset,
-      );
-      return fadeTransitionOf(state, detailPageWidget);
-    },
-  ),
-  GoRoute(
-    path: '/elev',
-    pageBuilder: (context, state) {
-      final params = state.extra as Map<String, dynamic>?;
-      final scrollOffset = params?['scrollOffset'] ?? 0.0;
-      Widget detailPageWidget = ElevationDetailPage(
-        articleId: 'top',
-        homePageScrollOffset: scrollOffset,
-      );
-      return fadeTransitionOf(state, detailPageWidget);
-    },
-  ),
-  GoRoute(
-    path: '/elev/:article',
-    pageBuilder: (context, state) {
-      final id = state.pathParameters['article']!;
-      final params = state.extra as Map<String, dynamic>?;
-      final scrollOffset = params?['scrollOffset'] ?? 0.0;
-      Widget detailPageWidget = ElevationDetailPage(
-        articleId: id,
-        homePageScrollOffset: scrollOffset,
-      );
-      return fadeTransitionOf(state, detailPageWidget);
-    },
-  ),
-  GoRoute(
-    path: '/',
-    builder: (context, state) => MyHomePage(),
-  ),
-  GoRoute(
-      path: '/car_crush_privacy_policy',
-      builder: (context, state) => const CarCrushPrivacyPolicyPage())
-]);
 
 CustomTransitionPage<void> fadeTransitionOf(
     GoRouterState state, Widget pageWidget) {

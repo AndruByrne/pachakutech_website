@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:pachakutech_website/app_sections.dart';
 import 'home_content.dart';
 import 'base_detail_page.dart';
 
 class ElevationDetailPage extends BaseDetailPage {
-  const ElevationDetailPage({
-    super.key, required super.articleId, required super.homePageScrollOffset,
+  final AppSection appSection = AppSection.elevation;
+  ElevationDetailPage({
+    super.key, required super.db, required super.articleId, required super.homePageScrollOffset,
   });
 
   @override
@@ -13,9 +15,6 @@ class ElevationDetailPage extends BaseDetailPage {
 
 class _EvaluationDetailPageState
     extends BaseDetailPageState<ElevationDetailPage> {
-
-  @override
-  SubSectionMetaData subSectionMetaData = myContentSectionsData[2]; // Fetch or receive this
 
   @override
   List<Widget> buildScrollableContent(BuildContext context) {
@@ -29,10 +28,10 @@ class _EvaluationDetailPageState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Elevation Details: ${subSectionMetaData.title}",
+                    Text("Elevation Details: ${sectionTitle}",
                         style: Theme.of(context).textTheme.headlineMedium),
                     SizedBox(height: 20),
-                    Text("ID: ${subSectionMetaData.id}"),
+                    Text("ID: ${sectionId}"),
                     SizedBox(height: 20),
                     Text("Content related to elevation and growth... " * 20),
                     SizedBox(height: MediaQuery.of(context).size.height * 0.5),
@@ -52,4 +51,10 @@ class _EvaluationDetailPageState
 // Optional: Override scroll physics if needed for this specific page
 // @override
 // ScrollPhysics getScrollPhysics() => const AlwaysScrollableScrollPhysics();
+  @override
+  String get backgroundImageAsset => widget.appSection.imageAsset; // Accesses the local appSection
+  @override
+  String get sectionId => widget.appSection.id;
+  @override
+  String get sectionTitle => widget.appSection.title;
 }

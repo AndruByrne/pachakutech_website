@@ -1,9 +1,13 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:pachakutech_website/app_sections.dart';
 import 'package:pachakutech_website/header_util.dart';
 import 'home_content.dart';
 import 'dart:developer' as developer;
 import 'package:go_router/go_router.dart';
 import 'hero_util.dart';
+import 'author_controls.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class _AnimatedHeaderDelegate extends SliverPersistentHeaderDelegate {
   final double minHeight;
@@ -45,7 +49,8 @@ class _AnimatedHeaderDelegate extends SliverPersistentHeaderDelegate {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
+  MyHomePage({super.key});
+  final db = FirebaseFirestore.instance;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -54,6 +59,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   final ScrollController _mainScrollController = ScrollController();
   late ValueNotifier<double> _mainScrollControllerNotifier;
+  bool _showAuthorUI = false;
 
   @override
   void initState() {
@@ -89,6 +95,17 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     }
   }
 
+  void _handleWheelsTap() {
+    if(kIsWeb){
+      _handleBackTap();
+    } else {
+      setState(() {
+        // replace main content with author UI
+       _showAuthorUI = !_showAuthorUI;
+      });
+    }
+  }
+
   void _handleBackTap() {
     // If the header is in a state where tapping it means "go back to top / main view"
     // With go_router, if we are on MyHomePage ('/'), tapping the logo when scrolled
@@ -107,18 +124,17 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     }
   }
 
-  void _handleSubsectionCardTap(SubSectionMetaData subsectionMetadata) {
+  void _handleSubsectionCardTap(AppSection appSection) {
     setState(() {
       final double currentScrollOffset = _mainScrollController.offset;
 
       developer.log(
-          "Card tapped: ${subsectionMetadata.title}. Passing scrollOffset: $currentScrollOffset",
+          "Card tapped: ${appSection.title}. Passing scrollOffset: $currentScrollOffset",
           name: "MyHomePageState.Navigation");
 
-      String path = '/${subsectionMetadata.id}';
+      String path = '/${appSection.id}';
       context.push(path, extra: {
         'scrollOffset': currentScrollOffset,
-        // Pass only the scroll offset
       });
     });
   }
@@ -148,8 +164,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     Widget headerVisuals = buildAnimatedHeaderContent(
       context: context,
       params: currentParams,
-      onLogoTap: _handleBackTap,
-      onWheelsTap: _handleBackTap,
+      onLogoTap: _handleWheelsTap,
+      onWheelsTap: _handleWheelsTap,
     );
 
     Widget headerVisualsWithHero = Hero(
@@ -245,7 +261,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
     return Scaffold(
       // Main Scaffold for MyHomePage
-      body: Stack(
+      body: _showAuthorUI ? AuthorControls(db: widget.db) : Stack(
         children: <Widget>[
           mainPageParallaxBackground, // Always show for MyHomePage
           CustomScrollView(

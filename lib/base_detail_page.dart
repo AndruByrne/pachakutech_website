@@ -1,24 +1,39 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'content_repo.dart';
 import 'header_util.dart';
 import 'home_content.dart';
 import 'hero_util.dart';
 
 abstract class BaseDetailPage extends StatefulWidget {
-  final String articleId;
+  final String? articleId;
   final double homePageScrollOffset;
+  final ContentRepository contentRepo;
 
-  const BaseDetailPage({
+  BaseDetailPage({
     super.key,
-    required this.articleId, required this.homePageScrollOffset,
-  });
+    required db,
+    required this.articleId,
+    required this.homePageScrollOffset,
+  }) : contentRepo = ContentRepository(db: db);
 }
 
 abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
   // Optional: Common internal scroll controller if needed by many subclasses
   final ScrollController _internalScrollController = ScrollController();
-  abstract SubSectionMetaData subSectionMetaData; // Fetch or receive this
+
   // Potentially a ValueNotifier for its own scroll offset if needed for internal parallax
   late ValueNotifier<double> _detailPageScrollNotifier;
+  late Future<String> _tickerFuture;
+
+  /// Provides the path to the background image asset for this detail page.
+  String get backgroundImageAsset;
+
+  /// Provides the unique ID for this section, used for Hero tags.
+  String get sectionId;
+
+  /// Provides the title for this section, potentially for the AppBar.
+  String get sectionTitle;
 
   @override
   void initState() {
@@ -27,6 +42,7 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
     _internalScrollController.addListener(() {
       _detailPageScrollNotifier.value = _internalScrollController.offset;
     });
+    _tickerFuture = widget.contentRepo.fetchTickerMessages();
   }
 
   @override
@@ -42,18 +58,13 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
 
   @override
   Widget build(BuildContext context) {
-    final canPop = Navigator.of(context).canPop();
     final double detailAppBarHeight =
         AppHeaderMetrics.getCollapsedHeaderHeight(context);
 
     final HeaderVisualParams detailHeaderParams =
         AppHeaderMetrics.getCollapsedHeaderVisualParams(context);
-    Widget smallHeaderVisual = buildAnimatedHeaderContent(
-        context: context, params: detailHeaderParams);
 
     return Scaffold(
-      // backgroundColor: Colors.transparent, // Consider if all detail pages need this
-
       body: Stack(
         children: [
           // --- Parallax Background ---
@@ -63,11 +74,11 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
             right: 0,
             bottom: 0,
             child: Hero(
-              tag: sectionHeroTag + subSectionMetaData.id,
+              tag: sectionHeroTag + sectionId,
               createRectTween: (Rect? begin, Rect? end) =>
                   CenterExpansionRectTween(begin: begin, end: end),
               child: Image.asset(
-                subSectionMetaData.imageAsset,
+                backgroundImageAsset,
                 fit: BoxFit.cover,
                 alignment: Alignment.center,
               ),
@@ -81,7 +92,7 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
             slivers: [
               SliverAppBar(
                 // TODO: how is back arrow still here?
-                // title: Text(subSectionMetaData.title), // Can be removed if headerHero is the title
+                // title: Text(sectionTitle), // Can be removed if headerHero is the title
                 // leading: canPop
                 //     ? IconButton(
                 //         icon: const Icon(Icons.arrow_back_ios_new),
@@ -92,42 +103,44 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                 // Or your desired collapsed header bg
                 pinned: true,
                 elevation: 2,
-                // Or your preferred elevation for the small header
-                // Use flexibleSpace to house the Hero widget for the header.
-                // The height of the SliverAppBar when collapsed will be determined by
-                // the AppBar's default height or `toolbarHeight` property if set.
-                // `expandedHeight` is not strictly needed if not making a collapsing FlexibleSpaceBar,
-                // but setting `toolbarHeight` can ensure the Hero's container has a known height.
                 toolbarHeight: detailAppBarHeight,
-                // Ensure consistent height for the Hero
                 flexibleSpace: Hero(
                   tag: headerHeroTag, // <<<---- THIS IS THE HEADER HERO
                   createRectTween: (begin, end) {
                     return MaterialRectCenterArcTween(begin: begin, end: end);
                   },
                   flightShuttleBuilder: (
-                      BuildContext flightCtx,
-                      Animation<double> animation,
-                      HeroFlightDirection flightDirection,
-                      BuildContext fromHeroCtx, // Context of Hero from HomePage
-                      BuildContext toHeroCtx,   // Context of this Hero on DetailPage
-                      ) {
+                    BuildContext flightCtx,
+                    Animation<double> animation,
+                    HeroFlightDirection flightDirection,
+                    BuildContext fromHeroCtx, // Context of Hero from HomePage
+                    BuildContext toHeroCtx,
+                    // Context of this Hero on DetailPage
+                  ) {
                     // This builder is called when DetailPage is the DESTINATION (i.e., on PUSH)
-                    print("BaseDetailPage Hero shuttle (DESTINATION ON PUSH): Anim Val: ${animation.value.toStringAsFixed(2)}");
+                    print(
+                        "BaseDetailPage Hero shuttle (DESTINATION ON PUSH): Anim Val: ${animation.value.toStringAsFixed(2)}");
 
                     HeaderVisualParams paramsFromHome;
-                    final double homeScrollOffset = widget.homePageScrollOffset; // Get from widget/extra
+                    final double homeScrollOffset =
+                        widget.homePageScrollOffset; // Get from widget/extra
 
-                    print("  BaseDetailShuttle (PUSH): Using PRECISE scrollOffset: $homeScrollOffset");
-                    paramsFromHome= AppHeaderLogic.getDynamicHeaderVisualParams(
+                    print(
+                        "  BaseDetailShuttle (PUSH): Using PRECISE scrollOffset: $homeScrollOffset");
+                    paramsFromHome =
+                        AppHeaderLogic.getDynamicHeaderVisualParams(
                       context: fromHeroCtx,
                       scrollOffset: homeScrollOffset,
                     );
-                    print("  Calculated precise paramsFromHome: Align: ${paramsFromHome.wheelAlignment}, Dia: ${paramsFromHome.wheelDiameter}, Angle1: ${paramsFromHome.wheelAngle1}");
+                    print(
+                        "  Calculated precise paramsFromHome: Align: ${paramsFromHome.wheelAlignment}, Dia: ${paramsFromHome.wheelDiameter}, Angle1: ${paramsFromHome.wheelAngle1}");
 
-                                      // Parameters for the end of the animation (this DetailPage's collapsed header)
-                    final paramsToDetail = AppHeaderMetrics.getCollapsedHeaderVisualParams(toHeroCtx);
-                    print("  paramsToDetail (Push): Align: ${paramsToDetail.wheelAlignment}, Dia: ${paramsToDetail.wheelDiameter.toStringAsFixed(2)}, Angle1: ${paramsToDetail.wheelAngle1.toStringAsFixed(2)}, Color1: ${paramsToDetail.wheel1Color}, BgColor: ${paramsToDetail.backgroundColor}");
+                    // Parameters for the end of the animation (this DetailPage's collapsed header)
+                    final paramsToDetail =
+                        AppHeaderMetrics.getCollapsedHeaderVisualParams(
+                            toHeroCtx);
+                    print(
+                        "  paramsToDetail (Push): Align: ${paramsToDetail.wheelAlignment}, Dia: ${paramsToDetail.wheelDiameter.toStringAsFixed(2)}, Angle1: ${paramsToDetail.wheelAngle1.toStringAsFixed(2)}, Color1: ${paramsToDetail.wheel1Color}, BgColor: ${paramsToDetail.backgroundColor}");
 
                     return globalFlightShuttleBuilderInternal(
                       flightContext: flightCtx,
@@ -137,7 +150,20 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                       flightDirection: flightDirection,
                     );
                   },
-                  child: smallHeaderVisual,
+                  child: FutureBuilder<Widget>(
+                      future: _tickerFuture.then((ticker) =>
+                          buildAnimatedHeaderContent(
+                              context: context,
+                              params: detailHeaderParams,
+                              ticker: ticker)),
+                      builder: (context, asyncSnapshot) {
+                        return asyncSnapshot.hasData
+                            ? asyncSnapshot.data ??
+                                Container(child: Text('null data'))
+                            : Container(
+                                child: Text('no data'),
+                              );
+                      }),
                 ),
               ),
               ...buildScrollableContent(context),

@@ -52,6 +52,7 @@ Widget buildAnimatedHeaderContent({
   required HeaderVisualParams params,
   VoidCallback? onLogoTap, // Optional: for the dot logo
   VoidCallback? onWheelsTap, // Optional: for the wheels
+  String ticker = '',
   bool isPopAnimation = false,
 }) {
   // The dotLogo from MyHomePage had a GestureDetector, let's make it configurable
