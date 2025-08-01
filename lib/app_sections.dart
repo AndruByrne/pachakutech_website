@@ -64,8 +64,6 @@ enum AppSection {
 
   /// Builds the appropriate detail page widget for this section.
   Widget buildDetailPage({
-    required BuildContext context, // Usually not needed directly for widget construction
-    required FirebaseFirestore db,
     String? articleId, // Specific article within the section
     required double homePageScrollOffset,
   }) {
@@ -76,19 +74,19 @@ enum AppSection {
           // as EducationDetailPage inherently IS for AppSection.education.
           // The specific page can still hold an 'appSection' field initialized to its type
           // if convenient for its internal logic (like for the state to access metadata).
-          db: db,
+          db: FirebaseFirestore.instance,
           articleId: articleId,
           homePageScrollOffset: homePageScrollOffset,
         );
       case AppSection.evaluation:
         return EvaluationDetailPage(
-          db: db,
+          db: FirebaseFirestore.instance,
           articleId: articleId,
           homePageScrollOffset: homePageScrollOffset,
         );
       case AppSection.elevation:
         return ElevationDetailPage(
-          db: db,
+          db: FirebaseFirestore.instance,
           articleId: articleId,
           homePageScrollOffset: homePageScrollOffset,
         );

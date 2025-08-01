@@ -22,6 +22,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return MaterialApp.router(
       title: 'Pachakutech',
       theme: ThemeData(
@@ -31,54 +32,55 @@ class MyApp extends StatelessWidget {
             surfaceContainer: Colors.blueGrey.shade50),
         useMaterial3: true,
       ),
-      routerConfig: GoRouter(routes: [
-        GoRoute(
-          path: '/',
-          builder: (context, state) => MyHomePage(),
-        ),
-        GoRoute(
-            path: '/car_crush_privacy_policy',
-            builder: (context, state) => const CarCrushPrivacyPolicyPage()),
-        ...AppSection.values.expand<RouteBase>((section) {
-          // For each section, we return a list containing its two routes
-          return [
-            // Route for the section overview (e.g., /edu)
-            GoRoute(
-              path: section.routePath,
-              pageBuilder: (context, state) {
-                final params = state.extra as Map<String, dynamic>?;
-                final scrollOffset = params?['scrollOffset'] as double? ?? 0.0;
-                Widget pageWidget = section.buildDetailPage(
-                  context: context,
-                  db: db,
-                  articleId: null, // For overview
-                  homePageScrollOffset: scrollOffset,
-                );
-                return fadeTransitionOf(state, pageWidget);
-              },
-            ),
-            // Route for a specific article (e.g., /edu/:articleId)
-            GoRoute(
-              path: section.articleRoutePath,
-              pageBuilder: (context, state) {
-                final articleId = state.pathParameters['articleId']!;
-                final params = state.extra as Map<String, dynamic>?;
-                final scrollOffset = params?['scrollOffset'] as double? ?? 0.0;
-                Widget pageWidget = section.buildDetailPage(
-                  context: context,
-                  db: db,
-                  articleId: articleId,
-                  homePageScrollOffset: scrollOffset,
-                );
-                return fadeTransitionOf(state, pageWidget);
-              },
-            ),
-          ];
-        }),
-      ]),
+      routerConfig: goRouterSingleton,
     );
   }
 }
+
+var goRouterSingleton = GoRouter(routes: [
+  GoRoute(
+    path: '/',
+    builder: (context, state) {
+      print('routing to home'); // <- this is called twice, but only on refresh, not on first load
+      return MyHomePage();
+    },
+  ),
+  GoRoute(
+      path: '/car_crush_privacy_policy',
+      builder: (context, state) => const CarCrushPrivacyPolicyPage()),
+  ...AppSection.values.expand<RouteBase>((section) {
+    // For each section, we return a list containing its two routes
+    return [
+      // Route for the section overview (e.g., /edu)
+      GoRoute(
+        path: section.routePath,
+        pageBuilder: (context, state) {
+          final params = state.extra as Map<String, dynamic>?;
+          final scrollOffset = params?['scrollOffset'] as double? ?? 0.0;
+          Widget pageWidget = section.buildDetailPage(
+            articleId: null, // For overview
+            homePageScrollOffset: scrollOffset,
+          );
+          return fadeTransitionOf(state, pageWidget);
+        },
+      ),
+      // Route for a specific article (e.g., /edu/:articleId)
+      GoRoute(
+        path: section.articleRoutePath,
+        pageBuilder: (context, state) {
+          final articleId = state.pathParameters['articleId']!;
+          final params = state.extra as Map<String, dynamic>?;
+          final scrollOffset = params?['scrollOffset'] as double? ?? 0.0;
+          Widget pageWidget = section.buildDetailPage(
+            articleId: articleId,
+            homePageScrollOffset: scrollOffset,
+          );
+          return fadeTransitionOf(state, pageWidget);
+        },
+      ),
+    ];
+  }),
+]);
 
 CustomTransitionPage<void> fadeTransitionOf(
     GoRouterState state, Widget pageWidget) {
