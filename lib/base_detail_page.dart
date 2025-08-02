@@ -116,30 +116,20 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                     // Context of this Hero on DetailPage
                   ) {
                     // This code does not run
-                    // This builder is called when DetailPage is the DESTINATION (i.e., on PUSH)
-                    print(
-                        "BaseDetailPage Hero shuttle (DESTINATION ON PUSH): Anim Val: ${animation.value.toStringAsFixed(2)}");
 
                     HeaderVisualParams paramsFromHome;
                     final double homeScrollOffset =
                         widget.homePageScrollOffset; // Get from widget/extra
-
-                    print(
-                        "  BaseDetailShuttle (PUSH): Using PRECISE scrollOffset: $homeScrollOffset");
                     paramsFromHome =
                         AppHeaderLogic.getDynamicHeaderVisualParams(
                       context: fromHeroCtx,
                       scrollOffset: homeScrollOffset,
                     );
-                    print(
-                        "  Calculated precise paramsFromHome: Align: ${paramsFromHome.wheelAlignment}, Dia: ${paramsFromHome.wheelDiameter}, Angle1: ${paramsFromHome.wheelAngle1}");
 
                     // Parameters for the end of the animation (this DetailPage's collapsed header)
                     final paramsToDetail =
                         AppHeaderMetrics.getCollapsedHeaderVisualParams(
                             toHeroCtx);
-                    print(
-                        "  paramsToDetail (Push): Align: ${paramsToDetail.wheelAlignment}, Dia: ${paramsToDetail.wheelDiameter.toStringAsFixed(2)}, Angle1: ${paramsToDetail.wheelAngle1.toStringAsFixed(2)}, Color1: ${paramsToDetail.wheel1Color}, BgColor: ${paramsToDetail.backgroundColor}");
 
                     return globalFlightShuttleBuilderInternal(
                       flightContext: flightCtx,
@@ -149,10 +139,13 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                       flightDirection: flightDirection,
                     );
                   },
-                  // child: buildAnimatedHeaderContent(
-                  //       params: detailHeaderParams,
-                  //       tickerFuture: Future.value(''),),
-                  child: Container(),
+                  child: buildAnimatedHeaderContent(
+                    params: detailHeaderParams,
+                    tickerFuture: widget.contentRepo
+                        .fetchTickerMessages()
+                        .then((tickers) => tickers[sectionId]),
+                  ),
+                  // child: Container(),
                 ),
               ),
               ...buildScrollableContent(context),

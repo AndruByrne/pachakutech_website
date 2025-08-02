@@ -24,7 +24,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return MaterialApp.router(
       title: 'Pachakutech',
       theme: ThemeData(
@@ -43,15 +42,16 @@ var goRouterSingleton = GoRouter(routes: [
   GoRoute(
     path: '/',
     builder: (context, state) {
-      print('routing to home'); // <- this is called twice, but only on refresh, not on first load
+      print(
+          'routing to home'); // <- this is called twice, but only on refresh, not on first load
       return MyHomePage();
     },
   ),
   GoRoute(
       path: '/car_crush_privacy_policy',
+      // TODO: change car crush privacy policy address on play store
       builder: (context, state) => const CarCrushPrivacyPolicyPage()),
   ...AppSection.values.expand<RouteBase>((section) {
-    // For each section, we return a list containing its two routes
     return [
       // Route for the section overview (e.g., /edu)
       GoRoute(
@@ -89,15 +89,12 @@ CustomTransitionPage<void> fadeTransitionOf(
   return CustomTransitionPage<void>(
     key: state.pageKey,
     child: pageWidget,
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      // Use a FadeTransition or any other transition you prefer
-      // The Hero animation will happen on top of/concurrently with this.
-      return FadeTransition(
-        opacity: animation,
-        //animation.drive(CurveTween(curve: Curves.easeInOut)),
-        child: child,
-      );
-    },
+    // The Hero animation will happen on top of/concurrently with this.
+    transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+        FadeTransition(
+      opacity: animation.drive(CurveTween(curve: Curves.easeInOut)),
+      child: child,
+    ),
     transitionDuration:
         const Duration(milliseconds: 300), // Match Hero duration or adjust
     // reverseTransitionDuration: const Duration(milliseconds: 300), // For pop

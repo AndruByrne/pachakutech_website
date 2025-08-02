@@ -175,7 +175,7 @@ Widget globalFlightShuttleBuilderInternal({
               : const ValueKey('push_animation_context_fixed'),
           child: buildAnimatedHeaderContent(
             params: interpolatedDisplayParams,
-            tickerFuture: Future.value(''),
+            tickerFuture: Future.value('             '), // Ticker should be blank in flight
             isPopAnimation: (flightDirection == HeroFlightDirection.pop),
           ),
         );

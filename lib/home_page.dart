@@ -30,8 +30,6 @@ class _AnimatedHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
-    // shrinkOffset: How much the header has scrolled up/shrunk.
-    // 0 when fully expanded (maxHeight), increases up to (maxHeight - minHeight).
     // The 'child' widget is already built by _MyHomePageState with all necessary
     // transformations (rotation, size, alignment) based on the global scroll offset.
     // This delegate's primary job is to provide the correctly sized container for it.
@@ -165,7 +163,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
     Widget headerVisuals = buildAnimatedHeaderContent(
       params: currentParams,
-      tickerFuture: Future.value(''),
+      tickerFuture: ContentRepository(db: FirebaseFirestore.instance)
+          .fetchTickerMessages()
+          .then((tickers) => tickers['header']),
       onLogoTap: _handleWheelsTap,
       onWheelsTap: _handleWheelsTap,
     );
@@ -263,12 +263,11 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     );
 
     return Scaffold(
-      // Main Scaffold for MyHomePage
       body: _showAuthorUI
           ? AuthorControls(db: widget.db)
           : Stack(
               children: <Widget>[
-                mainPageParallaxBackground, // Always show for MyHomePage
+                mainPageParallaxBackground,
                 CustomScrollView(
                   controller: _mainScrollController,
                   physics: const BouncingScrollPhysics(),

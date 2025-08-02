@@ -4,11 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import './education_content.dart';
 import './evaluation_content.dart';
 import './elevation_content.dart';
-// Forward declare BlogRepository if it's used by the detail pages' constructors directly
-// and you want to avoid circular dependencies at the import level for this file.
-// However, it's cleaner if detail pages create their own repositories or receive them
-// if the repository itself needs the AppSection for its construction.
-// For now, assuming pages can take `db` and construct their repo.
+// These are circular, but Dart allows this if the types can be resolved at compile time
 
 enum AppSection {
   education(
