@@ -1,13 +1,9 @@
-// app_sections.dart
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // For db type
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-// Import your page types - ensure paths are correct
-import './education_content.dart'; // Assuming EducationDetailPage is here
-import './evaluation_content.dart'; // Assuming EvaluationDetailPage is here
-import './elevation_content.dart'; // Assuming ElevationDetailPage is here
-// import './base_detail_page.dart'; // BaseDetailPage itself might not be directly constructed by this
-
+import './education_content.dart';
+import './evaluation_content.dart';
+import './elevation_content.dart';
 // Forward declare BlogRepository if it's used by the detail pages' constructors directly
 // and you want to avoid circular dependencies at the import level for this file.
 // However, it's cleaner if detail pages create their own repositories or receive them
@@ -70,10 +66,6 @@ enum AppSection {
     switch (this) {
       case AppSection.education:
         return EducationDetailPage(
-          // No longer needs to pass 'appSection: this' explicitly to EducationDetailPage,
-          // as EducationDetailPage inherently IS for AppSection.education.
-          // The specific page can still hold an 'appSection' field initialized to its type
-          // if convenient for its internal logic (like for the state to access metadata).
           db: FirebaseFirestore.instance,
           articleId: articleId,
           homePageScrollOffset: homePageScrollOffset,
@@ -90,10 +82,6 @@ enum AppSection {
           articleId: articleId,
           homePageScrollOffset: homePageScrollOffset,
         );
-    // Add other cases as needed
-    // Default case could throw an error if an AppSection isn't mapped
-    // default:
-    //   throw UnimplementedError('Detail page not implemented for $this');
     }
   }
 }

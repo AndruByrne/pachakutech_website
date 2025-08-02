@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pachakutech_website/app_sections.dart';
+import 'package:url_strategy/url_strategy.dart';
 
 import 'car_crush_privacy_policy_page.dart';
 import 'firebase_options.dart';
@@ -12,6 +13,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   final db = FirebaseFirestore.instance;
+  setPathUrlStrategy();
   runApp(MyApp(db: db));
 }
 
