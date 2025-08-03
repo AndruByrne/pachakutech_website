@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:marquee/marquee.dart';
 import 'package:pachakutech_website/looping_text_scroll.dart';
@@ -285,21 +287,31 @@ class CardTitle extends StatelessWidget {
           ),
         ),
         if (ticker.isNotEmpty)
-          Expanded(
+          Flexible(
             child: Container(
               height: 40,
               padding:
                   const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
               decoration: squircleDecoration(Colors.black26),
-              child: Marquee(
-                text: ticker,
-                style: TextStyle(
+              child: LayoutBuilder(builder: (context, constraints) {
+                final style = TextStyle(
                   color: Colors.white,
-                ),
-                blankSpace: 20,
-                scrollAxis: Axis.horizontal,
-                crossAxisAlignment: CrossAxisAlignment.end,
-              ),
+                );
+                final textPainter = TextPainter(
+                  text: TextSpan(text: ticker, style: style),
+                  maxLines: 1,
+                  textDirection: TextDirection.ltr,
+                )..layout();
+                return textPainter.width > constraints.maxWidth
+                    ? Marquee(
+                        text: ticker,
+                        style: style,
+                        blankSpace: 20,
+                        scrollAxis: Axis.horizontal,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                      )
+                    : Text(ticker, style: style,);
+              }),
             ),
           ),
       ],
