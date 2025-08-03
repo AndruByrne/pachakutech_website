@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:marquee/marquee.dart';
 import 'package:pachakutech_website/looping_text_scroll.dart';
 import 'app_sections.dart';
 import 'hero_util.dart';
@@ -41,7 +42,7 @@ SliverChildBuilderDelegate mainContentBuilder(
         if (isConsultingCard) {
           final consultingTitleWidget = CardTitle(
             title: 'Consulting',
-            ticker: 'Happy Customers',
+            ticker: '',
             textAlign: titleTextAlign,
           );
           return ConsultingCard(
@@ -286,10 +287,19 @@ class CardTitle extends StatelessWidget {
         if (ticker.isNotEmpty)
           Expanded(
             child: Container(
+              height: 40,
               padding:
                   const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
               decoration: squircleDecoration(Colors.black26),
-              child: LoopingTextScroll(text: ticker, fontSize: 16),
+              child: Marquee(
+                text: ticker,
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+                blankSpace: 20,
+                scrollAxis: Axis.horizontal,
+                crossAxisAlignment: CrossAxisAlignment.end,
+              ),
             ),
           ),
       ],
