@@ -1,17 +1,12 @@
-// blog_repository.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:pachakutech_website/app_sections.dart';
 import 'package:pachakutech_website/proto/blog_entry.pb.dart';
-
-// Import your BlogEntry proto model if you're fetching and parsing those
-// import 'package:pachakutech_website/generated/proto/blog_entry.pb.dart';
 
 class ContentRepository {
   final FirebaseFirestore _db;
 
   ContentRepository({required FirebaseFirestore db}) : _db = db;
 
-  // Example: Fetching generic messages (like your current 'messages' collection)
   Future<Map<String, dynamic>> fetchTickerMessages() async {
     try {
       final snapshot = await _db.collection('messages').get();

@@ -95,16 +95,12 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     }
   }
 
-  void _handleWheelsTap() {
-    if (kIsWeb) {
-      _handleBackTap();
-    } else {
-      setState(() {
-        // replace main content with author UI
-        _showAuthorUI = !_showAuthorUI;
-      });
-    }
-  }
+  void _handleWheelsTap() => kIsWeb
+      ? _handleBackTap()
+      : setState(() {
+          // replace main content with author UI
+          _showAuthorUI = !_showAuthorUI;
+        });
 
   void _handleBackTap() {
     // If the header is in a state where tapping it means "go back to top / main view"
@@ -124,8 +120,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     }
   }
 
-  void _handleSubsectionCardTap(AppSection appSection) {
-    setState(() {
+  void _handleSubsectionCardTap(AppSection appSection) => setState(() {
       final double currentScrollOffset = _mainScrollController.offset;
 
       developer.log(
@@ -137,17 +132,14 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         'scrollOffset': currentScrollOffset,
       });
     });
-  }
 
-  HeaderVisualParams get currentHeaderVisualParams {
-    double currentScroll = 0.0;
-    if (_mainScrollController.hasClients &&
-        _mainScrollController.position.haveDimensions) {
-      currentScroll = _mainScrollController.offset;
-    }
-    return AppHeaderLogic.getDynamicHeaderVisualParams(
-        context: context, scrollOffset: currentScroll);
-  }
+  HeaderVisualParams get currentHeaderVisualParams =>
+      AppHeaderLogic.getDynamicHeaderVisualParams(
+          context: context,
+          scrollOffset: _mainScrollController.hasClients &&
+                  _mainScrollController.position.haveDimensions
+              ? _mainScrollController.offset
+              : 0.0);
 
   @override
   void dispose() {
@@ -217,14 +209,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
     Widget mainPageParallaxBackground = ValueListenableBuilder<double>(
       valueListenable: _mainScrollControllerNotifier,
-
-      // You'll need to create this
       builder: (context, scrollOffset, child) {
         double backgroundScrollOffset = scrollOffset * 0.3; // Parallax factor
         double screenHeight = MediaQuery.of(context).size.height;
-        // Estimate how much "extra" height is needed for the parallax effect.
-        // This is a rough estimate; maxScrollExtent isn't always known upfront easily.
-        // Let's assume the content might scroll up to, say, twice the screen height for a long list.
         double estimatedMaxContentScroll = screenHeight * 2.5;
         double parallaxTravel = estimatedMaxContentScroll * 0.3;
 
@@ -232,8 +219,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           top: -backgroundScrollOffset,
           left: 0,
           right: 0,
-          // Make the image container tall enough to show the initial screen height
-          // plus the amount it will effectively "travel" due to parallax.
           height: screenHeight + parallaxTravel,
           child: Image.asset(
             'assets/main_page_background.jpg',
