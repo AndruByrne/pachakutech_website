@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pachakutech_website/looping_text_scroll.dart';
 import 'app_sections.dart';
 import 'hero_util.dart';
 import 'periodic_gradient_painter.dart';
@@ -39,7 +40,7 @@ SliverChildBuilderDelegate mainContentBuilder(
 
         if (isConsultingCard) {
           final consultingTitleWidget = CardTitle(
-            text: 'Consulting',
+            title: 'Consulting',
             ticker: 'Happy Customers',
             textAlign: titleTextAlign,
           );
@@ -55,7 +56,7 @@ SliverChildBuilderDelegate mainContentBuilder(
             future: sectionTickers,
             builder: (_, snapshot) {
               return CardTitle(
-                text: section.title,
+                title: section.title,
                 textAlign: titleTextAlign,
                 ticker:
                     snapshot.hasData ? (snapshot.data?[section.id] ?? '') : '',
@@ -246,13 +247,13 @@ class ContentSectionCard extends StatelessWidget {
 }
 
 class CardTitle extends StatelessWidget {
-  final String text;
+  final String title;
   final String ticker;
   final TextAlign textAlign;
 
   const CardTitle({
     super.key,
-    required this.text,
+    required this.title,
     required this.ticker,
     this.textAlign = TextAlign.left,
   });
@@ -263,9 +264,9 @@ class CardTitle extends StatelessWidget {
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-          decoration: blackSquircleDecoration,
+          decoration: squircleDecoration(Colors.black54),
           child: Text(
-            text,
+            title,
             textAlign: textAlign,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               color: Colors.white,
@@ -283,16 +284,12 @@ class CardTitle extends StatelessWidget {
           ),
         ),
         if (ticker.isNotEmpty)
-          Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-            decoration: blackSquircleDecoration,
-            child: Text(
-              ticker,
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineSmall
-                  ?.copyWith(color: Colors.white),
+          Expanded(
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+              decoration: squircleDecoration(Colors.black26),
+              child: LoopingTextScroll(text: ticker, fontSize: 16),
             ),
           ),
       ],
@@ -300,28 +297,28 @@ class CardTitle extends StatelessWidget {
   }
 }
 
-var blackSquircleDecoration = BoxDecoration(
-  color: Colors.black.withValues(alpha: 0.65),
-  borderRadius: BorderRadius.circular(8.0),
-  boxShadow: [
-    BoxShadow(
-      color: Colors.black.withValues(alpha: 0.5),
-      blurRadius: 10.0,
-      spreadRadius: 2.0,
-      offset: Offset(2, 2),
-    ),
-    BoxShadow(
-      color: Colors.white.withValues(alpha: 0.15),
-      blurRadius: 12.0,
-      spreadRadius: 1.0,
-      offset: Offset(0, 0),
-    ),
-  ],
-  border: Border.all(
-    color: Colors.white.withValues(alpha: 0.3),
-    width: 0.5,
-  ),
-);
+squircleDecoration(Color color) => BoxDecoration(
+      color: color,
+      borderRadius: BorderRadius.circular(8.0),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.5),
+          blurRadius: 10.0,
+          spreadRadius: 2.0,
+          offset: Offset(2, 2),
+        ),
+        BoxShadow(
+          color: Colors.white.withValues(alpha: 0.15),
+          blurRadius: 12.0,
+          spreadRadius: 1.0,
+          offset: Offset(0, 0),
+        ),
+      ],
+      border: Border.all(
+        color: Colors.white.withValues(alpha: 0.3),
+        width: 0.5,
+      ),
+    );
 
 abstract class BaseSectionData {
   final String title;
