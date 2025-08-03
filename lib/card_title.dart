@@ -4,27 +4,24 @@ import 'package:marquee/marquee.dart';
 class CardTitle extends StatelessWidget {
   final String title;
   final String ticker;
-  final TextAlign textAlign;
   final String? image;
 
   const CardTitle({
     super.key,
     required this.title,
     required this.ticker,
-    this.textAlign = TextAlign.left,
     this.image,
   });
 
   @override
-  Widget build(BuildContext context) {
-    return Row(
+  Widget build(BuildContext context) => Row(
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
           decoration: squircleDecoration(Colors.black54),
           child: Text(
             title,
-            textAlign: textAlign,
+            textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               color: Colors.white,
               // fontFamily: 'Pachakutech',
@@ -69,13 +66,14 @@ class CardTitle extends StatelessWidget {
             ),
           ),
         if (image != null)
-          Padding(
-              padding: const EdgeInsets.only(left: 28.0),
-              child: SizedBox(
-                  height: 40, child: Image.asset(image!, fit: BoxFit.contain)))
+          Flexible(
+            child: Padding(
+                padding: const EdgeInsets.only(left: 28.0),
+                child: SizedBox(
+                    height: 32, child: Image.asset(image!, fit: BoxFit.contain))),
+          )
       ],
     );
-  }
 }
 
 squircleDecoration(Color color) => BoxDecoration(
