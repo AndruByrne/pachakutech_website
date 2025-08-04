@@ -9,12 +9,24 @@ class ContentRepository {
 
   Future<Map<String, dynamic>> fetchTickerMessages() async {
     try {
-      final snapshot = await _db.collection('messages').get();
+      final snapshot = await _db.collection('tickers').get();
       return snapshot.docs
-          .map((doc) => doc.get('tickers') )
+          .map((doc) => doc.get('sections') )
           .first;
     } catch (e) {
       print("Error fetching ticker messages: $e");
+      return {};
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchSectionIntros() async {
+    try {
+      final snapshot = await _db.collection('section_intros').get();
+      return snapshot.docs
+          .map((doc) => doc.get('sections') )
+          .first;
+    } catch (e) {
+      print("Error fetching section intros: $e");
       return {};
     }
   }

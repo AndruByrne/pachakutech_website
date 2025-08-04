@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:pachakutech_website/app_sections.dart';
-import 'home_content.dart';
+import 'content_repo.dart';
 import 'base_detail_page.dart';
 
 class ElevationDetailPage extends BaseDetailPage {
   final AppSection appSection = AppSection.elevation;
+  final ContentRepository contentRepo;
   ElevationDetailPage({
     super.key, required super.db, required super.articleId, required super.homePageScrollOffset,
-  });
+  }): contentRepo = ContentRepository(db: db);
 
   @override
   State<ElevationDetailPage> createState() => _EvaluationDetailPageState();
@@ -44,17 +45,16 @@ class _EvaluationDetailPageState
           ),
         ),
       ),
-      // Add more slivers specific to EvaluationDetailPage here if needed
     ];
   }
 
-// Optional: Override scroll physics if needed for this specific page
-// @override
-// ScrollPhysics getScrollPhysics() => const AlwaysScrollableScrollPhysics();
   @override
   String get backgroundImageAsset => widget.appSection.imageAsset; // Accesses the local appSection
   @override
   String get sectionId => widget.appSection.id;
   @override
   String get sectionTitle => widget.appSection.title;
+
+  @override
+  Future<String> get titleCopy => widget.contentRepo.fetchSectionIntros().then((intros)=>intros[widget.appSection.id]);
 }

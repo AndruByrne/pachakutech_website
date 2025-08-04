@@ -28,7 +28,8 @@ class _EvaluationDetailPageState
   @override
   void initState() {
     super.initState();
-    _blogEntries = widget.contentRepo.fetchBlogEntries(appSection: widget.appSection);
+    _blogEntries =
+        widget.contentRepo.fetchBlogEntries(appSection: widget.appSection);
     _linkTreeEntries = widget.contentRepo.fetchEvalLinkTree();
   }
 
@@ -41,7 +42,6 @@ class _EvaluationDetailPageState
             future: _blogEntries,
             builder: (context, asyncSnapshot) {
               var blogEntries = asyncSnapshot.data;
-              print('building ${blogEntries?.length ?? 'NO'} eval entries');
               return SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (context, index) =>
@@ -63,4 +63,7 @@ class _EvaluationDetailPageState
 
   @override
   String get sectionTitle => widget.appSection.title;
+
+  @override
+  Future<String> get titleCopy => widget.contentRepo.fetchSectionIntros().then((intros) => intros[widget.appSection.id]);
 }

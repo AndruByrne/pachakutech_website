@@ -33,6 +33,8 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
   /// Provides the title for this section, potentially for the AppBar.
   String get sectionTitle;
 
+  Future<String> get titleCopy;
+
   @override
   void initState() {
     super.initState();
@@ -148,6 +150,20 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                   // child: Container(),
                 ),
               ),
+              SliverPadding(
+                  padding: const EdgeInsets.all(16.0),
+                  sliver: SliverList.list(children: [
+                    Card(
+                      margin: const EdgeInsets.all(4.0),
+                      child: FutureBuilder(
+                          future: titleCopy,
+                          builder: (context, snapshot) =>
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(snapshot.hasData ? snapshot.data ?? '' : ''),
+                              )),
+                    ),
+                  ])),
               ...buildScrollableContent(context),
             ],
           ),

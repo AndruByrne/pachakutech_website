@@ -45,38 +45,13 @@ class _EducationDetailPageState
                   asyncSnapshot.hasData ? asyncSnapshot.data ?? [] : [];
               return SliverList(
                 delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    if (index < blogEntries.length) {
-                      return BlogEntryCard(blogEntry: blogEntries?[index]);
-                    } else {
-                      return Card(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text("Elevation Details: ${sectionTitle}",
-                                style:
-                                    Theme.of(context).textTheme.headlineMedium),
-                            SizedBox(height: 20),
-                            Text("ID: ${sectionId}"),
-                            SizedBox(height: 20),
-                            Text("Content related to elevation and growth... " *
-                                20),
-                            SizedBox(
-                                height:
-                                    MediaQuery.of(context).size.height * 0.5),
-                            Text("End of elevation content."),
-                          ],
-                        ),
-                      );
-                    }
-                  },
-                  childCount:
-                      blogEntries.length + 1, // Your desired child count
+                  (context, index) =>
+                      BlogEntryCard(blogEntry: blogEntries?[index]),
+                  childCount: blogEntries.length, // Your desired child count
                 ),
               );
             }),
       ),
-      // Add more slivers specific to EvaluationDetailPage here if needed
     ];
   }
 
@@ -88,4 +63,7 @@ class _EducationDetailPageState
 
   @override
   String get sectionTitle => widget.appSection.title;
+
+  @override
+  Future<String> get titleCopy => widget.contentRepo.fetchSectionIntros().then((intros)=>intros[widget.appSection.id]);
 }
