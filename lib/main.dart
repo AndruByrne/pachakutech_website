@@ -38,51 +38,55 @@ class MyApp extends StatelessWidget {
   }
 }
 
-var goRouterSingleton = GoRouter(routes: [
-  GoRoute(
-    path: '/',
-    builder: (context, state) {
-      print(
-          'routing to home'); // <- this is called twice, but only on refresh, not on first load
-      return MyHomePage();
-    },
-  ),
-  GoRoute(
-      path: '/car_crush_privacy_policy',
-      // TODO: change car crush privacy policy address on play store
-      builder: (context, state) => const CarCrushPrivacyPolicyPage()),
-  ...AppSection.values.expand<RouteBase>((section) {
-    return [
-      // Route for the section overview (e.g., /edu)
+var goRouterSingleton = GoRouter(
+    routes: [
       GoRoute(
-        path: section.routePath,
-        pageBuilder: (context, state) {
-          final params = state.extra as Map<String, dynamic>?;
-          final scrollOffset = params?['scrollOffset'] as double? ?? 0.0;
-          Widget pageWidget = section.buildDetailPage(
-            articleId: null, // For overview
-            homePageScrollOffset: scrollOffset,
-          );
-          return fadeTransitionOf(state, pageWidget);
+        path: '/',
+        builder: (context, state) {
+          print('routing to home'); // <- this is called twice, only on refresh
+          return MyHomePage();
         },
       ),
-      // Route for a specific article (e.g., /edu/:articleId)
       GoRoute(
-        path: section.articleRoutePath,
-        pageBuilder: (context, state) {
-          final articleId = state.pathParameters['articleId']!;
-          final params = state.extra as Map<String, dynamic>?;
-          final scrollOffset = params?['scrollOffset'] as double? ?? 0.0;
-          Widget pageWidget = section.buildDetailPage(
-            articleId: articleId,
-            homePageScrollOffset: scrollOffset,
-          );
-          return fadeTransitionOf(state, pageWidget);
-        },
-      ),
-    ];
-  }),
-]);
+          path: '/car_crush_privacy_policy',
+          builder: (context, state) => const CarCrushPrivacyPolicyPage()),
+      ...AppSection.values.expand<RouteBase>((section) {
+        return [
+          // Route for the section overview (e.g., /edu)
+          GoRoute(
+            path: section.routePath,
+            pageBuilder: (context, state) {
+              final params = state.extra as Map<String, dynamic>?;
+              final scrollOffset = params?['scrollOffset'] as double? ?? 0.0;
+              Widget pageWidget = section.buildDetailPage(
+                articleId: null, // For overview
+                homePageScrollOffset: scrollOffset,
+              );
+              return fadeTransitionOf(state, pageWidget);
+            },
+          ),
+          // Route for a specific article (e.g., /edu/:articleId)
+          GoRoute(
+            path: section.articleRoutePath,
+            pageBuilder: (context, state) {
+              final articleId = state.pathParameters['articleId']!;
+              final params = state.extra as Map<String, dynamic>?;
+              final scrollOffset = params?['scrollOffset'] as double? ?? 0.0;
+              Widget pageWidget = section.buildDetailPage(
+                articleId: articleId,
+                homePageScrollOffset: scrollOffset,
+              );
+              return fadeTransitionOf(state, pageWidget);
+            },
+          ),
+        ];
+      }),
+    ],
+    errorBuilder: (ctx, state) => Scaffold(
+          body: Center(
+            child: Text('Page Not found: ${state.error}'),
+          ),
+        ));
 
 CustomTransitionPage<void> fadeTransitionOf(
     GoRouterState state, Widget pageWidget) {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pachakutech_website/app_sections.dart';
 import 'package:pachakutech_website/base_detail_page.dart';
-import 'package:pachakutech_website/blog_entry_card.dart';
+import 'package:pachakutech_website/widgets/blog_entry_card.dart';
 import 'proto/blog_entry.pb.dart';
 import 'content_repo.dart';
 
@@ -23,14 +23,12 @@ class EvaluationDetailPage extends BaseDetailPage {
 class _EvaluationDetailPageState
     extends BaseDetailPageState<EvaluationDetailPage> {
   late Future<List<BlogEntry>> _blogEntries;
-  late Future<List<Map<String, dynamic>>> _linkTreeEntries;
 
   @override
   void initState() {
     super.initState();
     _blogEntries =
         widget.contentRepo.fetchBlogEntries(appSection: widget.appSection);
-    _linkTreeEntries = widget.contentRepo.fetchEvalLinkTree();
   }
 
   @override
@@ -46,8 +44,7 @@ class _EvaluationDetailPageState
                 delegate: SliverChildBuilderDelegate(
                   (context, index) =>
                       BlogEntryCard(blogEntry: blogEntries?[index]),
-                  childCount:
-                      blogEntries?.length ?? 0, // Your desired child count
+                  childCount: blogEntries?.length ?? 0,
                 ),
               );
             }),
@@ -65,5 +62,7 @@ class _EvaluationDetailPageState
   String get sectionTitle => widget.appSection.title;
 
   @override
-  Future<String> get titleCopy => widget.contentRepo.fetchSectionIntros().then((intros) => intros[widget.appSection.id]);
+  Future<String> get titleCopy => widget.contentRepo
+      .fetchSectionIntros()
+      .then((intros) => intros[widget.appSection.id]);
 }

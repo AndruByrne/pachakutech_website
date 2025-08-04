@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pachakutech_website/section_card.dart';
 import 'app_sections.dart';
-import 'card_title.dart';
+import 'widgets/card_title.dart';
 
 typedef OnCardTap = void Function(AppSection appSection);
 

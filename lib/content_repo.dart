@@ -26,7 +26,7 @@ class ContentRepository {
           .map((doc) => doc.get('sections') )
           .first;
     } catch (e) {
-      print("Error fetching section intros: $e");
+      print("Error fetching ticker messages: $e");
       return {};
     }
   }
@@ -34,7 +34,11 @@ class ContentRepository {
   Future<List<BlogEntry>> fetchBlogEntries(
       {required AppSection appSection, String? articleId}) async {
     var collectionName = appSection.bloggingCollection;
-    try {
+    return await fetchEntries(collectionName);
+  }
+
+  Future<List<BlogEntry>> fetchEntries(String collectionName) async {
+      try {
       Query query = _db.collection(collectionName);
       final snapshot = await query.get();
       return snapshot.docs.map<BlogEntry>((doc) {
@@ -58,39 +62,26 @@ class ContentRepository {
         }
       }).toList();
     } catch (e, s) {
-      print("Error fetching $collectionName blog entries: $e");
+      print("Error fetching $collectionName entries: $e");
       print("Stack trace: $s");
       return [];
     }
   }
 
-  Future<List<Map<String, dynamic>>> fetchEduLinkTree(
-      {String? articleId}) async {
-    try {
-      Query query =
-          _db.collection('edu_links').orderBy('created', descending: true);
-      final snapshot = await query.get();
-      return snapshot.docs
-          .map((doc) => doc.data() as Map<String, dynamic>)
-          .toList();
-    } catch (e) {
-      print("Error fetching edu blog entries: $e");
-      return [];
-    }
-  }
-
-  Future<List<Map<String, dynamic>>> fetchEvalLinkTree(
-      {String? articleId}) async {
-    try {
-      Query query =
-          _db.collection('eval_links').orderBy('created', descending: true);
-      final snapshot = await query.get();
-      return snapshot.docs
-          .map((doc) => doc.data() as Map<String, dynamic>)
-          .toList();
-    } catch (e) {
-      print("Error fetching edu blog entries: $e");
-      return [];
-    }
+  Future<List<BlogEntry>> fetchLinkTree(
+      {required AppSection appSection, String? articleId}) async {
+    var collectionName = appSection.linktreeCollection;
+    return fetchEntries(collectionName);
+    // try {
+    //   Query query =
+    //       _db.collection(collectionName).orderBy('created', descending: true);
+    //   final snapshot = await query.get();
+    //   return snapshot.docs
+    //       .map((doc) => doc.data() as Map<String, dynamic>)
+    //       .toList();
+    // } catch (e) {
+    //   print("Error fetching $collectionName blog entries: $e");
+    //   return [];
+    // }
   }
 }

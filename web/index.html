@@ -33,6 +33,23 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+  <script>
+    (function() {
+      // Get the part of the URL after the #
+      var fragment = window.location.hash;
+
+      // Check if it's the specific fragment we want to redirect
+      if (fragment === '#/car_crush_privacy_policy') {
+        var newPath = '/car_crush_privacy_policy';
+        // Replace the current history state with the new path.
+        // This changes the URL in the browser bar without adding a new history entry
+        // and without causing a page reload.
+        // The Flutter app (with setPathUrlStrategy) should then pick up this newPath.
+        console.log('index.html: Detected fragment ' + fragment + ', rewriting to ' + newPath);
+        window.history.replaceState(null, '', newPath);
+      }
+    })();
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
