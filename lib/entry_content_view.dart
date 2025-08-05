@@ -59,7 +59,7 @@ Widget _addHyperlinkForEntry(List<String> titleParts, Function() launch) {
 TextSpan _wrapAsLinkSpan(String text, Function() launch) => TextSpan(
       text: text,
       style: const TextStyle(
-        color: Colors.blue, // Consider Theme.of(context).colorScheme.primary
+        color: Colors.blue,
         decoration: TextDecoration.underline,
       ),
       recognizer: TapGestureRecognizer()..onTap = () => launch(),
@@ -71,7 +71,7 @@ TextSpan _wrapAsBodyTextSpan(String text) =>
 Widget _hyperlinkedImageForEntry(String imgUrl, String linkUrl) => InkWell(
       child: Image.network(
         imgUrl,
-        fit: BoxFit.fitWidth, // Ensure image covers the tile appropriately
+        fit: BoxFit.fitWidth,
         errorBuilder: (context, error, stackTrace) =>
             Center(child: Icon(Icons.broken_image)),
       ),
