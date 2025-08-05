@@ -20,7 +20,6 @@ class _AuthorControlsState extends State<AuthorControls> {
   final _titleController = TextEditingController();
   final _linkUrlController = TextEditingController();
   final _imageUrlController = TextEditingController();
-  final _overallTitleController = TextEditingController();
   final _tagsController = TextEditingController(); // For comma-separated tags
   AppSection _selectedAppSection = AppSection.education; // Default to education
   bool _isLinktreeEntry = false; // Default to blog post
@@ -75,7 +74,7 @@ class _AuthorControlsState extends State<AuthorControls> {
   }
 
   Future<void> _submitBlogEntry() async {
-    if (_overallTitleController.text.isEmpty) {
+    if (_titleController.text.isEmpty) {
       // Overall title is now mandatory
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -113,7 +112,7 @@ class _AuthorControlsState extends State<AuthorControls> {
       }
     }
 
-    String title = _overallTitleController.text;
+    String title = _titleController.text;
     List<String> tags = _tagsController.text
         .split(',')
         .map((tag) => tag.trim())
@@ -159,7 +158,7 @@ class _AuthorControlsState extends State<AuthorControls> {
     _titleController.dispose();
     _linkUrlController.dispose();
     _imageUrlController.dispose();
-    _overallTitleController.dispose();
+    _titleController.dispose();
     _tagsController.dispose();
     super.dispose();
   }
@@ -241,7 +240,7 @@ class _AuthorControlsState extends State<AuthorControls> {
               Text('Entry Details:',
                   style: Theme.of(context).textTheme.titleLarge),
               TextField(
-                controller: _overallTitleController,
+                controller: _titleController,
                 decoration: const InputDecoration(
                     labelText: 'Overall Title (Required)'),
               ),
@@ -268,8 +267,8 @@ class _AuthorControlsState extends State<AuthorControls> {
                 controller: _titleController,
                 decoration: InputDecoration(
                     labelText: _isLinktreeEntry
-                        ? 'Display Text (Optional)'
-                        : 'Content Block Title (Optional)'),
+                        ? 'Display Text (Title)'
+                        : 'Content Block Title (Title)'),
               ),
               TextField(
                 controller: _linkUrlController,
