@@ -30,7 +30,7 @@ SliverChildBuilderDelegate mainContentBuilder(
         return ConsultingCard(
           height: sectionHeight,
           titleWidget: CardTitle(
-            title: 'Consulting',
+            title: 'Happy Customers',
             ticker: '',
             image: 'pach_at_gmail.png',
           ),
