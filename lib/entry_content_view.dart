@@ -26,7 +26,7 @@ StaggeredGridTile _wrapVideoLinkForEntry(String title, String? videoId) {
 
 StaggeredGridTile _wrapHyperlinkForEntry(String title, String linkUrl) =>
     StaggeredGridTile.count(
-      crossAxisCellCount: 2, // Default, can be overridden by specific cards
+      crossAxisCellCount: 1, // Default, can be overridden by specific cards
       mainAxisCellCount: 1, // Default, can be overridden by specific cards
       child: _addHyperlinkForEntry(
           title.split('/'), () => launchUrl(Uri.parse(linkUrl))),
@@ -152,6 +152,127 @@ class EntryContentView extends StatelessWidget {
     );
   }
 
+  Widget _buildStaggeredTileContent_TitleImageLink(
+      BuildContext context, BlogEntry_ContentBlock block) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            block.title,
+            style: Theme.of(context).textTheme.titleSmall,
+            textAlign: TextAlign.center,
+          ),
+        ),
+        _hyperlinkedImageForEntry(block.imageUrl, block.linkUrl),
+      ],
+    );
+  }
+
+  Widget _buildStaggeredTileContent_ImageTitle(
+      BuildContext context, BlogEntry_ContentBlock block) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            block.title,
+            style: Theme.of(context).textTheme.titleSmall,
+            textAlign: TextAlign.center,
+          ),
+        ),
+        // Image without link in this specific original branch
+        Image.network(
+          block.imageUrl,
+          fit: BoxFit.fitWidth,
+          errorBuilder: (cx, err, stack) => Text(err.toString()),
+        ),
+      ],
+    );
+  }
+
+// Consider if _wrapHyperlinkForEntry and _wrapVideoLinkForEntry
+// should return Widgets instead of StaggeredGridTiles,
+// and then _buildStaggeredGridTileForBlock wraps them in the appropriate tile.
+// For now, let's keep them as they are if they define their own tile structure.
+
+  StaggeredGridTile _buildStaggeredGridTileForBlock(
+      BuildContext context, BlogEntry_ContentBlock block) {
+    final hasTitle = block.hasTitle() && block.title.isNotEmpty;
+    final hasImage = block.hasImageUrl() && block.imageUrl.isNotEmpty;
+    final hasLink = block.hasLinkUrl() && block.linkUrl.isNotEmpty;
+
+    // Case 1: Title, Image, and Link
+    if (hasTitle && hasImage && hasLink) {
+      return StaggeredGridTile.fit(
+        crossAxisCellCount: defaultCrossAxisCount,
+        child: _buildStaggeredTileContent_TitleImageLink(context, block),
+      );
+    }
+    // Case 2: Image and Title (original logic had specific cell counts)
+    else if (hasImage && hasTitle) {
+      return StaggeredGridTile.fit(
+        crossAxisCellCount: 1, // Or defaultCrossAxisCount if it should be wider
+        child: _buildStaggeredTileContent_ImageTitle(context, block),
+      );
+    }
+    // Case 3: Title and Link (Video or simple link)
+    else if (hasTitle && hasLink) {
+      final videoId = extractVideoId(block.linkUrl);
+      if (videoId != null) {
+        // _wrapVideoLinkForEntry already returns a StaggeredGridTile
+        return _wrapVideoLinkForEntry(block.title, videoId);
+      } else {
+        // _wrapHyperlinkForEntry already returns a StaggeredGridTile
+        return _wrapHyperlinkForEntry(block.title, block.linkUrl);
+      }
+    }
+    // Case 4: Image and Link (No Title)
+    else if (hasImage && hasLink) {
+      return StaggeredGridTile.fit(
+        crossAxisCellCount: defaultCrossAxisCount,
+        child: _hyperlinkedImageForEntry(block.imageUrl, block.linkUrl),
+      );
+    }
+    // Case 5: Image Only
+    else if (hasImage) {
+      return StaggeredGridTile.fit(
+        // Assuming you want image to define height
+        crossAxisCellCount: defaultCrossAxisCount,
+        child: Image.network(
+          block.imageUrl,
+          fit: BoxFit.fitWidth,
+          errorBuilder: (cx, err, stack) => Text(err.toString()),
+        ),
+      );
+    }
+    // Case 6: Title Only
+    else if (hasTitle) {
+      return StaggeredGridTile.fit(
+        crossAxisCellCount: 2,
+        child: Padding(
+          // Padding acts as the content wrapper
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            block.title, // Removed extra interpolation ${}
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+        ),
+      );
+    }
+
+    // Fallback for empty or unrecognized block
+    return StaggeredGridTile.count(
+      crossAxisCellCount: 1,
+      mainAxisCellCount: 1,
+      child: const Center(child: Text('N/A')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (blogEntry == null || blogEntry!.content.isEmpty) {
@@ -176,77 +297,12 @@ class EntryContentView extends StatelessWidget {
 
       case EntryContentLayoutStyle.staggeredGrid:
         return StaggeredGrid.count(
-          crossAxisCount: defaultCrossAxisCount,
+          crossAxisCount: defaultCrossAxisCount, // This is passed to the grid
           mainAxisSpacing: 4,
           crossAxisSpacing: 4,
-          children: [
-            ...blogEntry!.content.map((block) {
-              final hasTitle = block.hasTitle() && block.title.isNotEmpty;
-              final hasImage = block.hasImageUrl() && block.imageUrl.isNotEmpty;
-              final hasLink = block.hasLinkUrl() && block.linkUrl.isNotEmpty;
-
-              if (hasTitle && hasImage && hasLink) {
-                return StaggeredGridTile.count(
-                  crossAxisCellCount: defaultCrossAxisCount,
-                  // Full width of card
-                  mainAxisCellCount: 3,
-                  // Example
-                  child:
-                      _hyperlinkedImageForEntry(block.imageUrl, block.linkUrl),
-                );
-              } else if (hasImage && hasTitle) {
-                return StaggeredGridTile.count(
-                  crossAxisCellCount: 1,
-                  mainAxisCellCount: 3, // Example
-                  child: Column(
-                    children: [
-                      Text(block.title,
-                          style: Theme.of(context).textTheme.titleSmall),
-                      Expanded(
-                          child: Image.network(block.imageUrl,
-                              fit: BoxFit.fitWidth,
-                              errorBuilder: (cx, err, stack) =>
-                                  Text(err.toString()))),
-                    ],
-                  ),
-                );
-              } else if (hasTitle && hasLink) {
-                final videoId = extractVideoId(block.linkUrl);
-                return _wrapVideoLinkForEntry(
-                    block.title, videoId); // Uses helper
-              } else if (hasImage && hasLink) {
-                return StaggeredGridTile.count(
-                  crossAxisCellCount: defaultCrossAxisCount,
-                  mainAxisCellCount: defaultMainAxisCount,
-                  child:
-                      _hyperlinkedImageForEntry(block.imageUrl, block.linkUrl),
-                );
-              } else if (hasImage) {
-                return StaggeredGridTile.count(
-                  crossAxisCellCount: defaultCrossAxisCount,
-                  mainAxisCellCount: defaultMainAxisCount,
-                  child: Image.network(block.imageUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (cx, err, stack) => Text(err.toString())),
-                );
-              } else if (hasTitle) {
-                return StaggeredGridTile.fit(
-                  // fit for text
-                  crossAxisCellCount: defaultCrossAxisCount,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text('${block.title}',
-                        style: Theme.of(context).textTheme.bodyMedium),
-                  ),
-                );
-              }
-              return StaggeredGridTile.count(
-                crossAxisCellCount: 1,
-                mainAxisCellCount: 1,
-                child: const Center(child: Text('N/A')),
-              );
-            }).toList(),
-          ],
+          children: blogEntry!.content
+              .map((block) => _buildStaggeredGridTileForBlock(context, block))
+              .toList(),
         );
     }
   }
