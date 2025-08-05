@@ -71,7 +71,7 @@ TextSpan _wrapAsBodyTextSpan(String text) =>
 Widget _hyperlinkedImageForEntry(String imgUrl, String linkUrl) => InkWell(
       child: Image.network(
         imgUrl,
-        fit: BoxFit.cover, // Ensure image covers the tile appropriately
+        fit: BoxFit.fitWidth, // Ensure image covers the tile appropriately
         errorBuilder: (context, error, stackTrace) =>
             Center(child: Icon(Icons.broken_image)),
       ),
@@ -204,7 +204,7 @@ class EntryContentView extends StatelessWidget {
                           style: Theme.of(context).textTheme.titleSmall),
                       Expanded(
                           child: Image.network(block.imageUrl,
-                              fit: BoxFit.cover,
+                              fit: BoxFit.fitWidth,
                               errorBuilder: (cx, err, stack) =>
                                   Text(err.toString()))),
                     ],
@@ -235,7 +235,7 @@ class EntryContentView extends StatelessWidget {
                   crossAxisCellCount: defaultCrossAxisCount,
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Text('Title ONLY: ${block.title}',
+                    child: Text('${block.title}',
                         style: Theme.of(context).textTheme.bodyMedium),
                   ),
                 );
