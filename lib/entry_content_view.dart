@@ -72,14 +72,16 @@ TextSpan _wrapAsBodyTextSpan(String text) =>
     TextSpan(text: '$text '); // Added space for readability
 
 Widget _hyperlinkedImageForEntry(String imgUrl, String linkUrl) =>
-    InkWell(
-      child: Image.network(
-        imgUrl,
-        fit: BoxFit.fitWidth,
-        errorBuilder: (context, error, stackTrace) =>
-            Center(child: Icon(Icons.broken_image)),
+    Card(
+      child: InkWell(
+        child: Image.network(
+          imgUrl,
+          fit: BoxFit.fitWidth,
+          errorBuilder: (context, error, stackTrace) =>
+              Center(child: Icon(Icons.broken_image)),
+        ),
+        onTap: () => launchUrl(Uri.parse(linkUrl)),
       ),
-      onTap: () => launchUrl(Uri.parse(linkUrl)),
     );
 
 String? extractVideoId(String url) {
@@ -127,7 +129,7 @@ class EntryContentView extends StatelessWidget {
       onTap: () => launchUrl(Uri.parse(linkUrl)),
       child: const Padding(
         padding: EdgeInsets.all(8.0),
-        child: Icon(Icons.link, size: 40), // Standard link icon
+        child: Icon(Icons.link, size: 32), // Standard link icon
       ),
     );
 
@@ -160,44 +162,21 @@ class EntryContentView extends StatelessWidget {
     );
   }
 
-  Widget _buildStaggeredTileContent_TitleImageLink(BuildContext context,
-      BlogEntry_ContentBlock block) {
-    return Stack(
-      alignment: Alignment.center,
-      // Default alignment for non-positioned children
+  Widget _buildStaggeredTileContent_TitleImageLink(
+      BuildContext context, BlogEntry_ContentBlock block) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Base Image (takes up the full space of the Stack by default)
-        _hyperlinkedImageForEntry(block.imageUrl, block.linkUrl),
-
-        // Positioned Title Overlay
-        Positioned(
-          top: 8.0, // Adjust spacing from the top
-          left: 8.0, // Add some horizontal padding from the edges
-          right: 8.0, // Add some horizontal padding from the edges
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 12.0, vertical: 8.0),
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.6), // Semi-transparent black
-              borderRadius: BorderRadius.circular(
-                  8.0), // Optional: rounded corners
-            ),
-            child: Text(
-              block.title,
-              style: Theme
-                  .of(context)
-                  .textTheme
-                  .titleSmall
-                  ?.copyWith(
-                color: Colors
-                    .white, // Ensure title text is visible on dark background
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 2, // Optional: Limit title lines
-              overflow: TextOverflow.ellipsis, // Optional: Handle long titles
-            ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            block.title,
+            style: Theme.of(context).textTheme.titleLarge,
+            textAlign: TextAlign.center,
           ),
         ),
+        _hyperlinkedImageForEntry(block.imageUrl, block.linkUrl),
       ],
     );
   }
@@ -244,14 +223,14 @@ class EntryContentView extends StatelessWidget {
     if (hasTitle && hasImage && hasLink) {
       return StaggeredGridTile.fit(
         crossAxisCellCount: defaultCrossAxisCount,
-        child: _buildStaggeredTileContent_TitleImageLink(context, block),
+        child: Card(child: _buildStaggeredTileContent_TitleImageLink(context, block)),
       );
     }
     // Case 2: Image and Title (original logic had specific cell counts)
     else if (hasImage && hasTitle) {
       return StaggeredGridTile.fit(
         crossAxisCellCount: 1, // Or defaultCrossAxisCount if it should be wider
-        child: _buildStaggeredTileContent_ImageTitle(context, block),
+        child: Card(child: _buildStaggeredTileContent_ImageTitle(context, block)),
       );
     }
     // Case 3: Title and Link (Video or simple link)

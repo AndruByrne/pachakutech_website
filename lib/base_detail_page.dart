@@ -153,9 +153,11 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                           future: titleCopy,
                           builder: (context, snapshot) => Padding(
                                 padding: const EdgeInsets.all(8.0),
-                                child: Text(
-                                  snapshot.hasData ? snapshot.data ?? '' : '',
-                                  style: Theme.of(context).textTheme.titleLarge,
+                                child: Center(
+                                  child: Text(
+                                    snapshot.hasData ? snapshot.data ?? '' : '',
+                                    style: Theme.of(context).textTheme.titleLarge,
+                                  ),
                                 ),
                               )),
                     ),
