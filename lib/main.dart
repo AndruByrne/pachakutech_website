@@ -31,6 +31,9 @@ class MyApp extends StatelessWidget {
             seedColor: Colors.green,
             secondary: Colors.orange.shade400,
             surfaceContainer: Colors.blueGrey.shade50),
+        textTheme: const TextTheme(
+            bodyLarge: TextStyle(fontSize: 18),
+            bodyMedium: TextStyle(fontSize: 16)),
         useMaterial3: true,
       ),
       routerConfig: goRouterSingleton,
