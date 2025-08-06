@@ -4,11 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart' show SvgPicture;
 import 'package:vector_math/vector_math.dart' show radians;
 
-// Import MyHomePageState to access _currentHeaderVisualParams if needed by the shuttle
-// This creates a slight coupling, but is pragmatic for the shuttle.
-// Alternatively, use a state management solution to provide params.
-// Adjust import path as necessary
-
 // --- HeaderVisualParams Data Class ---
 class HeaderVisualParams {
   final double wheelDiameter;
@@ -61,13 +56,6 @@ Widget buildAnimatedHeaderContent({
     child: Image.asset('assets/pachakutech_dot_logo_alpha.png'),
   );
 
-  if (onLogoTap != null) {
-    dotLogoWidget = GestureDetector(
-      onTap: onLogoTap,
-      child: dotLogoWidget,
-    );
-  }
-
   Widget wheelsWidget = Align(
     alignment: params.wheelAlignment,
     child: SizedBox(
@@ -100,6 +88,17 @@ Widget buildAnimatedHeaderContent({
       ),
     ),
   );
+
+  if (onLogoTap != null) {
+    dotLogoWidget = GestureDetector(
+      onTap: onLogoTap,
+      child: dotLogoWidget,
+    );
+    wheelsWidget = GestureDetector(
+      onTap: onLogoTap,
+      child: wheelsWidget,
+    );
+  }
 
   if (onWheelsTap != null) {
     wheelsWidget = Material(
@@ -135,51 +134,56 @@ Widget globalFlightShuttleBuilderInternal({
   required HeaderVisualParams paramsAtAnimationStart,
   required HeaderVisualParams paramsAtAnimationEnd,
   required HeroFlightDirection flightDirection,
-}) => AnimatedBuilder(
-      animation: animation,
-      builder: (context, child) {
-        final t = animation.value;
-        HeaderVisualParams interpolatedDisplayParams;
+}) =>
+    AnimatedBuilder(
+        animation: animation,
+        builder: (context, child) {
+          final t = animation.value;
+          HeaderVisualParams interpolatedDisplayParams;
 
-        if (flightDirection == HeroFlightDirection.push) {
-          // PUSH: Animate from Start (Home/Expanded) to End (Detail/Collapsed)
-          interpolatedDisplayParams = HeaderVisualParams.lerp(
-              paramsAtAnimationStart, paramsAtAnimationEnd, t);
-        } else { // HeroFlightDirection.pop
-          // POP:
-          // Raw interpolated params go from Start (Detail/Collapsed) to End (Home/Expanded)
-          // HeaderVisualParams rawPopParams = HeaderVisualParams.lerp(
-          //    paramsAtAnimationStart, paramsAtAnimationEnd, t);
+          if (flightDirection == HeroFlightDirection.push) {
+            // PUSH: Animate from Start (Home/Expanded) to End (Detail/Collapsed)
+            interpolatedDisplayParams = HeaderVisualParams.lerp(
+                paramsAtAnimationStart, paramsAtAnimationEnd, t);
+          } else {
+            // HeroFlightDirection.pop
+            // POP:
+            // Raw interpolated params go from Start (Detail/Collapsed) to End (Home/Expanded)
+            // HeaderVisualParams rawPopParams = HeaderVisualParams.lerp(
+            //    paramsAtAnimationStart, paramsAtAnimationEnd, t);
 
-          // THE FIX ATTEMPT:
-          // We want the VISUALS to behave as if they are animating from an "Expanded" state
-          // to a "Collapsed" state, even though the overall Hero transition is Detail to Home.
-          // The `paramsAtAnimationStart` for POP is the DetailPage state (Collapsed-like).
-          // The `paramsAtAnimationEnd` for POP is the HomePage state (Expanded-like).
-          // To make it look like PUSH, we effectively want to play the PUSH animation's parameter sequence.
-          // A PUSH animation goes from `paramsAtAnimationEnd` (Expanded) to `paramsAtAnimationStart` (Collapsed)
-          // IF WE CONSIDER THE POP's ENDPOINTS.
+            // THE FIX ATTEMPT:
+            // We want the VISUALS to behave as if they are animating from an "Expanded" state
+            // to a "Collapsed" state, even though the overall Hero transition is Detail to Home.
+            // The `paramsAtAnimationStart` for POP is the DetailPage state (Collapsed-like).
+            // The `paramsAtAnimationEnd` for POP is the HomePage state (Expanded-like).
+            // To make it look like PUSH, we effectively want to play the PUSH animation's parameter sequence.
+            // A PUSH animation goes from `paramsAtAnimationEnd` (Expanded) to `paramsAtAnimationStart` (Collapsed)
+            // IF WE CONSIDER THE POP's ENDPOINTS.
 
-          // So, for POP, we want to lerp from paramsAtAnimationEnd (Home/Expanded)
-          // to paramsAtAnimationStart (Detail/Collapsed) using t.
-          interpolatedDisplayParams = HeaderVisualParams.lerp(
-              paramsAtAnimationEnd,   // Treat POP's destination (Home/Expanded) as the visual start
-              paramsAtAnimationStart, // Treat POP's source (Detail/Collapsed) as the visual end
-              t);                     // Use t directly (0 to 1)
-        }
+            // So, for POP, we want to lerp from paramsAtAnimationEnd (Home/Expanded)
+            // to paramsAtAnimationStart (Detail/Collapsed) using t.
+            interpolatedDisplayParams = HeaderVisualParams.lerp(
+                paramsAtAnimationEnd,
+                // Treat POP's destination (Home/Expanded) as the visual start
+                paramsAtAnimationStart,
+                // Treat POP's source (Detail/Collapsed) as the visual end
+                t); // Use t directly (0 to 1)
+          }
 
-        return KeyedSubtree(
-          // Keying based on flightDirection might still be good practice
-          key: flightDirection == HeroFlightDirection.pop
-              ? const ValueKey('pop_animation_context_fixed')
-              : const ValueKey('push_animation_context_fixed'),
-          child: buildAnimatedHeaderContent(
-            params: interpolatedDisplayParams,
-            tickerFuture: Future.value('             '), // Ticker should be blank in flight
-            isPopAnimation: (flightDirection == HeroFlightDirection.pop),
-          ),
-        );
-      });
+          return KeyedSubtree(
+            // Keying based on flightDirection might still be good practice
+            key: flightDirection == HeroFlightDirection.pop
+                ? const ValueKey('pop_animation_context_fixed')
+                : const ValueKey('push_animation_context_fixed'),
+            child: buildAnimatedHeaderContent(
+              params: interpolatedDisplayParams,
+              tickerFuture: Future.value('             '),
+              // Ticker should be blank in flight
+              isPopAnimation: (flightDirection == HeroFlightDirection.pop),
+            ),
+          );
+        });
 
 class AppHeaderMetrics {
   // --- Core Heights ---

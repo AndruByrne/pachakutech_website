@@ -91,14 +91,7 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
             physics: getScrollPhysics(),
             slivers: [
               SliverAppBar(
-                // TODO: how is back arrow still here?
-                // title: Text(sectionTitle), // Can be removed if headerHero is the title
-                // leading: canPop
-                //     ? IconButton(
-                //         icon: const Icon(Icons.arrow_back_ios_new),
-                //         onPressed: () => _handleCustomBackNavigation(context),
-                //       )
-                //     : null,
+                automaticallyImplyLeading: false,
                 backgroundColor: Theme.of(context).colorScheme.secondary,
                 // Or your desired collapsed header bg
                 pinned: true,
@@ -146,6 +139,7 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                     tickerFuture: widget.contentRepo
                         .fetchTickerMessages()
                         .then((tickers) => tickers[sectionId]),
+                    onLogoTap: () => _handleCustomBackNavigation(context),
                   ),
                   // child: Container(),
                 ),
