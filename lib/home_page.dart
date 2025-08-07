@@ -117,6 +117,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     } else {
       developer.log("Logo/Wheels tapped on main list view (already at top).",
           name: "MyHomePageState.Interaction");
+      _onForwardTap();
     }
   }
 
@@ -162,6 +163,15 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       onWheelsTap: _handleWheelsTap,
     );
 
+    // Apply the GestureDetector for the "nudge" directly to the header's content
+    Widget headerContentWithNudgeDetector = GestureDetector(
+      onTap: _onForwardTap,
+      // HitTestBehavior.translucent allows taps to be "seen" by this detector
+      // AND by widgets further down the tree if this one doesn't claim the gesture.
+      behavior: HitTestBehavior.translucent,
+      child: headerVisuals,
+    );
+
     Widget headerVisualsWithHero = Hero(
       tag: headerHeroTag,
       createRectTween: (begin, end) {
@@ -204,7 +214,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           flightDirection: flightDirection,
         );
       },
-      child: headerVisuals,
+      child: headerContentWithNudgeDetector,
     );
 
     Widget mainPageParallaxBackground = ValueListenableBuilder<double>(
@@ -264,6 +274,31 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               ],
             ),
     );
+  }
+
+  bool get _headerExpanded => _mainScrollController.hasClients &&
+        _mainScrollController.position.haveDimensions &&
+        _mainScrollController.offset < 1.0;
+
+  // Condition: Header is expanded (at/near the top)
+  void _onForwardTap() {
+    print('got onForwardTap');
+    if (_headerExpanded) { // Small threshold
+
+      final screenHeight = MediaQuery.of(context).size.height;
+      final scrollAmount = screenHeight * 0.4;
+      final maxScroll = _mainScrollController.position.maxScrollExtent;
+      final targetScroll = (_mainScrollController.offset + scrollAmount)
+          .clamp(0.0, maxScroll);
+
+      if (targetScroll > _mainScrollController.offset) {
+        _mainScrollController.animateTo(
+          targetScroll,
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    }
   }
 }
 

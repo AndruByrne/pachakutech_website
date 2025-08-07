@@ -94,10 +94,10 @@ Widget buildAnimatedHeaderContent({
       onTap: onLogoTap,
       child: dotLogoWidget,
     );
-    wheelsWidget = GestureDetector(
-      onTap: onLogoTap,
-      child: wheelsWidget,
-    );
+    // wheelsWidget = GestureDetector(
+    //   onTap: onLogoTap,
+    //   child: wheelsWidget,
+    // );
   }
 
   if (onWheelsTap != null) {
@@ -149,19 +149,7 @@ Widget globalFlightShuttleBuilderInternal({
             // HeroFlightDirection.pop
             // POP:
             // Raw interpolated params go from Start (Detail/Collapsed) to End (Home/Expanded)
-            // HeaderVisualParams rawPopParams = HeaderVisualParams.lerp(
-            //    paramsAtAnimationStart, paramsAtAnimationEnd, t);
-
-            // THE FIX ATTEMPT:
-            // We want the VISUALS to behave as if they are animating from an "Expanded" state
-            // to a "Collapsed" state, even though the overall Hero transition is Detail to Home.
-            // The `paramsAtAnimationStart` for POP is the DetailPage state (Collapsed-like).
-            // The `paramsAtAnimationEnd` for POP is the HomePage state (Expanded-like).
-            // To make it look like PUSH, we effectively want to play the PUSH animation's parameter sequence.
-            // A PUSH animation goes from `paramsAtAnimationEnd` (Expanded) to `paramsAtAnimationStart` (Collapsed)
-            // IF WE CONSIDER THE POP's ENDPOINTS.
-
-            // So, for POP, we want to lerp from paramsAtAnimationEnd (Home/Expanded)
+            // for POP, we want to lerp from paramsAtAnimationEnd (Home/Expanded)
             // to paramsAtAnimationStart (Detail/Collapsed) using t.
             interpolatedDisplayParams = HeaderVisualParams.lerp(
                 paramsAtAnimationEnd,
