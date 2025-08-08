@@ -106,12 +106,9 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                     BuildContext flightCtx,
                     Animation<double> animation,
                     HeroFlightDirection flightDirection,
-                    BuildContext fromHeroCtx, // Context of Hero from HomePage
+                    BuildContext fromHeroCtx,
                     BuildContext toHeroCtx,
-                    // Context of this Hero on DetailPage
                   ) {
-                    // This code does not run
-
                     HeaderVisualParams paramsFromHome;
                     final double homeScrollOffset =
                         widget.homePageScrollOffset; // Get from widget/extra
