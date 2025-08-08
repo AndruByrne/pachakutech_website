@@ -100,9 +100,13 @@ class BlogEntry_ContentBlock extends $pb.GeneratedMessage {
 class BlogEntry extends $pb.GeneratedMessage {
   factory BlogEntry({
     $core.Iterable<BlogEntry_ContentBlock>? content,
+    $core.String? title,
+    $core.Iterable<$core.String>? tags,
   }) {
     final result = create();
     if (content != null) result.content.addAll(content);
+    if (title != null) result.title = title;
+    if (tags != null) result.tags.addAll(tags);
     return result;
   }
 
@@ -121,6 +125,8 @@ class BlogEntry extends $pb.GeneratedMessage {
     ..pc<BlogEntry_ContentBlock>(
         1, _omitFieldNames ? '' : 'content', $pb.PbFieldType.PM,
         subBuilder: BlogEntry_ContentBlock.create)
+    ..aOS(2, _omitFieldNames ? '' : 'title')
+    ..pPS(3, _omitFieldNames ? '' : 'tags')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -144,6 +150,18 @@ class BlogEntry extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(1)
   $pb.PbList<BlogEntry_ContentBlock> get content => $_getList(0);
+
+  @$pb.TagNumber(2)
+  $core.String get title => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set title($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTitle() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTitle() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $pb.PbList<$core.String> get tags => $_getList(2);
 }
 
 const $core.bool _omitFieldNames =
