@@ -207,7 +207,7 @@ class AppHeaderMetrics {
   // --- Alignments ---
   static Alignment getFullscreenWheelAlignment() => Alignment.center;
 
-  static Alignment getCollapsedWheelAlignment() => const Alignment(-0.85, 0.0);
+  static Alignment getCollapsedWheelAlignment() => const Alignment(-0.95, 0.0);
 
   // --- Methods to get specific HeaderVisualParams states ---
   static HeaderVisualParams getCollapsedHeaderVisualParams(
