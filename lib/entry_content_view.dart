@@ -54,7 +54,7 @@ Widget _addHyperlinkForEntry(List<String> titleParts, TextTheme textTheme,
           ])),
     );
   }
-  return Container(); // Should ideally be SizedBox.shrink() or similar
+  return const SizedBox.shrink(); // Should ideally be SizedBox.shrink() or similar
 }
 
 TextSpan _wrapAsLinkSpan(String text, Function() launch) =>
@@ -117,14 +117,11 @@ class EntryContentView extends StatelessWidget {
   Widget _buildCompactLinkView(BuildContext context,
       BlogEntry_ContentBlock block) {
     // This assumes 'block' has a title and a link.
-    // The image might be derived from the link (e.g., YouTube thumbnail).
     final String linkUrl = block.linkUrl;
-    final String blockTitle =
-    block.hasTitle() ? block.title : linkUrl; // Fallback title
+    final String blockTitle = block.hasTitle() ? block.title : linkUrl;
 
     Widget linkRepresentation;
 
-    // No video, just a generic link icon or placeholder
     linkRepresentation = InkWell(
       onTap: () => launchUrl(Uri.parse(linkUrl)),
       child: const Padding(
@@ -133,32 +130,25 @@ class EntryContentView extends StatelessWidget {
       ),
     );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      // Important for Column to not take excessive space
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 4.0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: _addHyperlinkForEntry(
-                    blockTitle.split('/'),
-                    Theme
-                        .of(context)
-                        .textTheme,
-                        () => launchUrl(Uri.parse(linkUrl))),
-              ),
-              block.imageUrl.isNotEmpty
-                  ? Image.network(block.imageUrl)
-                  : linkRepresentation,
-              const SizedBox(width: 8),
-            ],
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+            child: _addHyperlinkForEntry(
+                blockTitle.split('/'),
+                Theme
+                    .of(context)
+                    .textTheme,
+                    () => launchUrl(Uri.parse(linkUrl))),
           ),
-        ),
-      ],
+          block.imageUrl.isNotEmpty
+              ? Image.network(block.imageUrl, height: 32, width: 32, fit: BoxFit.contain,)
+              : linkRepresentation,
+        ],
+      ),
     );
   }
 

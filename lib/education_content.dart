@@ -68,7 +68,7 @@ class _EducationDetailPageState
             context: context,
             card: LinkEntryCard(blogEntry: linkTreeEntries[lIdx++]),
             alignment: Alignment.centerLeft,
-            widthFactor: cardWidthFactor,
+            widthFactor: cardWidthFactor * 2 / 3,
             // screenWidth: screenWidth, // If using fixed width + alignment
             // itemWidth: actualCardWidth,  // If using fixed width + alignment
           ),
@@ -93,7 +93,7 @@ class _EducationDetailPageState
             card: LinkEntryCard(blogEntry: linkTreeEntries[lIdx++]),
             alignment: Alignment.centerLeft,
             // Or maintain last preferLinkNext state
-            widthFactor: cardWidthFactor,
+            widthFactor: cardWidthFactor * 2 / 3,
             // screenWidth: screenWidth,
             // itemWidth: actualCardWidth,
           ),
