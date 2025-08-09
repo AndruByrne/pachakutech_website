@@ -149,71 +149,43 @@ Widget buildAnimatedHeaderContent({
     child: Image.asset('assets/pachakutech_dot_logo_alpha.png'),
   );
 
-  // Cross-fade between Dot Logo and Marquee is managed by their opacities effectively
-  // dotLogo is visible when params.marqueeOpacity < 0.5 (example threshold)
-  // marquee is visible when params.marqueeOpacity >= 0.5
-
-  // --- Navigation Buttons ---
   List<Widget> navButtons = [
     params.targetSection == null
-        ? SizedBox(
-            width: params.wheelDiameter,
-            child: wheelsWidget,
-          )
-        : createNavButtonForSection(
-            context: context,
-            section: null,
-            isActive: false,
-            currentParams: params,
-            onTap: onHomeTap)
-  ];
-  navButtons.addAll(AppSection.values.map((section) =>
-      section == params.targetSection
-          ? SizedBox(
+        ? Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: SizedBox(
               width: params.wheelDiameter,
               child: wheelsWidget,
+            ),
+          )
+        : Padding(
+            padding: const EdgeInsets.all(3.0),
+            child: createNavButtonForSection(
+                context: context,
+                section: null,
+                isActive: false,
+                currentParams: params,
+                onTap: onHomeTap),
+          )
+  ];
+  navButtons
+      .addAll(AppSection.values.map((section) => section == params.targetSection
+          ? Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: SizedBox(
+                width: params.wheelDiameter,
+                child: wheelsWidget,
+              ),
             )
-          : createNavButtonForSection(
-              context: context,
-              section: section,
-              isActive: false,
-              currentParams: params,
-              onTap: () => onSectionTap(section))));
-  // if (params.navButtonOpacity > 0.01) {
-  //   // Only build if somewhat visible
-  //   for (var section in [
-  //     AppSection.evaluation,
-  //     AppSection.education,
-  //     AppSection.elevation
-  //   ]) {
-  //     navButtons.add(Padding(
-  //       padding: const EdgeInsets.symmetric(horizontal: 4.0),
-  //       // Adjust padding
-  //       child: Opacity(
-  //         opacity: params.navButtonOpacity,
-  //         child: TextButton(
-  //           style: TextButton.styleFrom(
-  //             foregroundColor: params.navButtonColor,
-  //             padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-  //             minimumSize: Size(AppHeaderMetrics.NAV_BUTTON_WIDTH / 2, 30),
-  //             // Smaller touch target
-  //             // backgroundColor: Colors.transparent, // Explicitly
-  //             textStyle: TextStyle(
-  //               fontFamily: 'YourCustomFont', // TODO: Add your custom font
-  //               fontSize: 14, // Adjust
-  //             ),
-  //           ),
-  //           onPressed:
-  //               (params.isCollapsedState || params.navButtonOpacity > 0.8) &&
-  //                       onSectionTap != null
-  //                   ? () => onSectionTap(section)
-  //                   : null, // Active when mostly visible or collapsed
-  //           child: Text(section.id), // 'edu', 'eval', 'elev'
-  //         ),
-  //       ),
-  //     ));
-  //   }
-  // }
+          : Padding(
+              padding: const EdgeInsets.all(3.0),
+              child: createNavButtonForSection(
+                  context: context,
+                  section: section,
+                  isActive: false,
+                  currentParams: params,
+                  onTap: () => onSectionTap(section)),
+            )));
 
   // --- Marquee ---
   Widget marqueeWidget = Opacity(
@@ -566,53 +538,18 @@ Widget createNavButtonForSection({
       isActive, // Though with wheels obscuring, this might not be needed for styling
   required HeaderVisualParams currentParams,
   required VoidCallback? onTap,
-}) {
-  String buttonText;
-  IconData buttonIcon; // Example
-
-  if (section == null) {
-    buttonText = "Home";
-    buttonIcon = Icons.home;
-  } else {
-    switch (section) {
-      case AppSection.evaluation:
-        buttonText = "Eval";
-        buttonIcon = Icons.assessment; // Replace with your icons
-        break;
-      case AppSection.education:
-        buttonText = "Edu";
-        buttonIcon = Icons.school; // Replace with your icons
-        break;
-      case AppSection.elevation:
-        buttonText = "Elev";
-        buttonIcon = Icons.trending_up; // Replace with your icons
-        break;
-    }
-  }
-
-  // This is a very basic button, adapt to your NavButton styling
-  return GestureDetector(
-    onTap: onTap,
-    child: Opacity(
-      // Buttons are generally visible
-      opacity: currentParams.navButtonOpacity,
-      child: Container(
-        width: AppHeaderMetrics.NAV_BUTTON_WIDTH_ESTIMATE,
-        // Use consistent width
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        // decoration: BoxDecoration( ... if you want visible buttons ...),
-        child: Column(
-          // Example: Icon and Text
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(buttonIcon, color: currentParams.navButtonColor),
-            // Text(buttonText, style: TextStyle(color: currentParams.navButtonColor)),
-          ],
-        ),
+}) =>
+    GestureDetector(
+      onTap: onTap,
+      child: Opacity(
+        opacity: currentParams.navButtonOpacity,
+        child: Text(section?.id ?? 'HOME',
+            style: TextStyle(
+                fontFamily: 'Pachakutech',
+                fontSize: 20,
+                color: Theme.of(context).primaryColor)),
       ),
-    ),
-  );
-}
+    );
 
 class AppHeaderLogic {
   static const double MAX_EFFECTIVE_WHEEL_ANGLE = 584.0;

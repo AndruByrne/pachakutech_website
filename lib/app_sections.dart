@@ -14,19 +14,19 @@ enum AppSection {
     bloggingCollection: 'eval_blog',
     linktreeCollection: 'eval_links',
   ),
-  education(
-    id: 'edu',
-    title: 'Education',
-    imageAsset: 'assets/education.jpg',
-    bloggingCollection: 'edu_blog',
-    linktreeCollection: 'edu_links',
-  ),
   elevation(
     id: 'elev',
     title: 'Elevation',
     imageAsset: 'assets/elevation.jpg',
     bloggingCollection: '',
     linktreeCollection: '',
+  ),
+  education(
+    id: 'edu',
+    title: 'Education',
+    imageAsset: 'assets/education.jpg',
+    bloggingCollection: 'edu_blog',
+    linktreeCollection: 'edu_links',
   );
 
   const AppSection({
@@ -46,7 +46,8 @@ enum AppSection {
   String get routePath => '/$id'; // e.g. /edu
   String get articleRoutePath => '/$id/:articleId'; // e.g. /edu/:articleId
   bool get hasBlogContent => bloggingCollection.isNotEmpty; // <-- ADD THIS
-  bool get hasLinktreeContent => linktreeCollection.isNotEmpty; // <-- ADD THIS (for future use)
+  bool get hasLinktreeContent =>
+      linktreeCollection.isNotEmpty; // <-- ADD THIS (for future use)
 
   static AppSection? fromId(String id) {
     for (AppSection section in values) {
