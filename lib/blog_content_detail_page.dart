@@ -19,7 +19,8 @@ abstract class BlogContentDetailPage extends BaseDetailPage {
     required super.articleId,
     required super.homePageScrollOffset,
     required this.appSection,
-  });
+  }): super(appSection: appSection);
+
 }
 
 // Abstract State for Blog Content Detail Pages
@@ -33,8 +34,8 @@ abstract class BlogContentDetailPageState<T extends BlogContentDetailPage>
   void initState() {
     super.initState();
     _fetchedContentFuture = Future.wait([
-      widget.contentRepo.fetchBlogEntries(appSection: widget.appSection),
-      widget.contentRepo.fetchLinkTree(appSection: widget.appSection),
+      widget.contentRepo.fetchBlogEntries(section: widget.appSection),
+      widget.contentRepo.fetchLinkTree(section: widget.appSection),
     ]);
   }
 

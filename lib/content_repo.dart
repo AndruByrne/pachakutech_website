@@ -10,9 +10,7 @@ class ContentRepository {
   Future<Map<String, dynamic>> fetchTickerMessages() async {
     try {
       final snapshot = await _db.collection('tickers').get();
-      return snapshot.docs
-          .map((doc) => doc.get('sections') )
-          .first;
+      return snapshot.docs.map((doc) => doc.get('sections')).first;
     } catch (e) {
       print("Error fetching ticker messages: $e");
       return {};
@@ -22,9 +20,7 @@ class ContentRepository {
   Future<Map<String, dynamic>> fetchSectionIntros() async {
     try {
       final snapshot = await _db.collection('section_intros').get();
-      return snapshot.docs
-          .map((doc) => doc.get('sections') )
-          .first;
+      return snapshot.docs.map((doc) => doc.get('sections')).first;
     } catch (e) {
       print("Error fetching ticker messages: $e");
       return {};
@@ -32,13 +28,16 @@ class ContentRepository {
   }
 
   Future<List<BlogEntry>> fetchBlogEntries(
-      {required AppSection appSection, String? articleId}) async {
-    var collectionName = appSection.bloggingCollection;
+      {required AppSection section, String? articleId}) async {
+    if (!section.hasBlogContent) {
+      return [];
+    }
+    var collectionName = section.bloggingCollection;
     return await fetchEntries(collectionName);
   }
 
   Future<List<BlogEntry>> fetchEntries(String collectionName) async {
-      try {
+    try {
       Query query = _db.collection(collectionName);
       final snapshot = await query.get();
       return snapshot.docs.map<BlogEntry>((doc) {
@@ -69,8 +68,11 @@ class ContentRepository {
   }
 
   Future<List<BlogEntry>> fetchLinkTree(
-      {required AppSection appSection, String? articleId}) async {
-    var collectionName = appSection.linktreeCollection;
+      {required AppSection section, String? articleId}) async {
+    if (!section.hasBlogContent) {
+      return [];
+    }
+    var collectionName = section.linktreeCollection;
     return fetchEntries(collectionName);
     // try {
     //   Query query =

@@ -14,7 +14,8 @@ class EvaluationDetailPage extends BaseDetailPage {
     required super.db,
     required super.articleId,
     required super.homePageScrollOffset,
-  }) : contentRepo = ContentRepository(db: db);
+  })  : contentRepo = ContentRepository(db: db),
+        super(appSection: AppSection.evaluation);
 
   @override
   State<EvaluationDetailPage> createState() => _EvaluationDetailPageState();
@@ -28,7 +29,7 @@ class _EvaluationDetailPageState
   void initState() {
     super.initState();
     _blogEntries =
-        widget.contentRepo.fetchBlogEntries(appSection: widget.appSection);
+        widget.contentRepo.fetchBlogEntries(section: widget.appSection);
   }
 
   @override

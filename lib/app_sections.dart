@@ -7,19 +7,19 @@ import './elevation_content.dart';
 // These are circular, but Dart allows this if the types can be resolved at compile time
 
 enum AppSection {
-  education(
-    id: 'edu',
-    title: 'Education',
-    imageAsset: 'assets/education.jpg',
-    bloggingCollection: 'edu_blog',
-    linktreeCollection: 'edu_links',
-  ),
   evaluation(
     id: 'eval',
     title: 'Evaluation & Exploration',
     imageAsset: 'assets/exploration.jpg',
     bloggingCollection: 'eval_blog',
     linktreeCollection: 'eval_links',
+  ),
+  education(
+    id: 'edu',
+    title: 'Education',
+    imageAsset: 'assets/education.jpg',
+    bloggingCollection: 'edu_blog',
+    linktreeCollection: 'edu_links',
   ),
   elevation(
     id: 'elev',
@@ -45,6 +45,8 @@ enum AppSection {
 
   String get routePath => '/$id'; // e.g. /edu
   String get articleRoutePath => '/$id/:articleId'; // e.g. /edu/:articleId
+  bool get hasBlogContent => bloggingCollection.isNotEmpty; // <-- ADD THIS
+  bool get hasLinktreeContent => linktreeCollection.isNotEmpty; // <-- ADD THIS (for future use)
 
   static AppSection? fromId(String id) {
     for (AppSection section in values) {

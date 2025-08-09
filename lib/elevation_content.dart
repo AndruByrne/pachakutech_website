@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pachakutech_website/app_sections.dart';
 import 'blog_content_detail_page.dart';
-import 'content_repo.dart';
-import 'base_detail_page.dart';
 
 class ElevationDetailPage extends BlogContentDetailPage {
   // The appSection is now defined here and passed to the super constructor
@@ -14,8 +12,8 @@ class ElevationDetailPage extends BlogContentDetailPage {
   }) : super(appSection: AppSection.elevation); // Pass the specific AppSection
 
   @override
-  State<ElevationDetailPage> createState() => _EducationDetailPageState();
+  State<ElevationDetailPage> createState() => _ElevationDetailPageState();
 }
 
-class _EducationDetailPageState
+class _ElevationDetailPageState
     extends BlogContentDetailPageState<ElevationDetailPage> {}

@@ -95,7 +95,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     }
   }
 
-  void _handleWheelsTap() => kIsWeb
+  void _handleWheelTap() => kIsWeb
       ? _handleBackTap()
       : setState(() {
           // replace main content with author UI
@@ -134,13 +134,47 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       });
     });
 
+
+  void _handleSectionButtonTap(AppSection section) {
+    final double currentScrollOffset = _mainScrollController.hasClients && _mainScrollController.position.haveDimensions
+        ? _mainScrollController.offset
+        : 0.0;
+
+    developer.log(
+        "Section button tapped: ${section.title}. Passing scrollOffset: $currentScrollOffset",
+        name: "MyHomePageState.Navigation");
+
+    String path = '/${section.id}';
+    context.push(path, extra: {
+      'scrollOffset': currentScrollOffset,
+      'targetSection': section, // Pass the target section for Hero animation hints
+    });
+  }
+
+  // _handleWheelsTap might now be more of a "go to top" or general interaction
+  // Renaming to _handleHomeButtonTap for clarity in collapsed state
+  void _handleHomeButtonTap() {
+    if (_mainScrollController.offset > 0) {
+      _mainScrollController.animateTo(
+        0.0,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeOutQuart,
+      );
+    } else {
+      // If already at top, perhaps a subtle animation or nothing.
+      developer.log("Home button tapped at top.", name: "MyHomePageState.Interaction");
+      _onForwardTap(); // Or specific "nudge" behavior
+    }
+  }
+
+
   HeaderVisualParams get currentHeaderVisualParams =>
       AppHeaderLogic.getDynamicHeaderVisualParams(
           context: context,
           scrollOffset: _mainScrollController.hasClients &&
                   _mainScrollController.position.haveDimensions
               ? _mainScrollController.offset
-              : 0.0);
+              : 0.0,targetSectionForCollapsed: null,currentMarqueeText: "PACHAKUTECH");
 
   @override
   void dispose() {
@@ -154,13 +188,14 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final HeaderVisualParams currentParams = currentHeaderVisualParams;
 
+
     Widget headerVisuals = buildAnimatedHeaderContent(
+      context: context,
       params: currentParams,
-      tickerFuture: ContentRepository(db: FirebaseFirestore.instance)
-          .fetchTickerMessages()
-          .then((tickers) => tickers['header']),
-      onLogoTap: _handleWheelsTap,
-      onWheelsTap: _handleWheelsTap,
+      // tickerFuture is not directly used by the new buildAnimatedHeaderContent
+      // marqueeText is now part of currentParams
+      onHomeTap: _handleWheelTap, // For when wheels act as home
+      onSectionTap: _handleSectionButtonTap,
     );
 
     // Apply the GestureDetector for the "nudge" directly to the header's content
@@ -188,29 +223,58 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         HeaderVisualParams paramsTo;
 
         if (flightDirection == HeroFlightDirection.push) {
-          // This case should ideally not happen if DetailPage's Hero is primary for push.
-          // But if it does, `fromHeroCtx` is this page.
-          // We'd need to know what `currentParams` *was* at the point of push.
-          // This shuttle is for when HomePage is the DESTINATION (on POP).
-          // For POP: fromHeroContext is DetailPage, toHeroContext is HomePage
+          // PUSH: Home (fromHeroCtx) to Detail (toHeroCtx)
+          // `fromHeroCtx` is MyHomePage. `currentHeaderVisualParams` is appropriate.
+          paramsFrom = currentHeaderVisualParams; // State at the moment of push
+
+          // For `paramsTo`, we need info from the DetailPage.
+          // This is where the `extra` data in go_router comes in handy.
+          // We assume the DetailPage's Hero will primarily drive the PUSH.
+          // This shuttle on HomePage is more critical for POP.
+          // If this shuttle IS used for push, it means detail page hasn't specified its own target.
+          // Fallback:
+          final GoRouterState state = GoRouterState.of(fromHeroCtx); // or flightCtx
+          final Map<String, dynamic>? extra = state.extra as Map<String, dynamic>?;
+          final AppSection? targetSection = extra?['targetSection'] as AppSection?;
+
+          paramsTo = AppHeaderMetrics.getCollapsedHeaderVisualParams(
+              toHeroCtx, // context of the destination page
+              targetSection: targetSection, // Target section for the detail page
+              marqueeText: targetSection?.id ?? "pachakutech" // Detail page ticker
+          );
+
+        } else { // POP: Detail (fromHeroCtx) to Home (toHeroCtx)
+          // `fromHeroCtx` is DetailPage. We need its collapsed params.
+          final GoRouterState state = GoRouterState.of(context); // Get state from DetailPage context
+          final Map<String, dynamic>? extra = state.extra as Map<String, dynamic>?;
+          final AppSection? detailPageSection = extra?['targetSection'] as AppSection?;
+          // You might need a more robust way to get the detail page's ticker if it's dynamic
+          final String detailPageTicker = extra?['currentMarqueeText'] as String? ?? detailPageSection?.id ?? "pachakutech";
+
+
           paramsFrom = AppHeaderMetrics.getCollapsedHeaderVisualParams(
-              fromHeroCtx); // Detail's collapsed state
-          paramsTo = currentHeaderVisualParams; // Home's current dynamic state
-        } else {
-          // POP (HomePage is destination)
-          paramsFrom = AppHeaderMetrics.getCollapsedHeaderVisualParams(
-              fromHeroCtx); // Detail's collapsed state
-          paramsTo =
-              currentHeaderVisualParams; // Home's current state (as it will be when animation ends)
+              fromHeroCtx, // Detail's context
+              targetSection: detailPageSection,
+              marqueeText: detailPageTicker
+          );
+
+          // `toHeroCtx` is MyHomePage. `currentHeaderVisualParams` represents its state
+          // *IF* we were animating based on current scroll. But for a pop, we usually
+          // want to animate to the fully expanded (scrollOffset = 0) or a specific target.
+          // Let's assume pop animates to fully expanded home for simplicity.
+          paramsTo = AppHeaderLogic.getDynamicHeaderVisualParams(
+              context: toHeroCtx,
+              scrollOffset: 0.0, // Animate to home page's fully expanded state
+              targetSectionForCollapsed: null, // Home target
+              currentMarqueeText: "pachakutech"
+          );
         }
 
         return globalFlightShuttleBuilderInternal(
           flightContext: flightCtx,
           animation: animation,
           paramsAtAnimationStart: paramsFrom,
-          // Corrected for POP
           paramsAtAnimationEnd: paramsTo,
-          // Corrected for POP
           flightDirection: flightDirection,
         );
       },
@@ -245,7 +309,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       delegate: _AnimatedHeaderDelegate(
         minHeight: AppHeaderMetrics.getCollapsedHeaderHeight(context),
         maxHeight: AppHeaderMetrics.getFullscreenHeaderHeight(context),
-        child: headerVisualsWithHero,
+        child: headerVisualsWithHero, // Make sure this is the Hero widget
       ),
     );
 
