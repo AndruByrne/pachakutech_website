@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:pachakutech_website/app_sections.dart';
 import 'content_repo.dart';
 import 'header_util.dart';
@@ -192,21 +193,9 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                             // navigate to that new section.
                             if (tappedSection != widget.appSection) {
                               // Avoid navigating to self
-                              // Standard pop then push might be simplest, or a more custom transition.
-                              // For now, let's assume we want to go back to home, then to new section.
-                              // Or, if using go_router, you can context.push to the new section.
-                              Navigator.of(context)
-                                  .pop(); // Pop current detail page
-                              // Then, from home, the user would click the new section, or:
-                              // context.go('/'); // Go to home, then...
-                              // This interaction needs defining: what happens when tapping 'edu' while on 'eval' page?
-                              // Option 1: Go Home, then user clicks 'edu'
-                              // Option 2: Directly transition from 'eval' detail to 'edu' detail (more complex hero)
-                              // For now, let's make it go back home.
-                              // If you want direct detail-to-detail, the Hero animations and router need more setup.
-                              _handleCustomBackNavigation(
-                                  context); // Goes back to Home
-                              // TODO: Consider how to immediately trigger navigation to tappedSection from home if desired
+                              context.go('/', extra: {
+                                'navigateToAfterScroll': tappedSection
+                              });
                             }
                           },
                         ),

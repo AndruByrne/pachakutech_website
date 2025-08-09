@@ -9,6 +9,7 @@ SliverChildBuilderDelegate mainContentBuilder(
   double sectionHeight,
   OnCardTap onCardTap,
   Future<Map<String, dynamic>> sectionTickers,
+    Map<AppSection, GlobalKey> sectionItemKeys,
 ) {
   final List<AppSection> displayableSections = AppSection.values.toList();
   return SliverChildBuilderDelegate(
@@ -39,6 +40,7 @@ SliverChildBuilderDelegate mainContentBuilder(
 
       final AppSection section = displayableSections[itemIndex];
       return ContentSectionCard(
+        key: sectionItemKeys[section],
         titleWidget: FutureBuilder(
           future: sectionTickers,
           builder: (_, snapshot) => CardTitle(

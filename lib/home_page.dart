@@ -60,6 +60,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   final ScrollController _mainScrollController = ScrollController();
   late ValueNotifier<double> _mainScrollControllerNotifier;
   bool _showAuthorUI = false;
+  AppSection? _pendingNavigationToSection;
+  final Map<AppSection, GlobalKey> _sectionItemKeys = {
+    for (var section in AppSection.values) section: GlobalKey()
+  };
 
   @override
   void initState() {
@@ -77,9 +81,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         _mainScrollController.position.haveDimensions) {
       initialScrollOffset = _mainScrollController.offset;
     }
-
     _mainScrollControllerNotifier.value = initialScrollOffset;
-
+    _processNavigationExtras();
     _handleScroll();
   }
 
@@ -167,6 +170,136 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     }
   }
 
+
+  void _processNavigationExtras() {
+    final GoRouterState state = GoRouterState.of(context);
+    final Map<String, dynamic>? extra = state.extra as Map<String, dynamic>?;
+
+    if (extra != null && extra.containsKey('navigateToAfterScroll')) {
+      final AppSection? targetSection = extra['navigateToAfterScroll'] as AppSection?;
+      if (targetSection != null) {
+        // Clear the extra so it's not processed again on subsequent rebuilds
+        // This is a bit of a hack. A router-level state or event queue is cleaner.
+        // For go_router, if you're on '/', context.go('/', extra: null) won't rebuild.
+        // Consider using a flag in the state or a short-lived event.
+
+        // Store it and trigger the scroll + navigation flow
+        // Avoid doing it directly here if it causes rebuilds during build
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _initiateScrollAndNavigate(targetSection);
+        });
+      }
+      // How to "clear" the extra from go_router state is tricky without a full redirect.
+      // One way is to navigate to the same path with extra: null, but that might have side effects.
+      // A state variable in MyHomePage is safer.
+      // context.go(state.location, extra: null); // Risky, might trigger loops or unwanted rebuilds
+    }
+  }
+
+  Future<void> _initiateScrollAndNavigate(AppSection section) async {
+    if (_pendingNavigationToSection == section) return; // Already processing
+    setState(() {
+      _pendingNavigationToSection = section;
+    });
+    developer.log("Returning to Home. Instructed to scroll to and navigate to: ${section.id}", name: "MyHomePage.Navigation");
+
+
+    final GlobalKey? sectionKey = _sectionItemKeys[section];
+    if (sectionKey?.currentContext != null && _mainScrollController.hasClients) {
+      // Ensure the item is visible.
+      // `alignment: 0.0` tries to bring the top of the item to the top of the viewport.
+      // `alignment: 0.1` might be good to leave a small gap below the sticky header.
+      // The duration here is for the scroll *to* the item.
+      await Scrollable.ensureVisible(
+        sectionKey!.currentContext!,
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeInOutCubic,
+        alignment: 0.05, // Adjust this: 0.0 is top, 0.5 is center. Try to position it just below your sticky header.
+        alignmentPolicy: ScrollPositionAlignmentPolicy.explicit, // Be precise
+      );
+      // Add a small delay for visual settlement and to ensure Hero has the right start conditions
+      await Future.delayed(const Duration(milliseconds: 150)); // Tune this delay
+    } else {
+      developer.log("Could not find key or scroll controller for section ${section.id}. Jumping approximately.", name: "MyHomePage.Navigation");
+      // Fallback to approximate jump if key not ready (should be rare)
+    }
+
+    final double currentScrollOffset = _mainScrollController.hasClients && _mainScrollController.position.haveDimensions
+        ? _mainScrollController.offset
+        : 0.0; // Fallback
+
+    final AppSection? sectionToNavigate = _pendingNavigationToSection;
+    setState(() {
+      _pendingNavigationToSection = null;
+    });
+
+    if (sectionToNavigate != null) {
+      developer.log("Scroll/ensureVisible complete. Navigating to detail for ${sectionToNavigate.id} at offset $currentScrollOffset", name: "MyHomePage.Navigation");
+      String path = '/${sectionToNavigate.id}';
+      context.push(path, extra: {
+        'scrollOffset': currentScrollOffset,
+        'targetSection': sectionToNavigate,
+        'currentMarqueeText': "PACHAKUTECH", // Or dynamic
+      });
+    }
+  }
+
+  // THIS IS THE CRITICAL AND DIFFICULT FUNCTION TO IMPLEMENT
+  double _getScrollOffsetForSection(AppSection section) {
+  // Simpler (but less precise) for now: Approximate based on section index and an average item height.
+    // This depends heavily on your `mainContentBuilder` structure.
+    // Let's assume each section occupies roughly a certain height on the home page.
+    final double screenHeight = MediaQuery.of(context).size.height;
+    final double headerHeightAtTop = AppHeaderMetrics.getFullscreenHeaderHeight(context);
+    // Estimate based on current structure.
+    // This is a VERY ROUGH ESTIMATE. You'll need to tune this.
+
+    int sectionIndex = AppSection.values.indexOf(section);
+    if (sectionIndex < 0) return 0.0; // Should not happen
+
+    // Offset calculation:
+    final double singleSectionContentHeight = getSectionHeaderHeight(context); // This seems to be the height of the section "header" in the list
+
+
+    // Placeholder for GlobalKeys strategy:
+    // You would have a Map<AppSection, GlobalKey> in _MyHomePageState
+    // Map<AppSection, GlobalKey> _sectionKeys = {
+    //   AppSection.evaluation: GlobalKey(),
+    //   AppSection.education: GlobalKey(),
+    //   AppSection.elevation: GlobalKey(),
+    // };
+    // And pass these keys to your section card widgets.
+    // Then:
+    // GlobalKey? key = _sectionKeys[section];
+    // if (key?.currentContext != null) {
+    //   Scrollable.ensureVisible(key!.currentContext!,
+    //       duration: const Duration(milliseconds: 700),
+    //       curve: Curves.easeInOutCubic,
+    //       alignment: 0.1); // 0.0 is top, 0.5 is center. Adjust alignment.
+    //   // `ensureVisible` handles the scroll. The function would then just await it.
+    //   // The `targetOffset` would not be directly calculated here.
+    //   return _mainScrollController.offset; // This is problematic, ensureVisible is async
+    // }
+    // For now, returning a hardcoded approximation based on index:
+    // This assumes the first section card is right after the fully expanded header, and subsequent cards follow.
+    // And each "section slot" in the main list takes up roughly `screenHeight * 0.6` (very arbitrary).
+    // This needs to be the offset of the scroll controller, not just raw heights.
+    // Effective height of a section item on home page (guess)
+    final double assumedSectionItemHeight = getSectionHeaderHeight(context); // From your code, seems like height of a section preview
+
+    double calculatedOffset = 0;
+    if (sectionIndex == 0) { // First section (e.g., Evaluation)
+      calculatedOffset = AppHeaderMetrics.getTransitionEndScrollOffset(context) - (screenHeight * 0.1); // scroll past most of the header
+    } else {
+      calculatedOffset = AppHeaderMetrics.getTransitionEndScrollOffset(context) + (sectionIndex * assumedSectionItemHeight) - (kToolbarHeight/2);
+    }
+
+    // Ensure the offset is within valid scroll extents
+    if (_mainScrollController.hasClients && _mainScrollController.position.haveDimensions) {
+      return calculatedOffset.clamp(0.0, _mainScrollController.position.maxScrollExtent);
+    }
+    return calculatedOffset.clamp(0.0, 3000.0); // Fallback if no client, max 3000
+  }
 
   HeaderVisualParams get currentHeaderVisualParams =>
       AppHeaderLogic.getDynamicHeaderVisualParams(
@@ -318,6 +451,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         getSectionHeaderHeight(context),
         _handleSubsectionCardTap,
         ContentRepository(db: widget.db).fetchTickerMessages(),
+        _sectionItemKeys,
       ),
     );
 
