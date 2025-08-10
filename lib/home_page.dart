@@ -72,7 +72,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   Map<AppSection?, double> _buttonCenterOffsetsX = {};
   double _uniformButtonSlotWidth = 0;
   final TextStyle _navButtonTextStyle =
-      const TextStyle(fontFamily: 'Pachakutech', fontSize: 20);
+      const TextStyle(fontFamily: 'Pachakutech', fontSize: NAV_BUTTON_FONT_SIZE);
 
   @override
   void initState() {
@@ -80,12 +80,11 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     _mainScrollController.addListener(_handleScroll);
     _mainScrollControllerNotifier = ValueNotifier<double>(0.0);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _calculateButtonLayouts();
-        _processNavigationExtras();
-      }
-    });
+    _uniformButtonSlotWidth = AppHeaderMetrics.getMaxButtonTextWidth(_navButtonTextStyle);
+    _buttonCenterOffsetsX = AppHeaderMetrics.calculateButtonCenterOffsets(
+      textStyle: _navButtonTextStyle,
+      uniformButtonSlotWidth: _uniformButtonSlotWidth,
+    );
   }
 
   @override
@@ -555,10 +554,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     final uniformButtonSlotWidth =
         AppHeaderMetrics.getMaxButtonTextWidth(_navButtonTextStyle);
     final buttonCenterOffsetsX = AppHeaderMetrics.calculateButtonCenterOffsets(
-      context: context,
       textStyle: _navButtonTextStyle,
       uniformButtonSlotWidth: uniformButtonSlotWidth,
-      headerEdgePadding: 8.0, // The padding of your main header Container
     );
 
     // Check if values changed to avoid unnecessary rebuilds if called multiple times

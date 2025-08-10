@@ -28,9 +28,9 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
   // Potentially a ValueNotifier for its own scroll offset if needed for internal parallax
   late ValueNotifier<double> _detailPageScrollNotifier;
   Map<AppSection?, double> _buttonCenterOffsetsX = {};
+  final TextStyle _navButtonTextStyle =
+      const TextStyle(fontFamily: 'Pachakutech', fontSize: NAV_BUTTON_FONT_SIZE);
   double _maxButtonTextWidth = 0;
-  TextStyle _navButtonTextStyle =
-      TextStyle(fontFamily: 'Pachakutech', fontSize: 20);
 
   /// Provides the path to the background image asset for this detail page.
   String get backgroundImageAsset;
@@ -48,6 +48,11 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
   @override
   void initState() {
     super.initState();
+    _maxButtonTextWidth = AppHeaderMetrics.getMaxButtonTextWidth(_navButtonTextStyle);
+    _buttonCenterOffsetsX = AppHeaderMetrics.calculateButtonCenterOffsets(
+      textStyle: _navButtonTextStyle,
+      uniformButtonSlotWidth: _maxButtonTextWidth,
+    );
     _detailPageScrollNotifier = ValueNotifier<double>(0.0);
     _internalScrollController.addListener(() {
       _detailPageScrollNotifier.value = _internalScrollController.offset;
@@ -55,9 +60,6 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
     _tickerFuture = widget.contentRepo
         .fetchTickerMessages()
         .then((tickers) => tickers[sectionId] ?? '  err   ');
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _calculateButtonLayouts();
-    });
   }
 
   @override
@@ -258,10 +260,8 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
         AppHeaderMetrics.getMaxButtonTextWidth(_navButtonTextStyle);
     final newButtonCenterOffsetsX =
         AppHeaderMetrics.calculateButtonCenterOffsets(
-      context: context,
       textStyle: _navButtonTextStyle,
       uniformButtonSlotWidth: newMaxButtonTextWidth,
-      headerEdgePadding: 8.0, // The padding of your main header Container
     );
 
     // Check if values changed to avoid unnecessary rebuilds if called multiple times

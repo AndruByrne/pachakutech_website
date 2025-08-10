@@ -8,6 +8,10 @@ import 'package:vector_math/vector_math.dart' show radians;
 import 'app_sections.dart';
 
 const HOME_BUTTON_TEXT = 'HOME';
+const NAV_BUTTON_FONT_SIZE = 16.0;
+const NAV_HEADER_SPACING = 8.0;
+const double NAV_BUTTON_HORIZONTAL_PADDING = 4.0;
+const double NAV_BUTTON_SPACING = 0.5; // Space between buttons
 
 // --- HeaderVisualParams Data Class ---
 class HeaderVisualParams {
@@ -142,8 +146,7 @@ Widget buildAnimatedHeaderContent({
 
   List<Widget> navButtons = [null, ...AppSection.values]
       .map((section) => Padding(
-            padding:
-                EdgeInsets.only(right: AppHeaderMetrics.NAV_BUTTON_SPACING),
+            padding: EdgeInsets.only(right: NAV_BUTTON_SPACING),
             child: createNavButtonForSection(
                 context: context,
                 section: section,
@@ -153,7 +156,8 @@ Widget buildAnimatedHeaderContent({
                     if (onHomeTap != null) {
                       onHomeTap();
                     } else {
-                      print('[buildAnimatedHeaderContent] WARNING: onHomeTap is NULL!');
+                      print(
+                          '[buildAnimatedHeaderContent] WARNING: onHomeTap is NULL!');
                     }
                   } else {
                     onSectionTap(section);
@@ -201,7 +205,7 @@ Widget buildAnimatedHeaderContent({
         ...navButtons, // These are now just text buttons
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.only(left: 8.0),
+            padding: const EdgeInsets.only(left: NAV_HEADER_SPACING),
             child: marqueeWidget,
           ),
         ),
@@ -213,8 +217,8 @@ Widget buildAnimatedHeaderContent({
     color: params.backgroundColor,
     padding: EdgeInsets.only(
       top: params.isCollapsedState ? MediaQuery.of(context).padding.top : 0,
-      left: 8,
-      right: 8,
+      left: NAV_HEADER_SPACING,
+      right: NAV_HEADER_SPACING,
     ),
     child: Stack(
       alignment: Alignment.center,
@@ -331,9 +335,6 @@ class AppHeaderMetrics {
   static const double WHEEL_ANGLE_EVAL = 539.0;
   static const double WHEEL_ANGLE_EDU = 494.0;
   static const double WHEEL_ANGLE_ELEV = 449.0;
-  static const double NAV_BUTTON_HORIZONTAL_PADDING = 8.0;
-
-  static const double NAV_BUTTON_SPACING = 1.0; // Space between buttons
 
   static double calculateTextWidth(String text, TextStyle style) {
     final TextPainter textPainter = TextPainter(
@@ -351,6 +352,7 @@ class AppHeaderMetrics {
     BuildContext context,
     AppSection? section,
     Map<AppSection?, double> buttonCenterOffsetsX,
+    // TODO: Needs to be just a list
     // Key: section (null for Home), Value: center X offset
     double collapsedWheelDiameter,
   ) {
@@ -472,13 +474,11 @@ class AppHeaderMetrics {
 
   // Example structure to hold calculated layout data
   static Map<AppSection?, double> calculateButtonCenterOffsets({
-    required BuildContext context,
     required TextStyle textStyle,
     required double uniformButtonSlotWidth, // Max text width
-    required double headerEdgePadding, // e.g., 8.0 for the header Container
   }) {
     final Map<AppSection?, double> offsets = {};
-    double currentX = headerEdgePadding; // Start after header's left padding
+    double currentX = 0; // header's left padding is shared with wheel
 
     final List<AppSection?> allButtonSlots = [
       null,
@@ -517,14 +517,14 @@ Widget createNavButtonForSection({
           maintainState: true,
           child: Container(
             width: buttonSlotWidth,
-            padding: EdgeInsets.symmetric(
-                horizontal: AppHeaderMetrics.NAV_BUTTON_HORIZONTAL_PADDING),
+            padding:
+                EdgeInsets.symmetric(horizontal: NAV_BUTTON_HORIZONTAL_PADDING),
             alignment: Alignment.center,
             child: Text(
               section?.id ?? HOME_BUTTON_TEXT,
               style: TextStyle(
                   fontFamily: 'Pachakutech',
-                  fontSize: 20,
+                  fontSize: NAV_BUTTON_FONT_SIZE,
                   color: Theme.of(context).primaryColor),
               textAlign: TextAlign.center,
             ),
