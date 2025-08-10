@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pachakutech_website/app_sections.dart';
@@ -26,6 +27,10 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
 
   // Potentially a ValueNotifier for its own scroll offset if needed for internal parallax
   late ValueNotifier<double> _detailPageScrollNotifier;
+  Map<AppSection?, double> _buttonCenterOffsetsX = {};
+  double _maxButtonTextWidth = 0;
+  TextStyle _navButtonTextStyle =
+      TextStyle(fontFamily: 'Pachakutech', fontSize: 20);
 
   /// Provides the path to the background image asset for this detail page.
   String get backgroundImageAsset;
@@ -50,6 +55,9 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
     _tickerFuture = widget.contentRepo
         .fetchTickerMessages()
         .then((tickers) => tickers[sectionId] ?? '  err   ');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _calculateButtonLayouts();
+    });
   }
 
   @override
@@ -61,6 +69,7 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
 
   void _handleCustomBackNavigation(BuildContext context) {
     // For now, just a standard pop. We'll enhance this.
+    print('handling cutome back nav');
     if (Navigator.of(context).canPop()) {
       Navigator.of(context).pop();
     }
@@ -92,6 +101,7 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
             context,
             targetSection: widget.appSection, // From BlogContentDetailPage
             marqueeText: currentMarqueeText,
+            buttonCenterOffsetsX: _buttonCenterOffsetsX,
           );
 
           return Scaffold(
@@ -152,9 +162,9 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                                     scrollOffset: widget.homePageScrollOffset,
                                     targetSectionForCollapsed: null,
                                     // Home doesn't have a section target in this context
-                                    currentMarqueeText:
-                                        "pachakutech" // Home's default marquee
-                                    );
+                                    currentMarqueeText: "pachakutech",
+                                    buttonCenterOffsetsX:
+                                        _buttonCenterOffsetsX);
                             // `toHeroCtx` is this DetailPage. `detailHeaderParams` is its target.
                             paramsTo =
                                 detailHeaderParams; // Already calculated with correct section and marquee
@@ -167,11 +177,13 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                             // `toHeroCtx` is HomePage. We want to animate to its expanded state.
                             paramsTo =
                                 AppHeaderLogic.getDynamicHeaderVisualParams(
-                                    context: toHeroCtx,
-                                    scrollOffset: 0.0,
-                                    // Target home's expanded state
-                                    targetSectionForCollapsed: null,
-                                    currentMarqueeText: "pachakutech");
+                              context: toHeroCtx,
+                              scrollOffset: 0.0,
+                              // Target home's expanded state
+                              targetSectionForCollapsed: null,
+                              currentMarqueeText: "pachakutech",
+                              buttonCenterOffsetsX: _buttonCenterOffsetsX,
+                            );
                           }
 
                           return globalFlightShuttleBuilderInternal(
@@ -180,6 +192,8 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                             paramsAtAnimationStart: paramsFrom,
                             paramsAtAnimationEnd: paramsTo,
                             flightDirection: flightDirection,
+                            buttonCenterOffsetsX: _buttonCenterOffsetsX,
+                            maxButtonTextWidth: _maxButtonTextWidth,
                           );
                         },
                         child: buildAnimatedHeaderContent(
@@ -187,7 +201,10 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                           // Pass context
                           params: detailHeaderParams,
                           // tickerFuture no longer needed, marqueeText is in params
-                          onHomeTap: () => _handleCustomBackNavigation(context),
+                          onHomeTap: () {
+                            print('[BaseDetailPage] onHomeTap invoked. Calling _handleCustomBackNavigation.');
+                            _handleCustomBackNavigation(context);
+                          },
                           onSectionTap: (tappedSection) {
                             // If on detail page, and a section button is tapped,
                             // navigate to that new section.
@@ -198,6 +215,8 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                               });
                             }
                           },
+                          buttonCenterOffsetsX: _buttonCenterOffsetsX,
+                          uniformButtonSlotWidth: _maxButtonTextWidth,
                         ),
                       ),
                     ),
@@ -230,5 +249,29 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
             ),
           );
         });
+  }
+
+  void _calculateButtonLayouts() {
+    if (!mounted) return; // Ensure widget is still in the tree
+
+    final newMaxButtonTextWidth =
+        AppHeaderMetrics.getMaxButtonTextWidth(_navButtonTextStyle);
+    final newButtonCenterOffsetsX =
+        AppHeaderMetrics.calculateButtonCenterOffsets(
+      context: context,
+      textStyle: _navButtonTextStyle,
+      uniformButtonSlotWidth: newMaxButtonTextWidth,
+      headerEdgePadding: 8.0, // The padding of your main header Container
+    );
+
+    // Check if values changed to avoid unnecessary rebuilds if called multiple times
+    if (_maxButtonTextWidth != newMaxButtonTextWidth ||
+        !mapEquals(_buttonCenterOffsetsX, newButtonCenterOffsetsX)) {
+      // mapEquals from collection package
+      setState(() {
+        _maxButtonTextWidth = newMaxButtonTextWidth;
+        _buttonCenterOffsetsX = newButtonCenterOffsetsX;
+      });
+    }
   }
 }

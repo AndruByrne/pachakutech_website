@@ -8,7 +8,7 @@ import 'dart:developer' as developer;
 import 'package:go_router/go_router.dart';
 import 'hero_util.dart';
 import 'author_controls.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, mapEquals;
 
 class _AnimatedHeaderDelegate extends SliverPersistentHeaderDelegate {
   final double minHeight;
@@ -63,8 +63,16 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     for (var section in AppSection.values) section: GlobalKey()
   };
   bool _showAuthorUI = false;
+
+  // nav flags
   AppSection? _pendingNavigationToSection;
   Object? _lastProcessedNavigationExtra;
+
+  // nav button measurements
+  Map<AppSection?, double> _buttonCenterOffsetsX = {};
+  double _uniformButtonSlotWidth = 0;
+  final TextStyle _navButtonTextStyle =
+      const TextStyle(fontFamily: 'Pachakutech', fontSize: 20);
 
   @override
   void initState() {
@@ -74,6 +82,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
+        _calculateButtonLayouts();
         _processNavigationExtras();
       }
     });
@@ -90,7 +99,13 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     }
     _mainScrollControllerNotifier.value = initialScrollOffset;
     _handleScroll();
-    _processNavigationExtras();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Check if the widget is still mounted before proceeding,
+      // as the callback fires after the frame.
+      if (mounted) {
+        _processNavigationExtras();
+      }
+    });
   }
 
   void _handleScroll() {
@@ -106,7 +121,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   }
 
   void _handleWheelTap() => kIsWeb
-      ? _handleBackTap()
+      ? _handleHomeButtonTap()
       : setState(() {
           // replace main content with author UI
           _showAuthorUI = !_showAuthorUI;
@@ -207,13 +222,17 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       developer.log(
           "ProcessNavigationExtras: New instruction for ${targetSectionFromExtra.id}. Setting as pending.",
           name: "MyHomePage.Navigation");
-      setState(() {
-        _pendingNavigationToSection = targetSectionFromExtra;
-        // Mark this specific 'extra' object as being initiated for processing.
-        // We'll clear _lastProcessedNavigationExtra only when we truly leave MyHomePage
-        // or a new, different 'extra' comes in that should override.
-        _lastProcessedNavigationExtra = extra;
-      });
+      if (mounted) {
+        setState(() {
+          _pendingNavigationToSection = targetSectionFromExtra;
+          // Mark this specific 'extra' object as being initiated for processing.
+          // We'll clear _lastProcessedNavigationExtra only when we truly leave MyHomePage
+          // or a new, different 'extra' comes in that should override.
+          _lastProcessedNavigationExtra = extra;
+        });
+      } else {
+        return;
+      }
       _initiateScrollAndNavigate();
     } else {
       // No 'navigateToAfterScroll' in extras, or it's different from what we last processed.
@@ -223,7 +242,11 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         developer.log(
             "ProcessNavigationExtras: Clearing _lastProcessedNavigationExtra as 'navigateToAfterScroll' is no longer present.",
             name: "MyHomePage.Navigation");
-        _lastProcessedNavigationExtra = null;
+        if (mounted) {
+          setState(() {
+            _lastProcessedNavigationExtra = null;
+          });
+        }
       }
       if (_pendingNavigationToSection == null) {
         developer.log(
@@ -234,7 +257,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   }
 
   Future<void> _initiateScrollAndNavigate() async {
-    if (_pendingNavigationToSection == null) {
+    if (_pendingNavigationToSection == null || !mounted) {
       return;
     }
     final AppSection sectionToNavigate = _pendingNavigationToSection!;
@@ -285,9 +308,11 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           "Scroll/ensureVisible complete. Navigating to detail for ${sectionToNavigate.id} at offset $currentScrollOffset",
           name: "MyHomePage.Navigation");
       String path = '/${sectionToNavigate.id}';
-      setState(() {
-        _pendingNavigationToSection = null; // setting singleton to null
-      });
+      if (mounted) {
+        setState(() {
+          _pendingNavigationToSection = null; // setting singleton to null
+        });
+      }
       context.push(path, extra: {
         'scrollOffset': currentScrollOffset,
         'targetSection': sectionToNavigate,
@@ -301,13 +326,15 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   HeaderVisualParams get currentHeaderVisualParams =>
       AppHeaderLogic.getDynamicHeaderVisualParams(
-          context: context,
-          scrollOffset: _mainScrollController.hasClients &&
-                  _mainScrollController.position.haveDimensions
-              ? _mainScrollController.offset
-              : 0.0,
-          targetSectionForCollapsed: null,
-          currentMarqueeText: "PACHAKUTECH");
+        context: context,
+        scrollOffset: _mainScrollController.hasClients &&
+                _mainScrollController.position.haveDimensions
+            ? _mainScrollController.offset
+            : 0.0,
+        targetSectionForCollapsed: null,
+        currentMarqueeText: "PACHAKUTECH",
+        buttonCenterOffsetsX: _buttonCenterOffsetsX,
+      );
 
   @override
   void dispose() {
@@ -328,8 +355,11 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       params: currentParams,
       // tickerFuture is not directly used by the new buildAnimatedHeaderContent
       // marqueeText is now part of currentParams
-      onHomeTap: _handleWheelTap, // For when wheels act as home
+      onHomeTap: _handleHomeButtonTap,
+      // For when wheels act as home
       onSectionTap: _handleSectionButtonTap,
+      buttonCenterOffsetsX: _buttonCenterOffsetsX,
+      uniformButtonSlotWidth: _uniformButtonSlotWidth,
     );
 
     // Apply the GestureDetector for the "nudge" directly to the header's content
@@ -375,12 +405,13 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               extra?['targetSection'] as AppSection?;
 
           paramsTo = AppHeaderMetrics.getCollapsedHeaderVisualParams(
-              toHeroCtx, // context of the destination page
-              targetSection: targetSection,
-              // Target section for the detail page
-              marqueeText:
-                  targetSection?.id ?? "pachakutech" // Detail page ticker
-              );
+            toHeroCtx, // context of the destination page
+            targetSection: targetSection,
+            // Target section for the detail page
+            marqueeText:
+                targetSection?.id ?? "pachakutech", // Detail page ticker
+            buttonCenterOffsetsX: _buttonCenterOffsetsX,
+          );
         } else {
           // POP: Detail (fromHeroCtx) to Home (toHeroCtx)
           // `fromHeroCtx` is DetailPage. We need its collapsed params.
@@ -397,19 +428,25 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                   "pachakutech";
 
           paramsFrom = AppHeaderMetrics.getCollapsedHeaderVisualParams(
-              fromHeroCtx, // Detail's context
-              targetSection: detailPageSection,
-              marqueeText: detailPageTicker);
+            fromHeroCtx, // Detail's context
+            targetSection: detailPageSection,
+            marqueeText: detailPageTicker,
+            buttonCenterOffsetsX: _buttonCenterOffsetsX,
+          );
 
           // `toHeroCtx` is MyHomePage. `currentHeaderVisualParams` represents its state
           // *IF* we were animating based on current scroll. But for a pop, we usually
           // want to animate to the fully expanded (scrollOffset = 0) or a specific target.
           // Let's assume pop animates to fully expanded home for simplicity.
           paramsTo = AppHeaderLogic.getDynamicHeaderVisualParams(
-              context: toHeroCtx,
-              scrollOffset: 0.0, // Animate to home page's fully expanded state
-              targetSectionForCollapsed: null, // Home target
-              currentMarqueeText: "pachakutech");
+            context: toHeroCtx,
+            scrollOffset: 0.0,
+            // Animate to home page's fully expanded state
+            targetSectionForCollapsed: null,
+            // Home target
+            currentMarqueeText: "pachakutech",
+            buttonCenterOffsetsX: _buttonCenterOffsetsX,
+          );
         }
 
         return globalFlightShuttleBuilderInternal(
@@ -418,6 +455,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           paramsAtAnimationStart: paramsFrom,
           paramsAtAnimationEnd: paramsTo,
           flightDirection: flightDirection,
+          buttonCenterOffsetsX: _buttonCenterOffsetsX,
+          maxButtonTextWidth: _uniformButtonSlotWidth,
         );
       },
       child: headerContentWithNudgeDetector,
@@ -507,6 +546,29 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           curve: Curves.easeOutCubic,
         );
       }
+    }
+  }
+
+  void _calculateButtonLayouts() {
+    if (!mounted) return; // Ensure widget is still in the tree
+
+    final uniformButtonSlotWidth =
+        AppHeaderMetrics.getMaxButtonTextWidth(_navButtonTextStyle);
+    final buttonCenterOffsetsX = AppHeaderMetrics.calculateButtonCenterOffsets(
+      context: context,
+      textStyle: _navButtonTextStyle,
+      uniformButtonSlotWidth: uniformButtonSlotWidth,
+      headerEdgePadding: 8.0, // The padding of your main header Container
+    );
+
+    // Check if values changed to avoid unnecessary rebuilds if called multiple times
+    if (_uniformButtonSlotWidth != uniformButtonSlotWidth ||
+        !mapEquals(_buttonCenterOffsetsX, buttonCenterOffsetsX)) {
+      // mapEquals from collection package
+      setState(() {
+        _uniformButtonSlotWidth = uniformButtonSlotWidth;
+        _buttonCenterOffsetsX = buttonCenterOffsetsX;
+      });
     }
   }
 }
