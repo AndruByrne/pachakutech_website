@@ -17,6 +17,7 @@ const double NAV_BUTTON_SPACING = 0.5; // Space between buttons
 class HeaderVisualParams {
   final double wheelDiameter;
   final Alignment wheelAlignment;
+  final Alignment navButtonRowAlignment;
   final double wheelAngle1;
   final double wheelAngle2;
   final Color wheel1Color;
@@ -48,6 +49,7 @@ class HeaderVisualParams {
     required this.marqueeWidthFraction,
     required this.marqueeVelocity,
     required this.marqueeText,
+    required this.navButtonRowAlignment,
     this.targetSection,
     required this.isCollapsedState,
   });
@@ -77,6 +79,7 @@ class HeaderVisualParams {
       marqueeVelocity: lerpDouble(a.marqueeVelocity, b.marqueeVelocity, t)!,
       marqueeText: t < 0.5 ? a.marqueeText : b.marqueeText,
       // Simple switch, could be smarter
+      navButtonRowAlignment: Alignment.lerp(a.navButtonRowAlignment,b.navButtonRowAlignment, t)!,
       targetSection: lerpedTargetSection,
       isCollapsedState: lerpedIsCollapsed,
     );
@@ -92,6 +95,31 @@ Widget buildAnimatedHeaderContent({
   required Map<AppSection?, double> buttonCenterOffsetsX,
   required double uniformButtonSlotWidth,
 }) {
+  final double screenWidth = MediaQuery.of(context).size.width;
+  final double totalButtonsOuterWidth = (AppSection.values.length + 1) * uniformButtonSlotWidth + // Home + sections
+      (AppSection.values.length) * NAV_BUTTON_SPACING; // Spaces between buttons
+  final int numButtons = AppSection.values.length + 1;
+  final double totalWidthOfButtonSlotsOnly = numButtons * uniformButtonSlotWidth;
+  final double totalWidthOfSpacingBetweenButtons = (numButtons > 0 ? numButtons - 1 : 0) * NAV_BUTTON_SPACING;
+  final double fixedButtonsWidth = totalWidthOfButtonSlotsOnly + totalWidthOfSpacingBetweenButtons;
+
+// This is the width of buttons + spacer + remaining available space for marquee.
+  final double screenPaddedWidth = MediaQuery.of(context).size.width - NAV_HEADER_SPACING * 2;
+  final double fullTargetWidthOfBar = screenPaddedWidth; // The bar aims to fill the padded screen width eventually
+// It's just the width of the buttons.
+  final double initialWidthOfBar = fixedButtonsWidth;
+
+  // The current animated width for the entire bar (buttons + marquee area).
+// This width will be animated by lastHalfTurnLerp (which drives marqueeOpacity and navButtonRowAlignment).
+// marqueeWidthFraction can be repurposed or used as this lerp value.
+// Let's use params.marqueeOpacity as the lerp factor for width, since it goes 0 to 1.
+  final double currentAnimatedBarWidth = lerpDouble(
+    initialWidthOfBar,
+    fullTargetWidthOfBar,
+    params.marqueeOpacity, // Or lastHalfTurnLerp if marqueeOpacity isn't exactly 0-1 for this
+  )!;
+
+
   // --- Calculate standard button slot width (text + padding) ---
   Widget visualWheels = SizedBox(
     // No Align here yet, alignment applied in the Stack
@@ -164,10 +192,13 @@ Widget buildAnimatedHeaderContent({
                   }
                 },
                 buttonSlotWidth: uniformButtonSlotWidth,
-                isTargetForWheels: params.isCollapsedState &&
-                    (params.targetSection == section)),
+                isTargetForWheels: (params.targetSection == section)),
           ))
       .toList();
+
+  final double animatedMarqueeContainerWidth =
+      (screenWidth - totalButtonsOuterWidth - NAV_HEADER_SPACING * 2) // NAV_HEADER_SPACING for Stack padding
+          .clamp(0, double.infinity) * params.marqueeWidthFraction;
 
   // --- Marquee ---
   Widget marqueeWidget = Opacity(
@@ -197,8 +228,82 @@ Widget buildAnimatedHeaderContent({
         : SizedBox.shrink(), // Don't build if invisible or zero width
   );
 
+  final double availableWidthForBar = screenWidth - NAV_HEADER_SPACING * 2;
+
+  Widget internalBarContent = Row(
+    mainAxisSize: MainAxisSize.min, // Important so Expanded knows its bounds from parent SizedBox
+    crossAxisAlignment: CrossAxisAlignment.center,
+    children: <Widget>[
+      // Render buttons. They take up 'fixedButtonsWidth'
+      ...navButtons, // Ensure navButtons are built correctly to sum up to fixedButtonsWidth
+
+      // Marquee takes the rest of the space given by 'currentAnimatedBarWidth'
+      // after buttons have taken their space.
+      if (params.marqueeOpacity > 0.01) // Only add Expanded if marquee is meant to be visible
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(left: NAV_HEADER_SPACING), // Spacer before marquee text
+            child: marqueeWidget, // marqueeWidget has its own Opacity for text
+          ),
+        ),
+    ],
+  );
+
+// This is the widget that will be ALIGNED. Its width is animated.
+  Widget sizedAndAlignedBar = SizedBox(
+    width: currentAnimatedBarWidth,
+    child: Opacity( // Overall fade for the bar
+      opacity: params.navButtonOpacity,
+      child: internalBarContent,
+    ),
+  );
+
+
+  Widget positionedBar = Opacity(
+    opacity: params.navButtonOpacity,
+    child: Row(
+      mainAxisSize: MainAxisSize.min, // Row is only as wide as its children
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: <Widget>[
+        ...navButtons,
+        if (params.marqueeWidthFraction > 0.01 && params.marqueeOpacity > 0.01)
+          SizedBox(width: NAV_HEADER_SPACING), // Space between last button and marquee
+        SizedBox(
+          width: animatedMarqueeContainerWidth,
+          child: marqueeWidget,
+        ),
+      ],
+    ),
+  );
+
+  // This is the Opacity wrapper, its child will be aligned
+  Widget activatableRow = Opacity(
+    opacity: params.navButtonOpacity,
+    child: Row(
+      // Let this Row fill the width given by its parent Align,
+      // but its internal children will manage their space.
+      // mainAxisSize: MainAxisSize.max, // Default for Row
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: <Widget>[
+        // Buttons take their fixed space
+        ...navButtons,
+        // Marquee takes the rest of the space *within this Row*
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(left: NAV_HEADER_SPACING),
+            // marqueeWidget itself has opacity and conditional SizedBox.
+            // Its EFFECTIVE width for layout within Expanded will be driven by its content.
+            // However, params.marqueeWidthFraction was used to make it shrink before.
+            // Let's ensure marqueeWidget can be small.
+            child: marqueeWidget,
+          ),
+        ),
+      ],
+    ),
+  );
+
   Widget textButtonsAndMarqueeRow = Opacity(
-    opacity: params.marqueeOpacity, // Or navButtonOpacity if they fade together
+    opacity: params.navButtonOpacity, // Or navButtonOpacity if they fade together
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: <Widget>[
@@ -213,6 +318,11 @@ Widget buildAnimatedHeaderContent({
     ),
   );
 
+  // Need totalButtonsWidth calculation:
+  final double totalButtonsWidth = (AppSection.values.length + 1) * uniformButtonSlotWidth +
+      (AppSection.values.length) * NAV_BUTTON_SPACING +
+      NAV_HEADER_SPACING; // Account for left padding of marquee
+
   Widget headerContent = Container(
     color: params.backgroundColor,
     padding: EdgeInsets.only(
@@ -225,15 +335,19 @@ Widget buildAnimatedHeaderContent({
       children: [
         if (params.dotLogoScaleFactor > 0.001)
           Opacity(
-            opacity: (1.0 - params.marqueeOpacity), // Cross-fade with marquee
+            opacity: params.navButtonOpacity,
             child: Align(
               alignment: Alignment.center,
               child: dotLogoWidget,
             ),
           ),
         Align(
-          alignment: Alignment.centerLeft,
-          child: textButtonsAndMarqueeRow,
+          alignment: params.navButtonRowAlignment,
+          // The Align widget will provide a certain width to activatableRow.
+          // If activatableRow always tries to be full width, then we're back to the original problem.
+          //
+          // What if the Align's child is explicitly sized?
+          child: sizedAndAlignedBar
         ),
         Align(alignment: params.wheelAlignment, child: visualWheels),
       ],
@@ -441,6 +555,7 @@ class AppHeaderMetrics {
       marqueeWidthFraction: 1.0,
       marqueeVelocity: 20.0,
       marqueeText: marqueeText,
+      navButtonRowAlignment: Alignment.centerLeft,
       targetSection: targetSection,
       isCollapsedState: true,
     );
@@ -466,7 +581,7 @@ class AppHeaderMetrics {
         // Starts with zero effective width for marquee logic
         marqueeVelocity: 0.0,
         marqueeText: "pachakutech",
-        // Default
+        navButtonRowAlignment: Alignment.centerRight,
         targetSection: null,
         // No target section in fullscreen home
         isCollapsedState: false,
@@ -511,7 +626,7 @@ Widget createNavButtonForSection({
       child: Opacity(
         opacity: currentParams.navButtonOpacity,
         child: Visibility(
-          visible: !isTargetForWheels || !currentParams.isCollapsedState,
+          visible: !isTargetForWheels,
           maintainSize: true,
           maintainAnimation: true,
           maintainState: true,
@@ -628,12 +743,18 @@ class AppHeaderLogic {
       }
     }
 
+
     Color wheel1Color = Color.lerp(
         fsParams.wheel1Color, colParams.wheel1Color, lastHalfTurnLerp)!;
     Color wheel2Color = Color.lerp(
         fsParams.wheel2Color, colParams.wheel2Color, lastHalfTurnLerp)!;
     Color backgroundColor = Color.lerp(
         fsParams.backgroundColor, colParams.backgroundColor, lastHalfTurnLerp)!;
+    Alignment currentNavButtonRowAlignment = Alignment.lerp(
+        fsParams.navButtonRowAlignment,
+        colParams.navButtonRowAlignment,
+        Curves.easeInQuint.transform(lastHalfTurnLerp),
+    )!;
     double navButtonOpacity = lerpDouble(fsParams.navButtonOpacity,
         colParams.navButtonOpacity, lastHalfTurnLerp)!;
     Color navButtonColor = Color.lerp(
@@ -669,9 +790,11 @@ class AppHeaderLogic {
           (overallTransitionProgress < 1.0 || targetSectionForCollapsed == null)
               ? "pachakutech"
               : colParams.marqueeText,
+      navButtonRowAlignment: currentNavButtonRowAlignment,
       targetSection:
           overallTransitionProgress == 1.0 ? targetSectionForCollapsed : null,
       isCollapsedState: overallTransitionProgress == 1.0,
     );
   }
 }
+
