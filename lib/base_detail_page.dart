@@ -60,7 +60,7 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
       _detailPageScrollNotifier.value = _internalScrollController.offset;
     });
     _tickerFuture = widget.contentRepo
-        .fetchTickerMessages()
+        .fetchSectionIntros()
         .then((tickers) => tickers[sectionId] ?? '  err   ');
   }
 

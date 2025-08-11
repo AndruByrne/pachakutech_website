@@ -71,6 +71,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   // nav button measurements
   Map<AppSection?, double> _buttonCenterOffsetsX = {};
   double _uniformButtonSlotWidth = 0;
+  late Future<String> _tickerFuture;
   final TextStyle _navButtonTextStyle = const TextStyle(
       fontFamily: 'Pachakutech', fontSize: NAV_BUTTON_FONT_SIZE);
 
@@ -86,6 +87,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       textStyle: _navButtonTextStyle,
       uniformButtonSlotWidth: _uniformButtonSlotWidth,
     );
+    _tickerFuture = ContentRepository(db: widget.db)
+        .fetchSectionIntros()
+        .then((tickers) => tickers['home']);
   }
 
   @override
@@ -260,7 +264,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       context.push(path, extra: {
         'scrollOffset': currentScrollOffset,
         'targetSection': sectionToNavigate,
-        'currentMarqueeText': "PACHAKUTECH", // Or dynamic
       });
       developer.log(
           "InitiateScroll: Pushed to $path for ${sectionToNavigate.id}. _pendingNavigationToSection is now null.",
@@ -374,7 +377,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             ? _mainScrollController.offset
             : 0.0,
         targetSectionForCollapsed: null,
-        currentMarqueeText: "PACHAKUTECH",
+        currentMarqueeText: "PACHAUTECH",
         buttonCenterOffsetsX: _buttonCenterOffsetsX,
       );
 
@@ -390,177 +393,177 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final HeaderVisualParams currentParams = currentHeaderVisualParams;
-
-    Widget headerVisuals = buildAnimatedHeaderContent(
-      context: context,
-      params: currentParams,
-      // tickerFuture is not directly used by the new buildAnimatedHeaderContent
-      // marqueeText is now part of currentParams
-      onHomeTap: _handleHomeButtonTap,
-      // For when wheels act as home
-      onSectionTap: _handleSectionButtonTap,
-      buttonCenterOffsetsX: _buttonCenterOffsetsX,
-      uniformButtonSlotWidth: _uniformButtonSlotWidth,
-    );
-
-    // Apply the GestureDetector for the "nudge" directly to the header's content
-    Widget headerContentWithNudgeDetector = GestureDetector(
-      onTap: _onForwardTap,
-      // HitTestBehavior.translucent allows taps to be "seen" by this detector
-      // AND by widgets further down the tree if this one doesn't claim the gesture.
-      behavior: HitTestBehavior.translucent,
-      child: headerVisuals,
-    );
-
-    Widget headerVisualsWithHero = Hero(
-      tag: headerHeroTag,
-      createRectTween: (begin, end) {
-        return MaterialRectCenterArcTween(begin: begin, end: end);
-      },
-      flightShuttleBuilder: (
-        BuildContext flightCtx,
-        Animation<double> animation,
-        HeroFlightDirection flightDirection,
-        BuildContext fromHeroCtx, // Context of Hero from DetailPage
-        BuildContext toHeroCtx, // Context of this Hero on HomePage
-      ) {
-        HeaderVisualParams paramsFrom;
-        HeaderVisualParams paramsTo;
-
-        if (flightDirection == HeroFlightDirection.push) {
-          // PUSH: Home (fromHeroCtx) to Detail (toHeroCtx)
-          // `fromHeroCtx` is MyHomePage. `currentHeaderVisualParams` is appropriate.
-          paramsFrom = currentHeaderVisualParams; // State at the moment of push
-
-          developer.log('[Hero] pushing to detail using home shuttle');
-
-          // For `paramsTo`, we need info from the DetailPage.
-          // This is where the `extra` data in go_router comes in handy.
-          // We assume the DetailPage's Hero will primarily drive the PUSH.
-          // This shuttle on HomePage is more critical for POP.
-          // If this shuttle IS used for push, it means detail page hasn't specified its own target.
-          // Fallback:
-          final GoRouterState state =
-              GoRouterState.of(fromHeroCtx); // or flightCtx
-          final Map<String, dynamic>? extra =
-              state.extra as Map<String, dynamic>?;
-          final AppSection? targetSection =
-              extra?['targetSection'] as AppSection?;
-
-          paramsTo = AppHeaderMetrics.getCollapsedHeaderVisualParams(
-            toHeroCtx, // context of the destination page
-            targetSection: targetSection,
-            // Target section for the detail page
-            marqueeText:
-                targetSection?.id ?? "pachakutech", // Detail page ticker
-            buttonCenterOffsetsX: _buttonCenterOffsetsX,
-          );
-        } else {
-          // POP: Detail (fromHeroCtx) to Home (toHeroCtx)
-          // `fromHeroCtx` is DetailPage. We need its collapsed params.
-          developer.log('[Hero] popping to home using home shuttle');
-          final GoRouterState state =
-              GoRouterState.of(context); // Get state from DetailPage context
-          final Map<String, dynamic>? extra =
-              state.extra as Map<String, dynamic>?;
-          final AppSection? detailPageSection =
-              extra?['targetSection'] as AppSection?;
-          // You might need a more robust way to get the detail page's ticker if it's dynamic
-          final String detailPageTicker =
-              extra?['currentMarqueeText'] as String? ??
-                  detailPageSection?.id ??
-                  "pachakutech";
-
-          paramsFrom = AppHeaderMetrics.getCollapsedHeaderVisualParams(
-            fromHeroCtx, // Detail's context
-            targetSection: detailPageSection,
-            marqueeText: detailPageTicker,
-            buttonCenterOffsetsX: _buttonCenterOffsetsX,
-          );
-
-          paramsTo = AppHeaderLogic.getDynamicHeaderVisualParams(
-            context: toHeroCtx,
-            scrollOffset: _mainScrollController.offset,
-            // Animate to home page's fully expanded state
+    return FutureBuilder<String?>(
+        future: _tickerFuture,
+        builder: (ctx, tickerSnapshot) {
+          final HeaderVisualParams currentParams =
+              AppHeaderLogic.getDynamicHeaderVisualParams(
+            context: context,
+            scrollOffset: _mainScrollController.hasClients &&
+                    _mainScrollController.position.haveDimensions
+                ? _mainScrollController.offset
+                : 0.0,
             targetSectionForCollapsed: null,
-            // Home target
-            currentMarqueeText: "pachakutech",
+            currentMarqueeText:
+                tickerSnapshot.hasData ? tickerSnapshot.data ?? '  null data ' : '  no data ',
+            // Pass the resolved text
             buttonCenterOffsetsX: _buttonCenterOffsetsX,
           );
-        }
 
-        return globalFlightShuttleBuilderInternal(
-          flightContext: flightCtx,
-          animation: animation,
-          paramsAtAnimationStart: paramsFrom,
-          paramsAtAnimationEnd: paramsTo,
-          flightDirection: flightDirection,
-          buttonCenterOffsetsX: _buttonCenterOffsetsX,
-          maxButtonTextWidth: _uniformButtonSlotWidth,
-        );
-      },
-      child: headerContentWithNudgeDetector,
-    );
+          Widget headerVisuals = buildAnimatedHeaderContent(
+            context: context,
+            params: currentParams,
+            onHomeTap: _handleHomeButtonTap,
+            onSectionTap: _handleSectionButtonTap,
+            buttonCenterOffsetsX: _buttonCenterOffsetsX,
+            uniformButtonSlotWidth: _uniformButtonSlotWidth,
+          );
 
-    Widget mainPageParallaxBackground = ValueListenableBuilder<double>(
-      valueListenable: _mainScrollControllerNotifier,
-      builder: (context, scrollOffset, child) {
-        double backgroundScrollOffset = scrollOffset * 0.3; // Parallax factor
-        double screenHeight = MediaQuery.of(context).size.height;
-        double estimatedMaxContentScroll = screenHeight * 2.5;
-        double parallaxTravel = estimatedMaxContentScroll * 0.3;
+          Widget headerContentWithNudgeDetector = GestureDetector(
+            onTap: _onForwardTap,
+            behavior: HitTestBehavior.translucent,
+            child: headerVisuals,
+          );
 
-        return Positioned(
-          top: -backgroundScrollOffset,
-          left: 0,
-          right: 0,
-          height: screenHeight + parallaxTravel,
-          child: Image.asset(
-            'assets/main_page_background.jpg',
-            fit: BoxFit.cover,
-            alignment: Alignment.topCenter,
-          ),
-        );
-      },
-    );
+          Widget headerVisualsWithHero = Hero(
+            tag: headerHeroTag,
+            createRectTween: (begin, end) {
+              return MaterialRectCenterArcTween(begin: begin, end: end);
+            },
+            flightShuttleBuilder: (
+              BuildContext flightCtx,
+              Animation<double> animation,
+              HeroFlightDirection flightDirection,
+              BuildContext fromHeroCtx, // Context of Hero from DetailPage
+              BuildContext toHeroCtx, // Context of this Hero on HomePage
+            ) {
+              HeaderVisualParams paramsFrom;
+              HeaderVisualParams paramsTo;
 
-    SliverPersistentHeader headerSliver = SliverPersistentHeader(
-      pinned: true,
-      floating: false,
-      delegate: _AnimatedHeaderDelegate(
-        minHeight: AppHeaderMetrics.getCollapsedHeaderHeight(context),
-        maxHeight: AppHeaderMetrics.getFullscreenHeaderHeight(context),
-        child: headerVisualsWithHero, // Make sure this is the Hero widget
-      ),
-    );
+              if (flightDirection == HeroFlightDirection.push) {
+                // PUSH: Home (fromHeroCtx) to Detail (toHeroCtx)
+                paramsFrom =
+                    currentHeaderVisualParams; // State at the moment of push
 
-    Widget contentSliver = SliverList(
-      delegate: mainContentBuilder(
-        getSectionHeaderHeight(context),
-        _handleSectionButtonTap,
-        ContentRepository(db: widget.db).fetchTickerMessages(),
-        _sectionItemKeys,
-      ),
-    );
+                developer.log('[Hero] pushing to detail using home shuttle');
 
-    return Scaffold(
-      body: _showAuthorUI
-          ? AuthorControls(db: widget.db)
-          : Stack(
-              children: <Widget>[
-                mainPageParallaxBackground,
-                CustomScrollView(
-                  controller: _mainScrollController,
-                  physics: const BouncingScrollPhysics(),
-                  slivers: <Widget>[
-                    headerSliver,
-                    contentSliver,
-                  ],
+                final GoRouterState state =
+                    GoRouterState.of(fromHeroCtx); // or flightCtx
+                final Map<String, dynamic>? extra =
+                    state.extra as Map<String, dynamic>?;
+                final AppSection? targetSection =
+                    extra?['targetSection'] as AppSection?;
+
+                paramsTo = AppHeaderMetrics.getCollapsedHeaderVisualParams(
+                  toHeroCtx,
+                  targetSection: targetSection,
+                  marqueeText: targetSection?.id ?? "pachkutech",
+                  buttonCenterOffsetsX: _buttonCenterOffsetsX,
+                );
+              } else {
+                // POP: Detail (fromHeroCtx) to Home (toHeroCtx)
+                // `fromHeroCtx` is DetailPage. We need its collapsed params.
+                developer.log('[Hero] popping to home using home shuttle');
+                final GoRouterState state = GoRouterState.of(
+                    context); // Get state from DetailPage context
+                final Map<String, dynamic>? extra =
+                    state.extra as Map<String, dynamic>?;
+                final AppSection? detailPageSection =
+                    extra?['targetSection'] as AppSection?;
+                // You might need a more robust way to get the detail page's ticker if it's dynamic
+                paramsFrom = AppHeaderMetrics.getCollapsedHeaderVisualParams(
+                  fromHeroCtx, // Detail's context
+                  targetSection: detailPageSection,
+                  marqueeText: tickerSnapshot.hasData
+                      ? tickerSnapshot.data ?? '   '
+                      : '   ',
+                  buttonCenterOffsetsX: _buttonCenterOffsetsX,
+                );
+
+                paramsTo = AppHeaderLogic.getDynamicHeaderVisualParams(
+                  context: toHeroCtx,
+                  scrollOffset: _mainScrollController.offset,
+                  // Animate to home page's fully expanded state
+                  targetSectionForCollapsed: null,
+                  // Home target
+                  currentMarqueeText: "pachakuteh",
+                  buttonCenterOffsetsX: _buttonCenterOffsetsX,
+                );
+              }
+
+              return globalFlightShuttleBuilderInternal(
+                flightContext: flightCtx,
+                animation: animation,
+                paramsAtAnimationStart: paramsFrom,
+                paramsAtAnimationEnd: paramsTo,
+                flightDirection: flightDirection,
+                buttonCenterOffsetsX: _buttonCenterOffsetsX,
+                maxButtonTextWidth: _uniformButtonSlotWidth,
+              );
+            },
+            child: headerContentWithNudgeDetector,
+          );
+
+          Widget mainPageParallaxBackground = ValueListenableBuilder<double>(
+            valueListenable: _mainScrollControllerNotifier,
+            builder: (context, scrollOffset, child) {
+              double backgroundScrollOffset =
+                  scrollOffset * 0.3; // Parallax factor
+              double screenHeight = MediaQuery.of(context).size.height;
+              double estimatedMaxContentScroll = screenHeight * 2.5;
+              double parallaxTravel = estimatedMaxContentScroll * 0.3;
+
+              return Positioned(
+                top: -backgroundScrollOffset,
+                left: 0,
+                right: 0,
+                height: screenHeight + parallaxTravel,
+                child: Image.asset(
+                  'assets/main_page_background.jpg',
+                  fit: BoxFit.cover,
+                  alignment: Alignment.topCenter,
                 ),
-              ],
+              );
+            },
+          );
+
+          SliverPersistentHeader headerSliver = SliverPersistentHeader(
+            pinned: true,
+            floating: false,
+            delegate: _AnimatedHeaderDelegate(
+              minHeight: AppHeaderMetrics.getCollapsedHeaderHeight(context),
+              maxHeight: AppHeaderMetrics.getFullscreenHeaderHeight(context),
+              child: headerVisualsWithHero, // Make sure this is the Hero widget
             ),
-    );
+          );
+
+          Widget contentSliver = SliverList(
+            delegate: mainContentBuilder(
+              getSectionHeaderHeight(context),
+              _handleSectionButtonTap,
+              ContentRepository(db: widget.db).fetchTickerMessages(),
+              _sectionItemKeys,
+            ),
+          );
+
+          return Scaffold(
+            body: _showAuthorUI
+                ? AuthorControls(db: widget.db)
+                : Stack(
+                    children: <Widget>[
+                      mainPageParallaxBackground,
+                      CustomScrollView(
+                        controller: _mainScrollController,
+                        physics: const BouncingScrollPhysics(),
+                        slivers: <Widget>[
+                          headerSliver,
+                          contentSliver,
+                        ],
+                      ),
+                    ],
+                  ),
+          );
+        });
   }
 
   bool get _headerExpanded =>
