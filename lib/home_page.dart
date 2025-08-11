@@ -127,19 +127,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           _showAuthorUI = !_showAuthorUI;
         });
 
-  void _handleSubsectionCardTap(AppSection appSection) => setState(() {
-        final double currentScrollOffset = _mainScrollController.offset;
-
-        developer.log(
-            "Card tapped: ${appSection.title}. Passing scrollOffset: $currentScrollOffset",
-            name: "MyHomePageState.Navigation");
-
-        String path = '/${appSection.id}';
-        context.push(path, extra: {
-          'scrollOffset': currentScrollOffset,
-        });
-      });
-
   void _handleSectionButtonTap(AppSection section) async {
     final double currentScrollOffset = _mainScrollController.hasClients &&
             _mainScrollController.position.haveDimensions
@@ -281,29 +268,108 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     }
   }
 
-  Future<void> scrollTo(AppSection sectionToNavigate) async {
+  Future<void> scrollTo(AppSection sectionToNavigate,
+      {double alignment = 0.25}) async {
     developer.log(
-        "Returning to Home. Instructed to scroll to and navigate to: ${sectionToNavigate.id}",
+        "ScrollTo: Instructed to scroll to ${sectionToNavigate
+            .id} with alignment $alignment",
         name: "MyHomePage.Navigation");
 
     final GlobalKey? sectionKey = _sectionItemKeys[sectionToNavigate];
-    if (sectionKey?.currentContext != null &&
-        _mainScrollController.hasClients) {
+
+    if (!_mainScrollController.hasClients) {
+      developer.log(
+          "ScrollTo: Scroll controller has no clients. Cannot scroll.",
+          name: "MyHomePage.Navigation.Error");
+      return;
+    }
+
+    // Phase 1: Check if already visible or context available
+    if (sectionKey?.currentContext != null) {
+      developer.log(
+          "ScrollTo: Key context already available for ${sectionToNavigate
+              .id}. Using ensureVisible directly.",
+          name: "MyHomePage.Navigation");
       await Scrollable.ensureVisible(
         sectionKey!.currentContext!,
-        duration: const Duration(milliseconds: 1600),
+        duration: const Duration(milliseconds: 1200), // Your desired duration
         curve: Curves.easeInOutCubic,
-        alignment: 0.25,
-        alignmentPolicy: ScrollPositionAlignmentPolicy.explicit, // Be precise
+        alignment: alignment,
+        alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
       );
-      // Add a small delay for visual settlement and to ensure Hero has the right start conditions
-      // await Future.delayed(
-      //     const Duration(milliseconds: 150)); // Tune this delay
+      await Future.delayed(const Duration(milliseconds: 50)); // Settle delay
+      developer.log(
+          "ScrollTo: EnsureVisible complete for ${sectionToNavigate
+              .id} (direct).",
+          name: "MyHomePage.Navigation");
+      return; // Done
+    }
+
+    // Phase 2: Context not available, item is likely off-screen. Attempt jump then ensure.
+    developer.log(
+        "ScrollTo: Key context NULL for ${sectionToNavigate
+            .id}. Item likely off-screen. Attempting jump.",
+        name: "MyHomePage.Navigation");
+
+    final double averageItemHeight = getSectionHeaderHeight(context);
+    int itemIndex = AppSection.values.toList().indexOf(sectionToNavigate);
+    if (itemIndex == -1) {
+      developer.log(
+          "ScrollTo: Could not find index for ${sectionToNavigate.id}",
+          name: "MyHomePage.Navigation.Error");
+      return;
+    }
+    double estimatedScrollOffset = itemIndex * averageItemHeight;
+
+    // Constrain jump to scroll extents
+    estimatedScrollOffset = estimatedScrollOffset.clamp(
+        _mainScrollController.position.minScrollExtent,
+        _mainScrollController.position.maxScrollExtent
+    );
+
+    developer.log(
+        "ScrollTo: Jumping to estimated offset $estimatedScrollOffset for ${sectionToNavigate
+            .id}.",
+        name: "MyHomePage.Navigation");
+
+    // Using animateTo for a smoother initial movement than jumpTo.
+    // If this animation is too slow and interferes with the perceived responsiveness,
+    // you might use jumpTo() and accept a more jarring initial movement.
+    await _mainScrollController.animateTo(
+      estimatedScrollOffset,
+      duration: const Duration(milliseconds: 300),
+      // Faster animation for the initial jump
+      curve: Curves.easeOut,
+    );
+    await Future.delayed(
+        const Duration(milliseconds: 100)); // Allow time for items to build
+
+    // Phase 3: Try Scrollable.ensureVisible again, hoping the item is now built
+    if (mounted && sectionKey?.currentContext != null) {
+      developer.log(
+          "ScrollTo: Key context now available for ${sectionToNavigate
+              .id} after jump. Using ensureVisible for precise alignment.",
+          name: "MyHomePage.Navigation");
+      await Scrollable.ensureVisible(
+        sectionKey!.currentContext!,
+        duration: const Duration(milliseconds: 800),
+        // Slightly shorter than initial target if combined
+        curve: Curves.easeInOutCubic,
+        alignment: alignment,
+        alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
+      );
+      await Future.delayed(const Duration(milliseconds: 50)); // Settle delay
+      developer.log(
+          "ScrollTo: EnsureVisible complete for ${sectionToNavigate
+              .id} (after jump).",
+          name: "MyHomePage.Navigation");
     } else {
       developer.log(
-          "Could not find key or scroll controller for section ${sectionToNavigate!.id}. Jumping approximately.",
-          name: "MyHomePage.Navigation");
-      // Fallback to approximate jump if key not ready (should be rare)
+          "ScrollTo: Key context STILL NULL for ${sectionToNavigate
+              .id} after jump and delay. Scroll may be imprecise.",
+          name: "MyHomePage.Navigation.Warning");
+      // If it's still null, the estimation was too far off, or item heights vary wildly.
+      // The user might see a jump and then the push without the fine-tuned scroll.
     }
   }
 
