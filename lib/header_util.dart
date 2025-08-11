@@ -337,14 +337,6 @@ Widget buildAnimatedHeaderContent({
     child: Stack(
       alignment: Alignment.center,
       children: [
-        if (params.dotLogoScaleFactor > 0.001)
-          Opacity(
-            opacity: params.navButtonOpacity,
-            child: Align(
-              alignment: Alignment.center,
-              child: dotLogoWidget,
-            ),
-          ),
         Align(
           alignment: params.navButtonRowAlignment,
           // The Align widget will provide a certain width to activatableRow.
@@ -354,6 +346,14 @@ Widget buildAnimatedHeaderContent({
           child: sizedAndAlignedBar
         ),
         Align(alignment: params.wheelAlignment, child: visualWheels),
+        if (params.dotLogoScaleFactor > 0.001)
+          Opacity(
+            opacity: 1 - params.navButtonOpacity,
+            child: Align(
+              alignment: Alignment.center,
+              child: dotLogoWidget,
+            ),
+          ),
       ],
     ),
   );
@@ -437,7 +437,7 @@ class AppHeaderMetrics {
       getCollapsedHeaderHeight(context) * 0.8;
 
   static double getBaseDotLogoDiameter(BuildContext context) =>
-      getFullscreenWheelDiameter(context) * 0.3; // Based on fullscreen wheel
+      getFullscreenWheelDiameter(context) * 0.8; // Based on fullscreen wheel
 
   static double getCollapsedLogoDiameter(BuildContext context) =>
       getFullscreenWheelDiameter(context) * 0.5;
