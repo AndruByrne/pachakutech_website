@@ -130,9 +130,13 @@ Widget buildAnimatedHeaderContent({
       children: [
         Transform.rotate(
           angle: radians(params.wheelAngle1),
-          child: SvgPicture.asset('assets/pachakutech_wheel.svg',
-              colorFilter:
-                  ColorFilter.mode(params.wheel1Color, BlendMode.srcIn)),
+          child: SizedBox(
+            width: params.wheelDiameter,
+            height: params.wheelDiameter,
+            child: SvgPicture.asset('assets/pachakutech_wheel.svg',
+                colorFilter:
+                    ColorFilter.mode(params.wheel1Color, BlendMode.srcIn)),
+          ),
         ),
         Transform.rotate(
           angle: radians(params.wheelAngle2),
