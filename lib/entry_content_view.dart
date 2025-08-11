@@ -9,70 +9,63 @@ enum EntryContentLayoutStyle {
   compactLink,
 }
 
-StaggeredGridTile _wrapVideoLinkForEntry(String title, TextTheme textTheme,
-    String? videoId) {
+StaggeredGridTile _wrapVideoLinkForEntry(
+    String title, TextTheme textTheme, String? videoId) {
   if (videoId == null) {
-    // Fallback if it's not a video or ID extraction fails
-    return _wrapHyperlinkForEntry(
-        title, textTheme,
+    // Fallback if it's not a video or ID extraction fails (not a youtube video)
+    return _wrapHyperlinkForEntry(title, textTheme, // is a card
         'https://www.youtube.com/results?search_query=$title');
   }
   return StaggeredGridTile.count(
     crossAxisCellCount: 2,
     mainAxisCellCount: 2,
-    child: _hyperlinkedImageForEntry(
+    child: _hyperlinkedImageForEntry( //also a card
         'https://img.youtube.com/vi/$videoId/hqdefault.jpg',
         'https://www.youtube.com/watch?v=$videoId'),
   );
 }
 
-StaggeredGridTile _wrapHyperlinkForEntry(String title, TextTheme textTheme,
-    String linkUrl) =>
-    StaggeredGridTile.count(
+StaggeredGridTile _wrapHyperlinkForEntry(
+        String title, TextTheme textTheme, String linkUrl) =>
+    StaggeredGridTile.fit(
       crossAxisCellCount: 1, // Default, can be overridden by specific cards
-      mainAxisCellCount: 1, // Default, can be overridden by specific cards
-      child: _addHyperlinkForEntry(
-          title.split('/'), textTheme, () => launchUrl(Uri.parse(linkUrl))),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: _addHyperlinkForEntry(
+              title.split('/'), textTheme, () => launchUrl(Uri.parse(linkUrl))),
+        ),
+      ),
     );
 
-Widget _addHyperlinkForEntry(List<String> titleParts, TextTheme textTheme,
-    Function() launch) {
+Widget _addHyperlinkForEntry(
+    List<String> titleParts, TextTheme textTheme, Function() launch) {
   if (titleParts.isNotEmpty) {
     var indexToLink = titleParts.length > 1 ? 1 : 0;
-    return Padding(
-      // Add some padding for better text appearance in a grid
-      padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 2.0),
-      child: RichText(
-          text: TextSpan(style: textTheme.bodyMedium, children: <TextSpan>[
-            ...titleParts
-                .asMap()
-                .entries
-                .map((entry) =>
-            entry.key == indexToLink
-                ? _wrapAsLinkSpan(entry.value, launch)
-                : _wrapAsBodyTextSpan(entry.value))
-          ])),
-    );
+    return RichText(
+        text: TextSpan(style: textTheme.bodyMedium, children: <TextSpan>[
+      ...titleParts.asMap().entries.map((entry) => entry.key == indexToLink
+          ? _wrapAsLinkSpan(entry.value, launch)
+          : _wrapAsBodyTextSpan(entry.value))
+    ]));
   }
-  return const SizedBox.shrink(); // Should ideally be SizedBox.shrink() or similar
+  return const SizedBox
+      .shrink(); // Should ideally be SizedBox.shrink() or similar
 }
 
-TextSpan _wrapAsLinkSpan(String text, Function() launch) =>
-    TextSpan(
+TextSpan _wrapAsLinkSpan(String text, Function() launch) => TextSpan(
       text: text,
       style: const TextStyle(
         color: Colors.blue,
         decoration: TextDecoration.underline,
       ),
-      recognizer: TapGestureRecognizer()
-        ..onTap = () => launch(),
+      recognizer: TapGestureRecognizer()..onTap = () => launch(),
     );
 
 TextSpan _wrapAsBodyTextSpan(String text) =>
     TextSpan(text: '$text '); // Added space for readability
 
-Widget _hyperlinkedImageForEntry(String imgUrl, String linkUrl) =>
-    Card(
+Widget _hyperlinkedImageForEntry(String imgUrl, String linkUrl) => Card(
       child: InkWell(
         child: Image.network(
           imgUrl,
@@ -114,8 +107,8 @@ class EntryContentView extends StatelessWidget {
     this.layoutStyle = EntryContentLayoutStyle.staggeredGrid, // Default style
   }) : super(key: key);
 
-  Widget _buildCompactLinkView(BuildContext context,
-      BlogEntry_ContentBlock block) {
+  Widget _buildCompactLinkView(
+      BuildContext context, BlogEntry_ContentBlock block) {
     // This assumes 'block' has a title and a link.
     final String linkUrl = block.linkUrl;
     final String blockTitle = block.hasTitle() ? block.title : linkUrl;
@@ -131,21 +124,30 @@ class EntryContentView extends StatelessWidget {
     );
 
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.all(4.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Flexible(
-            child: _addHyperlinkForEntry(
-                blockTitle.split('/'),
-                Theme
-                    .of(context)
-                    .textTheme,
-                    () => launchUrl(Uri.parse(linkUrl))),
+          Expanded(
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(4.0),
+                child: Center(
+                  child: _addHyperlinkForEntry(
+                      blockTitle.split('/'),
+                      Theme.of(context).textTheme,
+                      () => launchUrl(Uri.parse(linkUrl))),
+                ),
+              ),
+            ),
           ),
           block.imageUrl.isNotEmpty
-              ? Image.network(block.imageUrl, height: 32, width: 32, fit: BoxFit.contain,)
+              ? Image.network(
+                  block.imageUrl,
+                  height: 32,
+                  width: 32,
+                  fit: BoxFit.contain,
+                )
               : linkRepresentation,
         ],
       ),
@@ -171,8 +173,8 @@ class EntryContentView extends StatelessWidget {
     );
   }
 
-  Widget _buildStaggeredTileContent_ImageTitle(BuildContext context,
-      BlogEntry_ContentBlock block) {
+  Widget _buildStaggeredTileContent_ImageTitle(
+      BuildContext context, BlogEntry_ContentBlock block) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -181,10 +183,7 @@ class EntryContentView extends StatelessWidget {
           padding: const EdgeInsets.all(8.0),
           child: Text(
             block.title,
-            style: Theme
-                .of(context)
-                .textTheme
-                .titleSmall,
+            style: Theme.of(context).textTheme.titleSmall,
             textAlign: TextAlign.center,
           ),
         ),
@@ -203,8 +202,8 @@ class EntryContentView extends StatelessWidget {
 // and then _buildStaggeredGridTileForBlock wraps them in the appropriate tile.
 // For now, let's keep them as they are if they define their own tile structure.
 
-  StaggeredGridTile _buildStaggeredGridTileForBlock(BuildContext context,
-      BlogEntry_ContentBlock block) {
+  StaggeredGridTile _buildStaggeredGridTileForBlock(
+      BuildContext context, BlogEntry_ContentBlock block) {
     final hasTitle = block.hasTitle() && block.title.isNotEmpty;
     final hasImage = block.hasImageUrl() && block.imageUrl.isNotEmpty;
     final hasLink = block.hasLinkUrl() && block.linkUrl.isNotEmpty;
@@ -213,14 +212,16 @@ class EntryContentView extends StatelessWidget {
     if (hasTitle && hasImage && hasLink) {
       return StaggeredGridTile.fit(
         crossAxisCellCount: defaultCrossAxisCount,
-        child: Card(child: _buildStaggeredTileContent_TitleImageLink(context, block)),
+        child: Card(
+            child: _buildStaggeredTileContent_TitleImageLink(context, block)),
       );
     }
     // Case 2: Image and Title (original logic had specific cell counts)
     else if (hasImage && hasTitle) {
       return StaggeredGridTile.fit(
         crossAxisCellCount: 1, // Or defaultCrossAxisCount if it should be wider
-        child: Card(child: _buildStaggeredTileContent_ImageTitle(context, block)),
+        child:
+            Card(child: _buildStaggeredTileContent_ImageTitle(context, block)),
       );
     }
     // Case 3: Title and Link (Video or simple link)
@@ -229,26 +230,18 @@ class EntryContentView extends StatelessWidget {
       if (videoId != null) {
         // _wrapVideoLinkForEntry already returns a StaggeredGridTile
         return _wrapVideoLinkForEntry(
-            block.title,
-            Theme
-                .of(context)
-                .textTheme,
-            videoId);
+            block.title, Theme.of(context).textTheme, videoId);
       } else {
         // _wrapHyperlinkForEntry already returns a StaggeredGridTile
         return _wrapHyperlinkForEntry(
-            block.title,
-            Theme
-                .of(context)
-                .textTheme,
-            block.linkUrl);
+            block.title, Theme.of(context).textTheme, block.linkUrl);
       }
     }
     // Case 4: Image and Link (No Title)
     else if (hasImage && hasLink) {
       return StaggeredGridTile.fit(
         crossAxisCellCount: defaultCrossAxisCount,
-        child: _hyperlinkedImageForEntry(block.imageUrl, block.linkUrl),
+        child: Card(child: _hyperlinkedImageForEntry(block.imageUrl, block.linkUrl)),
       );
     }
     // Case 5: Image Only
@@ -256,10 +249,12 @@ class EntryContentView extends StatelessWidget {
       return StaggeredGridTile.fit(
         // Assuming you want image to define height
         crossAxisCellCount: defaultCrossAxisCount,
-        child: Image.network(
-          block.imageUrl,
-          fit: BoxFit.fitWidth,
-          errorBuilder: (cx, err, stack) => Text(err.toString()),
+        child: Card(
+          child: Image.network(
+            block.imageUrl,
+            fit: BoxFit.fitWidth,
+            errorBuilder: (cx, err, stack) => Text(err.toString()),
+          ),
         ),
       );
     }
@@ -267,14 +262,13 @@ class EntryContentView extends StatelessWidget {
     else if (hasTitle) {
       return StaggeredGridTile.fit(
         crossAxisCellCount: 2,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            block.title,
-            style: Theme
-                .of(context)
-                .textTheme
-                .bodyLarge,
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              block.title,
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
           ),
         ),
       );
@@ -284,7 +278,7 @@ class EntryContentView extends StatelessWidget {
     return StaggeredGridTile.count(
       crossAxisCellCount: 1,
       mainAxisCellCount: 1,
-      child: const Center(child: Text('N/A')),
+      child: const Center(child: Text('...')),
     );
   }
 
@@ -295,18 +289,14 @@ class EntryContentView extends StatelessWidget {
     }
 
     switch (layoutStyle) {
-    // For compact link, we expect usually one content block, or we'll iterate
-    // and lay them out as compact link rows.
+      // For compact link, we expect usually one content block, or we'll iterate
+      // and lay them out as compact link rows.
       case EntryContentLayoutStyle.compactLink:
         return Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: blogEntry!.content.map((block) {
-            return Padding(
-              // Add padding between multiple link items if any
-              padding: const EdgeInsets.only(top: 4.0),
-              child: _buildCompactLinkView(context, block),
-            );
+            return _buildCompactLinkView(context, block);
           }).toList(),
         );
 

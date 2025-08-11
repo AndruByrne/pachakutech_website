@@ -15,7 +15,15 @@ class BlogEntryCard extends StatelessWidget {
           final int innerCrossAxisCount = constraints.maxWidth < 600 ? 2 : 4;
 
           return Card(
+            color: Colors.black38,
             margin: const EdgeInsets.all(4.0),
+            shape: RoundedRectangleBorder(
+              side: BorderSide(color: Theme
+                  .of(context)
+                  .colorScheme
+                  .outlineVariant, width: 1),
+              borderRadius: BorderRadius.circular(8),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(12.0),
               child: EntryContentView( // Use the refactored widget

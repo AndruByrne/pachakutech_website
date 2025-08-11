@@ -27,6 +27,7 @@ class LinkEntryCard extends StatelessWidget {
     }
 
     return Card(
+      color: Colors.black38,
       margin: const EdgeInsets.all(4.0),
       shape: RoundedRectangleBorder(
         side: BorderSide(color: Theme
@@ -36,7 +37,7 @@ class LinkEntryCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(10.0),
+        padding: const EdgeInsets.all(0.0),
         // Slightly more padding for compact view
         child: EntryContentView(
           blogEntry: blogEntry,

@@ -230,6 +230,7 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                         padding: const EdgeInsets.all(16.0),
                         sliver: SliverList.list(children: [
                           Card(
+                            color: Colors.black38,
                             margin: const EdgeInsets.all(4.0),
                             child: FutureBuilder(
                                 future: titleFuture,
@@ -243,7 +244,7 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                                               : '',
                                           style: Theme.of(context)
                                               .textTheme
-                                              .titleLarge,
+                                              .titleLarge?.copyWith(color: Colors.white),
                                         ),
                                       ),
                                     )),
