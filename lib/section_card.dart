@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:pachakutech_website/periodic_gradient_painter.dart';
 
+import 'hero_util.dart';
+
 class ContentSectionCard extends StatelessWidget {
   final String? imagePath; // Made optional
   final double height;
@@ -30,7 +32,7 @@ class ContentSectionCard extends StatelessWidget {
             // Background (image or fallback)
             if (imagePath != null && id != null)
               Hero(
-                tag: 'sectionHeroTag$id',
+                tag: sectionHeroTag + id!,
                 child: Image.asset(
                   imagePath!,
                   fit: BoxFit.cover,
