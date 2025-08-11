@@ -88,7 +88,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       uniformButtonSlotWidth: _uniformButtonSlotWidth,
     );
     _tickerFuture = ContentRepository(db: widget.db)
-        .fetchSectionIntros()
+        .fetchHeaderTickers()
         .then((tickers) => tickers['home']);
   }
 
@@ -377,7 +377,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             ? _mainScrollController.offset
             : 0.0,
         targetSectionForCollapsed: null,
-        currentMarqueeText: "PACHAUTECH",
+        currentMarqueeText: "",
         buttonCenterOffsetsX: _buttonCenterOffsetsX,
       );
 
@@ -405,7 +405,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 : 0.0,
             targetSectionForCollapsed: null,
             currentMarqueeText:
-                tickerSnapshot.hasData ? tickerSnapshot.data ?? '  null data ' : '  no data ',
+                tickerSnapshot.hasData ? tickerSnapshot.data ?? '' : '',
+                // currentMarqueeText: '',
             // Pass the resolved text
             buttonCenterOffsetsX: _buttonCenterOffsetsX,
           );
@@ -457,7 +458,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 paramsTo = AppHeaderMetrics.getCollapsedHeaderVisualParams(
                   toHeroCtx,
                   targetSection: targetSection,
-                  marqueeText: targetSection?.id ?? "pachkutech",
+                  marqueeText: '',
                   buttonCenterOffsetsX: _buttonCenterOffsetsX,
                 );
               } else {
@@ -486,7 +487,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                   // Animate to home page's fully expanded state
                   targetSectionForCollapsed: null,
                   // Home target
-                  currentMarqueeText: "pachakuteh",
+                  currentMarqueeText: '',
                   buttonCenterOffsetsX: _buttonCenterOffsetsX,
                 );
               }

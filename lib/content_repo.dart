@@ -7,24 +7,36 @@ class ContentRepository {
 
   ContentRepository({required FirebaseFirestore db}) : _db = db;
 
-  Future<Map<String, dynamic>> fetchTickerMessages() async {
+  Future<Map<String, dynamic>> fetchTickerMessages() async { // For the content card tickers
     try {
       final snapshot = await _db.collection('tickers').get();
       return snapshot.docs.map((doc) => doc.get('sections')).first;
     } catch (e) {
-      print("Error fetching ticker messages: $e");
+      print("Error fetching section ticker messages: $e");
       return {};
     }
   }
 
-  Future<Map<String, dynamic>> fetchSectionIntros() async {
+  Future<Map<String, dynamic>> fetchSectionIntros() async { // For the Section title (top card)
     try {
       final snapshot = await _db.collection('section_intros').get();
       return snapshot.docs.map((doc) => doc.get('sections')).first;
     } catch (e) {
-      print("Error fetching ticker messages: $e");
+      print("Error fetching section intros: $e");
       return {};
     }
+  }
+
+  Future<Map<String, dynamic>> fetchHeaderTickers() async {
+   try{
+     final snapshot = await _db.collection('header_tickers').get();
+     return snapshot.docs.map((doc) => doc.get('sections')).first;
+   }
+   catch(e){
+     print("Error fetching header tickers: $e");
+     return {};
+   }
+
   }
 
   Future<List<BlogEntry>> fetchBlogEntries(

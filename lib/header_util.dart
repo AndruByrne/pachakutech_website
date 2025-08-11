@@ -12,6 +12,9 @@ const NAV_BUTTON_FONT_SIZE = 16.0;
 const NAV_HEADER_SPACING = 8.0;
 const double NAV_BUTTON_HORIZONTAL_PADDING = 4.0;
 const double NAV_BUTTON_SPACING = 0.5; // Space between buttons
+const String MARQUEE_DEFAULT_TEXT =
+    "even the smallest business can save money and time by using ai";
+const String MARQUEE_LIVE_TEXT = "Elevation session is live";
 
 // --- HeaderVisualParams Data Class ---
 class HeaderVisualParams {
@@ -210,7 +213,7 @@ Widget buildAnimatedHeaderContent({
     child: params.marqueeOpacity > 0.01 && params.marqueeWidthFraction > 0.01
         ? SizedBox(
             child: Marquee(
-              text: params.marqueeText,
+              text: MARQUEE_DEFAULT_TEXT,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16, // Adjust
@@ -452,7 +455,7 @@ class AppHeaderMetrics {
   static HeaderVisualParams getCollapsedHeaderVisualParams(
     BuildContext context, {
     AppSection? targetSection,
-    String marqueeText = "pchakutech",
+    String marqueeText = '',
     required Map<AppSection?, double> buttonCenterOffsetsX,
   }) {
     double targetWheelAngle1;
@@ -521,7 +524,7 @@ class AppHeaderMetrics {
         marqueeWidthFraction: 0.0,
         // Starts with zero effective width for marquee logic
         marqueeVelocity: 0.0,
-        marqueeText: "pachaktech",
+        marqueeText: MARQUEE_DEFAULT_TEXT,
         navButtonRowAlignment: Alignment.centerRight,
         targetSection: null,
         // No target section in fullscreen home
@@ -626,7 +629,9 @@ class AppHeaderLogic {
     final colParams = AppHeaderMetrics.getCollapsedHeaderVisualParams(
       context,
       targetSection: targetSectionForCollapsed,
-      marqueeText: currentMarqueeText ?? "achakutech",
+      marqueeText: (currentMarqueeText == null || currentMarqueeText.isEmpty)
+          ? MARQUEE_DEFAULT_TEXT
+          : MARQUEE_LIVE_TEXT,
       buttonCenterOffsetsX: buttonCenterOffsetsX,
     );
 
@@ -726,10 +731,9 @@ class AppHeaderLogic {
       marqueeOpacity: marqueeOpacity,
       marqueeWidthFraction: marqueeWidthFraction,
       marqueeVelocity: marqueeVelocity,
-      marqueeText:
-          (overallTransitionProgress < 0.1 )
-              ? "" // The text during the transition
-              : colParams.marqueeText,
+      marqueeText: (overallTransitionProgress < 0.1)
+          ? "" // The text during the transition
+          : colParams.marqueeText,
       navButtonRowAlignment: currentNavButtonRowAlignment,
       targetSection:
           overallTransitionProgress == 1.0 ? targetSectionForCollapsed : null,
