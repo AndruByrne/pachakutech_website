@@ -71,8 +71,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   // nav button measurements
   Map<AppSection?, double> _buttonCenterOffsetsX = {};
   double _uniformButtonSlotWidth = 0;
-  final TextStyle _navButtonTextStyle =
-      const TextStyle(fontFamily: 'Pachakutech', fontSize: NAV_BUTTON_FONT_SIZE);
+  final TextStyle _navButtonTextStyle = const TextStyle(
+      fontFamily: 'Pachakutech', fontSize: NAV_BUTTON_FONT_SIZE);
 
   @override
   void initState() {
@@ -80,7 +80,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     _mainScrollController.addListener(_handleScroll);
     _mainScrollControllerNotifier = ValueNotifier<double>(0.0);
 
-    _uniformButtonSlotWidth = AppHeaderMetrics.getMaxButtonTextWidth(_navButtonTextStyle);
+    _uniformButtonSlotWidth =
+        AppHeaderMetrics.getMaxButtonTextWidth(_navButtonTextStyle);
     _buttonCenterOffsetsX = AppHeaderMetrics.calculateButtonCenterOffsets(
       textStyle: _navButtonTextStyle,
       uniformButtonSlotWidth: _uniformButtonSlotWidth,
@@ -139,7 +140,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         });
       });
 
-  void _handleSectionButtonTap(AppSection section) {
+  void _handleSectionButtonTap(AppSection section) async {
     final double currentScrollOffset = _mainScrollController.hasClients &&
             _mainScrollController.position.haveDimensions
         ? _mainScrollController.offset
@@ -148,6 +149,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     developer.log(
         "Section button tapped: ${section.title}. Passing scrollOffset: $currentScrollOffset",
         name: "MyHomePageState.Navigation");
+
+    await scrollTo(section);
 
     String path = '/${section.id}';
     context.push(path, extra: {
@@ -238,29 +241,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       return;
     }
     final AppSection sectionToNavigate = _pendingNavigationToSection!;
-    developer.log(
-        "Returning to Home. Instructed to scroll to and navigate to: ${sectionToNavigate.id}",
-        name: "MyHomePage.Navigation");
-
-    final GlobalKey? sectionKey = _sectionItemKeys[sectionToNavigate];
-    if (sectionKey?.currentContext != null &&
-        _mainScrollController.hasClients) {
-      await Scrollable.ensureVisible(
-        sectionKey!.currentContext!,
-        duration: const Duration(milliseconds: 1600),
-        curve: Curves.easeInOutCubic,
-        alignment: 0.5,
-        alignmentPolicy: ScrollPositionAlignmentPolicy.explicit, // Be precise
-      );
-      // Add a small delay for visual settlement and to ensure Hero has the right start conditions
-      // await Future.delayed(
-      //     const Duration(milliseconds: 150)); // Tune this delay
-    } else {
-      developer.log(
-          "Could not find key or scroll controller for section ${sectionToNavigate!.id}. Jumping approximately.",
-          name: "MyHomePage.Navigation");
-      // Fallback to approximate jump if key not ready (should be rare)
-    }
+    await scrollTo(sectionToNavigate);
     // ENSURE THE WIDGET IS STILL MOUNTED BEFORE ANY context.push
     if (!mounted) {
       developer.log(
@@ -297,6 +278,32 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       developer.log(
           "InitiateScroll: Pushed to $path for ${sectionToNavigate.id}. _pendingNavigationToSection is now null.",
           name: "MyHomePage.Navigation");
+    }
+  }
+
+  Future<void> scrollTo(AppSection sectionToNavigate) async {
+    developer.log(
+        "Returning to Home. Instructed to scroll to and navigate to: ${sectionToNavigate.id}",
+        name: "MyHomePage.Navigation");
+
+    final GlobalKey? sectionKey = _sectionItemKeys[sectionToNavigate];
+    if (sectionKey?.currentContext != null &&
+        _mainScrollController.hasClients) {
+      await Scrollable.ensureVisible(
+        sectionKey!.currentContext!,
+        duration: const Duration(milliseconds: 1600),
+        curve: Curves.easeInOutCubic,
+        alignment: 0.25,
+        alignmentPolicy: ScrollPositionAlignmentPolicy.explicit, // Be precise
+      );
+      // Add a small delay for visual settlement and to ensure Hero has the right start conditions
+      // await Future.delayed(
+      //     const Duration(milliseconds: 150)); // Tune this delay
+    } else {
+      developer.log(
+          "Could not find key or scroll controller for section ${sectionToNavigate!.id}. Jumping approximately.",
+          name: "MyHomePage.Navigation");
+      // Fallback to approximate jump if key not ready (should be rare)
     }
   }
 
@@ -472,7 +479,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     Widget contentSliver = SliverList(
       delegate: mainContentBuilder(
         getSectionHeaderHeight(context),
-        _handleSubsectionCardTap,
+        _handleSectionButtonTap,
         ContentRepository(db: widget.db).fetchTickerMessages(),
         _sectionItemKeys,
       ),
@@ -523,7 +530,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       }
     }
   }
-
 }
 
 double getSectionHeaderHeight(BuildContext context) =>
