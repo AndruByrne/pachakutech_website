@@ -180,9 +180,9 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                             paramsTo =
                                 AppHeaderLogic.getDynamicHeaderVisualParams(
                               context: toHeroCtx,
-                              scrollOffset: 0.0,
+                              scrollOffset: widget.homePageScrollOffset,
                               // Target home's expanded state
-                              targetSectionForCollapsed: null,
+                              targetSectionForCollapsed: widget.appSection,
                               currentMarqueeText: "pachakutech",
                               buttonCenterOffsetsX: _buttonCenterOffsetsX,
                             );
