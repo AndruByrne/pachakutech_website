@@ -271,8 +271,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   Future<void> scrollTo(AppSection sectionToNavigate,
       {double alignment = 0.25}) async {
     developer.log(
-        "ScrollTo: Instructed to scroll to ${sectionToNavigate
-            .id} with alignment $alignment",
+        "ScrollTo: Instructed to scroll to ${sectionToNavigate.id} with alignment $alignment",
         name: "MyHomePage.Navigation");
 
     final GlobalKey? sectionKey = _sectionItemKeys[sectionToNavigate];
@@ -287,8 +286,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     // Phase 1: Check if already visible or context available
     if (sectionKey?.currentContext != null) {
       developer.log(
-          "ScrollTo: Key context already available for ${sectionToNavigate
-              .id}. Using ensureVisible directly.",
+          "ScrollTo: Key context already available for ${sectionToNavigate.id}. Using ensureVisible directly.",
           name: "MyHomePage.Navigation");
       await Scrollable.ensureVisible(
         sectionKey!.currentContext!,
@@ -299,16 +297,14 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       );
       await Future.delayed(const Duration(milliseconds: 50)); // Settle delay
       developer.log(
-          "ScrollTo: EnsureVisible complete for ${sectionToNavigate
-              .id} (direct).",
+          "ScrollTo: EnsureVisible complete for ${sectionToNavigate.id} (direct).",
           name: "MyHomePage.Navigation");
       return; // Done
     }
 
     // Phase 2: Context not available, item is likely off-screen. Attempt jump then ensure.
     developer.log(
-        "ScrollTo: Key context NULL for ${sectionToNavigate
-            .id}. Item likely off-screen. Attempting jump.",
+        "ScrollTo: Key context NULL for ${sectionToNavigate.id}. Item likely off-screen. Attempting jump.",
         name: "MyHomePage.Navigation");
 
     final double averageItemHeight = getSectionHeaderHeight(context);
@@ -319,17 +315,17 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           name: "MyHomePage.Navigation.Error");
       return;
     }
-    double estimatedScrollOffset = itemIndex * averageItemHeight;
+    double estimatedScrollOffset =
+        AppHeaderMetrics.getFullscreenHeaderHeight(context) +
+            itemIndex * averageItemHeight;
 
     // Constrain jump to scroll extents
     estimatedScrollOffset = estimatedScrollOffset.clamp(
         _mainScrollController.position.minScrollExtent,
-        _mainScrollController.position.maxScrollExtent
-    );
+        _mainScrollController.position.maxScrollExtent);
 
     developer.log(
-        "ScrollTo: Jumping to estimated offset $estimatedScrollOffset for ${sectionToNavigate
-            .id}.",
+        "ScrollTo: Jumping to estimated offset $estimatedScrollOffset for ${sectionToNavigate.id}.",
         name: "MyHomePage.Navigation");
 
     // Using animateTo for a smoother initial movement than jumpTo.
@@ -337,7 +333,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     // you might use jumpTo() and accept a more jarring initial movement.
     await _mainScrollController.animateTo(
       estimatedScrollOffset,
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 900),
       // Faster animation for the initial jump
       curve: Curves.easeOut,
     );
@@ -347,8 +343,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     // Phase 3: Try Scrollable.ensureVisible again, hoping the item is now built
     if (mounted && sectionKey?.currentContext != null) {
       developer.log(
-          "ScrollTo: Key context now available for ${sectionToNavigate
-              .id} after jump. Using ensureVisible for precise alignment.",
+          "ScrollTo: Key context now available for ${sectionToNavigate.id} after jump. Using ensureVisible for precise alignment.",
           name: "MyHomePage.Navigation");
       await Scrollable.ensureVisible(
         sectionKey!.currentContext!,
@@ -360,13 +355,11 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       );
       await Future.delayed(const Duration(milliseconds: 50)); // Settle delay
       developer.log(
-          "ScrollTo: EnsureVisible complete for ${sectionToNavigate
-              .id} (after jump).",
+          "ScrollTo: EnsureVisible complete for ${sectionToNavigate.id} (after jump).",
           name: "MyHomePage.Navigation");
     } else {
       developer.log(
-          "ScrollTo: Key context STILL NULL for ${sectionToNavigate
-              .id} after jump and delay. Scroll may be imprecise.",
+          "ScrollTo: Key context STILL NULL for ${sectionToNavigate.id} after jump and delay. Scroll may be imprecise.",
           name: "MyHomePage.Navigation.Warning");
       // If it's still null, the estimation was too far off, or item heights vary wildly.
       // The user might see a jump and then the push without the fine-tuned scroll.
