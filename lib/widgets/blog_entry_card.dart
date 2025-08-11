@@ -26,11 +26,10 @@ class BlogEntryCard extends StatelessWidget {
             ),
             child: Padding(
               padding: const EdgeInsets.all(12.0),
-              child: EntryContentView( // Use the refactored widget
+              child: EntryContentView(
                 blogEntry: blogEntry,
                 defaultCrossAxisCount: innerCrossAxisCount,
-                // Pass down the calculated count
-                defaultMainAxisCount: 2, // Example, can be made more dynamic if needed
+                defaultMainAxisCount: 2,
               ),
             ),
           );

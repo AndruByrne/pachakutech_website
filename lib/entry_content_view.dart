@@ -13,13 +13,16 @@ StaggeredGridTile _wrapVideoLinkForEntry(
     String title, TextTheme textTheme, String? videoId) {
   if (videoId == null) {
     // Fallback if it's not a video or ID extraction fails (not a youtube video)
-    return _wrapHyperlinkForEntry(title, textTheme, // is a card
+    return _wrapHyperlinkForEntry(
+        title,
+        textTheme, // is a card
         'https://www.youtube.com/results?search_query=$title');
   }
   return StaggeredGridTile.count(
     crossAxisCellCount: 2,
     mainAxisCellCount: 2,
-    child: _hyperlinkedImageForEntry( //also a card
+    child: _hyperlinkedImageForEntry(
+        //also a card
         'https://img.youtube.com/vi/$videoId/hqdefault.jpg',
         'https://www.youtube.com/watch?v=$videoId'),
   );
@@ -241,7 +244,8 @@ class EntryContentView extends StatelessWidget {
     else if (hasImage && hasLink) {
       return StaggeredGridTile.fit(
         crossAxisCellCount: defaultCrossAxisCount,
-        child: Card(child: _hyperlinkedImageForEntry(block.imageUrl, block.linkUrl)),
+        child: Card(
+            child: _hyperlinkedImageForEntry(block.imageUrl, block.linkUrl)),
       );
     }
     // Case 5: Image Only
@@ -305,9 +309,20 @@ class EntryContentView extends StatelessWidget {
           crossAxisCount: defaultCrossAxisCount, // This is passed to the grid
           mainAxisSpacing: 4,
           crossAxisSpacing: 4,
-          children: blogEntry!.content
-              .map((block) => _buildStaggeredGridTileForBlock(context, block))
-              .toList(),
+          children: <StaggeredGridTile>[
+                if (blogEntry!.title.isNotEmpty)
+                  StaggeredGridTile.fit(
+                      crossAxisCellCount: 4,
+                      child: Center(
+                          child: Text(
+                        blogEntry!.title,
+                        style: TextStyle(color: Colors.white),
+                      )))
+              ] +
+              blogEntry!.content
+                  .map((block) =>
+                      _buildStaggeredGridTileForBlock(context, block))
+                  .toList(),
         );
     }
   }
