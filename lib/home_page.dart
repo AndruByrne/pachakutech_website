@@ -126,25 +126,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           _showAuthorUI = !_showAuthorUI;
         });
 
-  void _handleBackTap() {
-    // If the header is in a state where tapping it means "go back to top / main view"
-    // With go_router, if we are on MyHomePage ('/'), tapping the logo when scrolled
-    // might mean "scroll to top". If we were on a different page (not the case here
-    // anymore since _activeDetailData is gone), it would mean context.go('/');
-    if (_mainScrollController.offset > 0) {
-      _mainScrollController.animateTo(
-        0.0,
-        duration: const Duration(milliseconds: 500),
-        // Or your preferred duration
-        curve: Curves.easeOutQuart,
-      );
-    } else {
-      developer.log("Logo/Wheels tapped on main list view (already at top).",
-          name: "MyHomePageState.Interaction");
-      _onForwardTap();
-    }
-  }
-
   void _handleSubsectionCardTap(AppSection appSection) => setState(() {
         final double currentScrollOffset = _mainScrollController.offset;
 
@@ -176,8 +157,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     });
   }
 
-  // _handleWheelsTap might now be more of a "go to top" or general interaction
-  // Renaming to _handleHomeButtonTap for clarity in collapsed state
   void _handleHomeButtonTap() {
     if (_mainScrollController.offset > 0) {
       _mainScrollController.animateTo(
@@ -186,10 +165,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         curve: Curves.easeOutQuart,
       );
     } else {
-      // If already at top, perhaps a subtle animation or nothing.
       developer.log("Home button tapped at top.",
           name: "MyHomePageState.Interaction");
-      _onForwardTap(); // Or specific "nudge" behavior
+      _onForwardTap();
     }
   }
 
@@ -271,8 +249,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         sectionKey!.currentContext!,
         duration: const Duration(milliseconds: 1600),
         curve: Curves.easeInOutCubic,
-        alignment: 0.05,
-        // Adjust this: 0.0 is top, 0.5 is center. Try to position it just below your sticky header.
+        alignment: 0.5,
         alignmentPolicy: ScrollPositionAlignmentPolicy.explicit, // Be precise
       );
       // Add a small delay for visual settlement and to ensure Hero has the right start conditions
@@ -547,26 +524,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     }
   }
 
-  void _calculateButtonLayouts() {
-    if (!mounted) return; // Ensure widget is still in the tree
-
-    final uniformButtonSlotWidth =
-        AppHeaderMetrics.getMaxButtonTextWidth(_navButtonTextStyle);
-    final buttonCenterOffsetsX = AppHeaderMetrics.calculateButtonCenterOffsets(
-      textStyle: _navButtonTextStyle,
-      uniformButtonSlotWidth: uniformButtonSlotWidth,
-    );
-
-    // Check if values changed to avoid unnecessary rebuilds if called multiple times
-    if (_uniformButtonSlotWidth != uniformButtonSlotWidth ||
-        !mapEquals(_buttonCenterOffsetsX, buttonCenterOffsetsX)) {
-      // mapEquals from collection package
-      setState(() {
-        _uniformButtonSlotWidth = uniformButtonSlotWidth;
-        _buttonCenterOffsetsX = buttonCenterOffsetsX;
-      });
-    }
-  }
 }
 
 double getSectionHeaderHeight(BuildContext context) =>
