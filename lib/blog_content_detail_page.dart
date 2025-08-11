@@ -122,7 +122,7 @@ abstract class BlogContentDetailPageState<T extends BlogContentDetailPage>
   String get sectionTitle => widget.appSection.title;
 
   @override
-  Future<String> get titleCopy =>
+  Future<String> get titleFuture =>
       widget.contentRepo.fetchSectionIntros().then((intros) =>
           intros[widget.appSection.id] ??
           'Welcome to ${widget.appSection.title}');

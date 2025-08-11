@@ -43,7 +43,7 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
   /// Provides the title for this section, potentially for the AppBar.
   String get sectionTitle;
 
-  Future<String> get titleCopy; // likely to be replaced by the marquee text
+  Future<String> get titleFuture;
 
   late Future<String> _tickerFuture;
 
@@ -232,13 +232,14 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                           Card(
                             margin: const EdgeInsets.all(4.0),
                             child: FutureBuilder(
-                                future: titleCopy,
-                                builder: (context, snapshot) => Padding(
+                                future: titleFuture,
+                                builder: (context, titleSnapshot) => Padding(
                                       padding: const EdgeInsets.all(8.0),
                                       child: Center(
                                         child: Text(
-                                          snapshot.hasData
-                                              ? snapshot.data ?? ''
+                                          // 'titleCopyText',
+                                          titleSnapshot.hasData
+                                              ? titleSnapshot.data ?? ''
                                               : '',
                                           style: Theme.of(context)
                                               .textTheme

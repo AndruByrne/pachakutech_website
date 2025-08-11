@@ -63,7 +63,7 @@ class _EvaluationDetailPageState
   String get sectionTitle => widget.appSection.title;
 
   @override
-  Future<String> get titleCopy => widget.contentRepo
+  Future<String> get titleFuture => widget.contentRepo
       .fetchSectionIntros()
       .then((intros) => intros[widget.appSection.id]);
 }
