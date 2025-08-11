@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -158,6 +160,7 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                           if (flightDirection == HeroFlightDirection.push) {
                             // PUSH: Home (fromHeroCtx) to Detail (toHeroCtx)
                             // `fromHeroCtx` is HomePage. `homePageScrollOffset` gives its scroll.
+                            developer.log('[Hero] pushing from home using detail shuttle');
                             paramsFrom =
                                 AppHeaderLogic.getDynamicHeaderVisualParams(
                                     context: fromHeroCtx,
@@ -173,6 +176,7 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                           } else {
                             // POP: Detail (fromHeroCtx) to Home (toHeroCtx)
                             // `fromHeroCtx` is this DetailPage.
+                            developer.log('[Hero] popping to home using detail shuttle');
                             paramsFrom =
                                 detailHeaderParams; // Current state of detail page header
 

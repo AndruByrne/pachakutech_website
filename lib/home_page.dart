@@ -390,6 +390,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           // `fromHeroCtx` is MyHomePage. `currentHeaderVisualParams` is appropriate.
           paramsFrom = currentHeaderVisualParams; // State at the moment of push
 
+          developer.log('[Hero] pushing to detail using home shuttle');
+
           // For `paramsTo`, we need info from the DetailPage.
           // This is where the `extra` data in go_router comes in handy.
           // We assume the DetailPage's Hero will primarily drive the PUSH.
@@ -414,6 +416,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         } else {
           // POP: Detail (fromHeroCtx) to Home (toHeroCtx)
           // `fromHeroCtx` is DetailPage. We need its collapsed params.
+          developer.log('[Hero] popping to home using home shuttle');
           final GoRouterState state =
               GoRouterState.of(context); // Get state from DetailPage context
           final Map<String, dynamic>? extra =
@@ -433,13 +436,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             buttonCenterOffsetsX: _buttonCenterOffsetsX,
           );
 
-          // `toHeroCtx` is MyHomePage. `currentHeaderVisualParams` represents its state
-          // *IF* we were animating based on current scroll. But for a pop, we usually
-          // want to animate to the fully expanded (scrollOffset = 0) or a specific target.
-          // Let's assume pop animates to fully expanded home for simplicity.
           paramsTo = AppHeaderLogic.getDynamicHeaderVisualParams(
             context: toHeroCtx,
-            scrollOffset: 0.0,
+            scrollOffset: _mainScrollController.offset,
             // Animate to home page's fully expanded state
             targetSectionForCollapsed: null,
             // Home target
