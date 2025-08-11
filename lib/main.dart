@@ -9,6 +9,8 @@ import 'car_crush_privacy_policy_page.dart';
 import 'firebase_options.dart';
 import 'home_page.dart';
 
+const transitionDuration = Duration(milliseconds: 900);
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -27,6 +29,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'Pachakutech',
       theme: ThemeData(
+        useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
             seedColor: Colors.green,
             secondary: Colors.orange.shade400,
@@ -34,7 +37,6 @@ class MyApp extends StatelessWidget {
         textTheme: const TextTheme(
             bodyLarge: TextStyle(fontSize: 18),
             bodyMedium: TextStyle(fontSize: 16)),
-        useMaterial3: true,
       ),
       routerConfig: goRouterSingleton,
     );
@@ -45,9 +47,9 @@ var goRouterSingleton = GoRouter(
     routes: [
       GoRoute(
         path: '/',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           print('routing to home'); // <- this is called twice, only on refresh
-          return MyHomePage();
+          return fadeTransitionOf(state, MyHomePage());
         },
       ),
       GoRoute(
@@ -92,18 +94,15 @@ var goRouterSingleton = GoRouter(
         ));
 
 CustomTransitionPage<void> fadeTransitionOf(
-    GoRouterState state, Widget pageWidget) {
-  return CustomTransitionPage<void>(
-    key: state.pageKey,
-    child: pageWidget,
-    // The Hero animation will happen on top of/concurrently with this.
-    transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-        FadeTransition(
-      opacity: animation.drive(CurveTween(curve: Curves.easeInOut)),
-      child: child,
-    ),
-    transitionDuration:
-        const Duration(milliseconds: 300), // Match Hero duration or adjust
-    // reverseTransitionDuration: const Duration(milliseconds: 300), // For pop
-  );
-}
+        GoRouterState state, Widget pageWidget) =>
+    CustomTransitionPage<void>(
+      key: state.pageKey,
+      child: pageWidget,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+          FadeTransition(
+        opacity: animation.drive(CurveTween(curve: Curves.easeInOut)),
+        child: child,
+      ),
+      transitionDuration: transitionDuration,
+      reverseTransitionDuration: transitionDuration,
+    );
