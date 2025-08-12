@@ -213,7 +213,7 @@ Widget buildAnimatedHeaderContent({
     child: params.marqueeOpacity > 0.01 && params.marqueeWidthFraction > 0.01
         ? SizedBox(
             child: Material(
-              color: Theme.of(context).colorScheme.secondary,
+              color: params.backgroundColor,
               child: Marquee(
                 text: MARQUEE_DEFAULT_TEXT,
                 style: TextStyle(
@@ -581,7 +581,7 @@ Widget createNavButtonForSection({
           maintainAnimation: true,
           maintainState: true,
           child: Material(
-            color: Theme.of(context).colorScheme.secondary,
+            color: currentParams.backgroundColor,
             child: Container(
               width: buttonSlotWidth,
               padding:
