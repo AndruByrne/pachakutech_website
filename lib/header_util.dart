@@ -523,7 +523,7 @@ class AppHeaderMetrics {
         marqueeOpacity: 0.0,
         marqueeWidthFraction: 0.0,
         // Starts with zero effective width for marquee logic
-        marqueeVelocity: 0.0,
+        marqueeVelocity: 20.0,
         marqueeText: MARQUEE_DEFAULT_TEXT,
         navButtonRowAlignment: Alignment.centerRight,
         targetSection: null,
