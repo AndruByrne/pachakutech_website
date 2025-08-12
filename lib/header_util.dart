@@ -212,24 +212,30 @@ Widget buildAnimatedHeaderContent({
     opacity: params.marqueeOpacity,
     child: params.marqueeOpacity > 0.01 && params.marqueeWidthFraction > 0.01
         ? SizedBox(
-            child: Marquee(
-              text: MARQUEE_DEFAULT_TEXT,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16, // Adjust
-                fontFamily: 'Pachakutech',
-                color: Theme.of(context).colorScheme.primary,
+            child: Material(
+              color: Theme.of(context).colorScheme.secondary,
+              child: Marquee(
+                text: MARQUEE_DEFAULT_TEXT,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16, // Adjust
+                  fontFamily: 'Pachakutech',
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                scrollAxis: Axis.horizontal,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                blankSpace: 20.0,
+                velocity: params.marqueeVelocity,
+                pauseAfterRound: Duration(seconds: 1),
+                startPadding: 10.0,
+                showFadingOnlyWhenScrolling: true,
+                //   fadingEdgeStartFraction: 0.1,
+                //   fadingEdgeEndFraction: 0.1,
+                accelerationDuration: Duration(seconds: 1),
+                accelerationCurve: Curves.linear,
+                decelerationDuration: Duration(milliseconds: 500),
+                decelerationCurve: Curves.easeOut,
               ),
-              scrollAxis: Axis.horizontal,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              blankSpace: 20.0,
-              velocity: params.marqueeVelocity,
-              pauseAfterRound: Duration(seconds: 1),
-              startPadding: 10.0,
-              accelerationDuration: Duration(seconds: 1),
-              accelerationCurve: Curves.linear,
-              decelerationDuration: Duration(milliseconds: 500),
-              decelerationCurve: Curves.easeOut,
             ),
           )
         : SizedBox.shrink(), // Don't build if invisible or zero width
@@ -574,18 +580,21 @@ Widget createNavButtonForSection({
           maintainSize: true,
           maintainAnimation: true,
           maintainState: true,
-          child: Container(
-            width: buttonSlotWidth,
-            padding:
-                EdgeInsets.symmetric(horizontal: NAV_BUTTON_HORIZONTAL_PADDING),
-            alignment: Alignment.center,
-            child: Text(
-              section?.id ?? HOME_BUTTON_TEXT,
-              style: TextStyle(
-                  fontFamily: 'Pachakutech',
-                  fontSize: NAV_BUTTON_FONT_SIZE,
-                  color: Theme.of(context).primaryColor),
-              textAlign: TextAlign.center,
+          child: Material(
+            color: Theme.of(context).colorScheme.secondary,
+            child: Container(
+              width: buttonSlotWidth,
+              padding:
+                  EdgeInsets.symmetric(horizontal: NAV_BUTTON_HORIZONTAL_PADDING),
+              alignment: Alignment.center,
+              child: Text(
+                section?.id ?? HOME_BUTTON_TEXT,
+                style: TextStyle(
+                    fontFamily: 'Pachakutech',
+                    fontSize: NAV_BUTTON_FONT_SIZE,
+                    color: Theme.of(context).primaryColor),
+                textAlign: TextAlign.center,
+              ),
             ),
           ),
         ),
