@@ -335,9 +335,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     // you might use jumpTo() and accept a more jarring initial movement.
     await _mainScrollController.animateTo(
       estimatedScrollOffset,
-      duration: const Duration(milliseconds: 900),
+      duration: const Duration(milliseconds: 1200),
       // Faster animation for the initial jump
-      curve: Curves.decelerate,
+      curve: Curves.easeInQuad,
     );
     // await Future.delayed(
     //     const Duration(milliseconds: 100)); // Allow time for items to build
