@@ -30,8 +30,8 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
   // Potentially a ValueNotifier for its own scroll offset if needed for internal parallax
   late ValueNotifier<double> _detailPageScrollNotifier;
   Map<AppSection?, double> _buttonCenterOffsetsX = {};
-  final TextStyle _navButtonTextStyle =
-      const TextStyle(fontFamily: 'Pachakutech', fontSize: NAV_BUTTON_FONT_SIZE);
+  final TextStyle _navButtonTextStyle = const TextStyle(
+      fontFamily: 'Pachakutech', fontSize: NAV_BUTTON_FONT_SIZE);
   double _maxButtonTextWidth = 0;
 
   /// Provides the path to the background image asset for this detail page.
@@ -50,7 +50,8 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
   @override
   void initState() {
     super.initState();
-    _maxButtonTextWidth = AppHeaderMetrics.getMaxButtonTextWidth(_navButtonTextStyle);
+    _maxButtonTextWidth =
+        AppHeaderMetrics.getMaxButtonTextWidth(_navButtonTextStyle);
     _buttonCenterOffsetsX = AppHeaderMetrics.calculateButtonCenterOffsets(
       textStyle: _navButtonTextStyle,
       uniformButtonSlotWidth: _maxButtonTextWidth,
@@ -60,7 +61,7 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
       _detailPageScrollNotifier.value = _internalScrollController.offset;
     });
     _tickerFuture = widget.contentRepo
-        .fetchSectionIntros()
+        .fetchHeaderTickers()
         .then((tickers) => tickers[sectionId] ?? '  err   ');
   }
 
@@ -97,8 +98,11 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
             // Provide a minimal loading state for the header itself if needed
             // Or use default text until loaded
           }
+          var whitespace = AppHeaderLogic.getWhitespaceForMarquee(
+            MediaQuery.of(context).size.width * 0.75,
+          );
           final String currentMarqueeText =
-              marqueeSnapshot.data ?? sectionTitle; // Fallback
+              whitespace + (marqueeSnapshot.data ?? '');
 
           final HeaderVisualParams detailHeaderParams =
               AppHeaderMetrics.getCollapsedHeaderVisualParams(
@@ -157,17 +161,24 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                           HeaderVisualParams paramsFrom; // Animation Start
                           HeaderVisualParams paramsTo; // Animation End
 
+                          var whitespaceForMarquee =
+                              AppHeaderLogic.getWhitespaceForMarquee(
+                                  MediaQuery.of(context).size.width * 0.8);
                           if (flightDirection == HeroFlightDirection.push) {
                             // PUSH: Home (fromHeroCtx) to Detail (toHeroCtx)
                             // `fromHeroCtx` is HomePage. `homePageScrollOffset` gives its scroll.
-                            developer.log('[Hero] pushing from home using detail shuttle');
+                            developer.log(
+                                '[Hero] pushing from home using detail shuttle');
                             paramsFrom =
                                 AppHeaderLogic.getDynamicHeaderVisualParams(
                                     context: fromHeroCtx,
                                     scrollOffset: widget.homePageScrollOffset,
                                     targetSectionForCollapsed: null,
                                     // Home doesn't have a section target in this context
-                                    currentMarqueeText: "pachakutech",
+                                    currentMarqueeText: whitespaceForMarquee +
+                                        (marqueeSnapshot.hasData
+                                            ? marqueeSnapshot.data ?? ''
+                                            : ''),
                                     buttonCenterOffsetsX:
                                         _buttonCenterOffsetsX);
                             // `toHeroCtx` is this DetailPage. `detailHeaderParams` is its target.
@@ -176,7 +187,8 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                           } else {
                             // POP: Detail (fromHeroCtx) to Home (toHeroCtx)
                             // `fromHeroCtx` is this DetailPage.
-                            developer.log('[Hero] popping to home using detail shuttle');
+                            developer.log(
+                                '[Hero] popping to home using detail shuttle');
                             paramsFrom =
                                 detailHeaderParams; // Current state of detail page header
 
@@ -187,7 +199,7 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                               scrollOffset: widget.homePageScrollOffset,
                               // Target home's expanded state
                               targetSectionForCollapsed: widget.appSection,
-                              currentMarqueeText: "pachakutech",
+                              currentMarqueeText: whitespaceForMarquee,
                               buttonCenterOffsetsX: _buttonCenterOffsetsX,
                             );
                           }
@@ -208,7 +220,8 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                           params: detailHeaderParams,
                           // tickerFuture no longer needed, marqueeText is in params
                           onHomeTap: () {
-                            print('[BaseDetailPage] onHomeTap invoked. Calling _handleCustomBackNavigation.');
+                            print(
+                                '[BaseDetailPage] onHomeTap invoked. Calling _handleCustomBackNavigation.');
                             _handleCustomBackNavigation(context);
                           },
                           onSectionTap: (tappedSection) {
@@ -244,7 +257,8 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                                               : '',
                                           style: Theme.of(context)
                                               .textTheme
-                                              .titleLarge?.copyWith(color: Colors.white),
+                                              .titleLarge
+                                              ?.copyWith(color: Colors.white),
                                         ),
                                       ),
                                     )),

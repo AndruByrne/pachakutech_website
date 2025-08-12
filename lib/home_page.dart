@@ -74,6 +74,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   late Future<String> _tickerFuture;
   final TextStyle _navButtonTextStyle = const TextStyle(
       fontFamily: 'Pachakutech', fontSize: NAV_BUTTON_FONT_SIZE);
+  String _whitespaceForMarquee = '';
 
   @override
   void initState() {
@@ -87,6 +88,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       textStyle: _navButtonTextStyle,
       uniformButtonSlotWidth: _uniformButtonSlotWidth,
     );
+
     _tickerFuture = ContentRepository(db: widget.db)
         .fetchHeaderTickers()
         .then((tickers) => tickers['home']);
@@ -95,6 +97,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+
+    _whitespaceForMarquee = AppHeaderLogic.getWhitespaceForMarquee(
+        MediaQuery.of(context).size.width * 0.8);
     // Initialize visual properties based on scroll position (or 0 if not available yet)
     double initialScrollOffset = 0.0;
     if (_mainScrollController.hasClients &&
@@ -376,7 +381,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             ? _mainScrollController.offset
             : 0.0,
         targetSectionForCollapsed: null,
-        currentMarqueeText: "",
+        currentMarqueeText: _whitespaceForMarquee,
         buttonCenterOffsetsX: _buttonCenterOffsetsX,
       );
 
@@ -403,9 +408,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 ? _mainScrollController.offset
                 : 0.0,
             targetSectionForCollapsed: null,
-            currentMarqueeText:
-                tickerSnapshot.hasData ? tickerSnapshot.data ?? '' : '',
-                // currentMarqueeText: '',
+            currentMarqueeText: _whitespaceForMarquee +
+                (tickerSnapshot.hasData ? tickerSnapshot.data ?? '' : ''),
+            // currentMarqueeText: '',
             // Pass the resolved text
             buttonCenterOffsetsX: _buttonCenterOffsetsX,
           );
@@ -457,7 +462,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 paramsTo = AppHeaderMetrics.getCollapsedHeaderVisualParams(
                   toHeroCtx,
                   targetSection: targetSection,
-                  marqueeText: '',
+                  marqueeText: _whitespaceForMarquee,
                   buttonCenterOffsetsX: _buttonCenterOffsetsX,
                 );
               } else {
@@ -474,9 +479,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 paramsFrom = AppHeaderMetrics.getCollapsedHeaderVisualParams(
                   fromHeroCtx, // Detail's context
                   targetSection: detailPageSection,
-                  marqueeText: tickerSnapshot.hasData
-                      ? tickerSnapshot.data ?? '   '
-                      : '   ',
+                  marqueeText: _whitespaceForMarquee,
                   buttonCenterOffsetsX: _buttonCenterOffsetsX,
                 );
 
@@ -486,7 +489,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                   // Animate to home page's fully expanded state
                   targetSectionForCollapsed: null,
                   // Home target
-                  currentMarqueeText: '',
+                  currentMarqueeText: _whitespaceForMarquee,
+                      // (tickerSnapshot.hasData ? tickerSnapshot.data ?? '' : ''),
                   buttonCenterOffsetsX: _buttonCenterOffsetsX,
                 );
               }

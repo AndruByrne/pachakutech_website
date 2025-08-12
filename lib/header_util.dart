@@ -10,11 +10,10 @@ import 'app_sections.dart';
 const HOME_BUTTON_TEXT = 'HOME';
 const NAV_BUTTON_FONT_SIZE = 16.0;
 const NAV_HEADER_SPACING = 8.0;
+const MARQUEE_VELOCITY = 60.0;
 const double NAV_BUTTON_HORIZONTAL_PADDING = 4.0;
 const double NAV_BUTTON_SPACING = 0.5; // Space between buttons
-const String MARQUEE_DEFAULT_TEXT =
-    "even the smallest business can save money and time by using ai";
-const String MARQUEE_LIVE_TEXT = "Elevation session is live";
+const double MARQUEE_FONT_SIZE = 16.0;
 
 // --- HeaderVisualParams Data Class ---
 class HeaderVisualParams {
@@ -86,7 +85,8 @@ class HeaderVisualParams {
       // Simple switch, could be smarter
       navButtonRowAlignment:
           Alignment.lerp(a.navButtonRowAlignment, b.navButtonRowAlignment, t)!,
-      dotLogoAlignment: Alignment.lerp(a.dotLogoAlignment, b.dotLogoAlignment, t)!,
+      dotLogoAlignment:
+          Alignment.lerp(a.dotLogoAlignment, b.dotLogoAlignment, t)!,
       targetSection: lerpedTargetSection,
       isCollapsedState: lerpedIsCollapsed,
     );
@@ -211,6 +211,12 @@ Widget buildAnimatedHeaderContent({
       .toList();
 
   // --- Marquee ---
+  final marqueeTextStyle = TextStyle(
+    // fontWeight: FontWeight.bold,
+    fontSize: MARQUEE_FONT_SIZE, // Adjust
+    fontFamily: 'Pachakutech',
+    color: Theme.of(context).colorScheme.primary,
+  );
   Widget marqueeWidget = Opacity(
     opacity: params.marqueeOpacity,
     child: params.marqueeOpacity > 0.01 && params.marqueeWidthFraction > 0.01
@@ -218,19 +224,16 @@ Widget buildAnimatedHeaderContent({
             child: Material(
               color: params.backgroundColor,
               child: Marquee(
-                text: MARQUEE_DEFAULT_TEXT,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16, // Adjust
-                  fontFamily: 'Pachakutech',
-                  color: Theme.of(context).colorScheme.primary,
-                ),
+                text: params.marqueeText.isNotEmpty
+                    ? params.marqueeText
+                    : '        ',
+                style: marqueeTextStyle,
                 scrollAxis: Axis.horizontal,
                 crossAxisAlignment: CrossAxisAlignment.center,
-                blankSpace: 20.0,
-                velocity: params.marqueeVelocity,
+                blankSpace: 0.0,
+                velocity: MARQUEE_VELOCITY,
                 pauseAfterRound: Duration(seconds: 1),
-                startPadding: 10.0,
+                startPadding: 0.0,
                 showFadingOnlyWhenScrolling: true,
                 //   fadingEdgeStartFraction: 0.1,
                 //   fadingEdgeEndFraction: 0.1,
@@ -287,7 +290,8 @@ Widget buildAnimatedHeaderContent({
     child: Stack(
       alignment: Alignment.center,
       children: [
-        Align( alignment: params.navButtonRowAlignment, child: sizedAndAlignedBar),
+        Align(
+            alignment: params.navButtonRowAlignment, child: sizedAndAlignedBar),
         Align(alignment: params.wheelAlignment, child: visualWheels),
         if (params.dotLogoScaleFactor > 0.001)
           Opacity(
@@ -500,7 +504,7 @@ class AppHeaderMetrics {
       navButtonColor: Theme.of(context).colorScheme.primary,
       marqueeOpacity: 1.0,
       marqueeWidthFraction: 1.0,
-      marqueeVelocity: 20.0,
+      marqueeVelocity: MARQUEE_VELOCITY,
       marqueeText: marqueeText,
       navButtonRowAlignment: Alignment.centerLeft,
       dotLogoAlignment: Alignment.centerLeft,
@@ -527,8 +531,8 @@ class AppHeaderMetrics {
         marqueeOpacity: 0.0,
         marqueeWidthFraction: 0.0,
         // Starts with zero effective width for marquee logic
-        marqueeVelocity: 20.0,
-        marqueeText: MARQUEE_DEFAULT_TEXT,
+        marqueeVelocity: MARQUEE_VELOCITY,
+        marqueeText: '',
         navButtonRowAlignment: Alignment.centerRight,
         dotLogoAlignment: Alignment.center,
         targetSection: null,
@@ -583,8 +587,8 @@ Widget createNavButtonForSection({
             color: currentParams.backgroundColor,
             child: Container(
               width: buttonSlotWidth,
-              padding:
-                  EdgeInsets.symmetric(horizontal: NAV_BUTTON_HORIZONTAL_PADDING),
+              padding: EdgeInsets.symmetric(
+                  horizontal: NAV_BUTTON_HORIZONTAL_PADDING),
               alignment: Alignment.center,
               child: Text(
                 section?.id ?? HOME_BUTTON_TEXT,
@@ -610,12 +614,32 @@ class AppHeaderLogic {
   static const double TARGET_DOT_LOGO_TEXT_MATCH_SCALE = 0.3;
   static const double DOT_LOGO_ANIMATION_PHASE_SPLIT_POINT = 0.5;
 
+  static String getWhitespaceForMarquee(double marqueeWidth) {
+    final style =
+        TextStyle(fontFamily: 'Pachakutech', fontSize: MARQUEE_FONT_SIZE);
+    if (marqueeWidth <= 0) return "";
+    // Estimate character width. This is a rough approximation.
+    // For more accuracy, you might need a more sophisticated way to measure text
+    // or use a fixed-width font for the whitespace if possible.
+    final TextPainter charPainter = TextPainter(
+      text: TextSpan(text: " ", style: style), // A single space
+      maxLines: 1,
+      textDirection: TextDirection.ltr,
+    )..layout(minWidth: 0, maxWidth: double.infinity);
+    double avgCharWidth = charPainter.size.width;
+    if (avgCharWidth <= 0)
+      avgCharWidth = style.fontSize ?? 16.0 / 2; // Fallback
+
+    int numSpaces = (marqueeWidth / avgCharWidth).ceil();
+    return String.fromCharCodes(
+        List.filled(numSpaces, 0x00A0)); // Non-breaking spaces
+  }
+
   static HeaderVisualParams getDynamicHeaderVisualParams(
       {required BuildContext context,
       required double scrollOffset,
-      AppSection?
-          targetSectionForCollapsed, // hint for final state if collapsing towards a section
-      String? currentMarqueeText, // for detail pages to provide their ticker
+      AppSection? targetSectionForCollapsed,
+      String? currentMarqueeText,
       required Map<AppSection?, double> buttonCenterOffsetsX}) {
     final double transitionEndScrollOffset =
         AppHeaderMetrics.getTransitionEndScrollOffset(context);
@@ -631,7 +655,6 @@ class AppHeaderLogic {
       overallTransitionProgress = 1.0;
     }
 
-    // Get baseline visual params for fullscreen and collapsed states
     // The target collapsed state depends on whether we are aiming for "home" or a specific section.
     // This 'targetSectionForCollapsed' would typically be null on the home page during scroll,
     // and set during a Hero push to a detail page.
@@ -640,11 +663,16 @@ class AppHeaderLogic {
       context,
       targetSection: targetSectionForCollapsed,
       marqueeText: (currentMarqueeText == null || currentMarqueeText.isEmpty)
-          ? MARQUEE_DEFAULT_TEXT
-          : MARQUEE_LIVE_TEXT,
+          ? getWhitespaceForMarquee(MediaQuery.of(context).size.width)
+          : getWhitespaceForMarquee(MediaQuery.of(context).size.width / 2) +
+              currentMarqueeText,
       buttonCenterOffsetsX: buttonCenterOffsetsX,
     );
 
+    var whitespaceForMarquee = getWhitespaceForMarquee(
+      MediaQuery.of(context).size.width,
+    );
+    // Get baseline visual params for fullscreen and collapsed states
     // --- Wheel Values ---
     double currentWheelAngle1 = lerpDouble(fsParams.wheelAngle1,
         colParams.wheelAngle1, overallTransitionProgress)!;
@@ -684,28 +712,36 @@ class AppHeaderLogic {
     // --- Dot Logo Scale Calculation ---
     // Initial scale down progress as wheel approaches LAST_HALF_TURN_START_ANGLE
     double initialScaleProgress = 0.0;
-    if (DOT_LOGO_SCALE_END_ANGLE > 0 && currentWheelAngle1 <= DOT_LOGO_SCALE_END_ANGLE) {
-      initialScaleProgress = (currentWheelAngle1 / DOT_LOGO_SCALE_END_ANGLE).clamp(0.0, 1.0);
+    if (DOT_LOGO_SCALE_END_ANGLE > 0 &&
+        currentWheelAngle1 <= DOT_LOGO_SCALE_END_ANGLE) {
+      initialScaleProgress =
+          (currentWheelAngle1 / DOT_LOGO_SCALE_END_ANGLE).clamp(0.0, 1.0);
     } else if (currentWheelAngle1 > DOT_LOGO_SCALE_END_ANGLE) {
-      initialScaleProgress = 1.0; // Fully progressed through initial scaling phase
+      initialScaleProgress =
+          1.0; // Fully progressed through initial scaling phase
     }
 
     double scaleBeforeLastHalfTurn = lerpDouble(
         fsParams.dotLogoScaleFactor, // Typically 1.0
-        TARGET_DOT_LOGO_TEXT_MATCH_SCALE, // Scale towards this, or an intermediate value if you prefer
+        TARGET_DOT_LOGO_TEXT_MATCH_SCALE,
+        // Scale towards this, or an intermediate value if you prefer
         initialScaleProgress)!;
 
-    double dynamicScaleDuringLastHalfTurn = scaleBeforeLastHalfTurn * (1.0 - lastHalfTurnLerp);
+    double dynamicScaleDuringLastHalfTurn =
+        scaleBeforeLastHalfTurn * (1.0 - lastHalfTurnLerp);
 
     double currentDotLogoDisplayScale = dynamicScaleDuringLastHalfTurn;
-    if (lastHalfTurnLerp < 1.0) { // Only apply floor if not fully faded/transformed
-      currentDotLogoDisplayScale = currentDotLogoDisplayScale.clamp(TARGET_DOT_LOGO_TEXT_MATCH_SCALE, fsParams.dotLogoScaleFactor);
+    if (lastHalfTurnLerp < 1.0) {
+      // Only apply floor if not fully faded/transformed
+      currentDotLogoDisplayScale = currentDotLogoDisplayScale.clamp(
+          TARGET_DOT_LOGO_TEXT_MATCH_SCALE, fsParams.dotLogoScaleFactor);
     }
 
     Alignment currentDotLogoAlignment = Alignment.lerp(
       fsParams.dotLogoAlignment, // Center
-      colParams.dotLogoAlignment,  // Far-left (or target)
-      Curves.easeInBack.transform(lastHalfTurnLerp), // Or another curve you like
+      colParams.dotLogoAlignment, // Far-left (or target)
+      Curves.easeInBack
+          .transform(lastHalfTurnLerp), // Or another curve you like
     )!;
 
     Color wheel1Color = Color.lerp(
@@ -723,8 +759,9 @@ class AppHeaderLogic {
         colParams.navButtonOpacity, lastHalfTurnLerp)!;
     Color navButtonColor = Color.lerp(
         fsParams.navButtonColor, colParams.navButtonColor, lastHalfTurnLerp)!;
-    double marqueeOpacity = lastHalfTurnLerp;
 
+    // Marquee translations
+    double marqueeOpacity = lastHalfTurnLerp;
     double marqueeWidthFraction = lerpDouble(
         AppHeaderMetrics.getCollapsedLogoDiameter(context) /
             MediaQuery.of(context).size.width,
@@ -732,6 +769,11 @@ class AppHeaderLogic {
         lastHalfTurnLerp)!;
     double marqueeVelocity = lerpDouble(
         fsParams.marqueeVelocity, colParams.marqueeVelocity, lastHalfTurnLerp)!;
+
+    String currentMarqueeDisplayText =
+        overallTransitionProgress < 0.95 && lastHalfTurnLerp < 0.95
+            ? whitespaceForMarquee
+            : colParams.marqueeText;
 
     return HeaderVisualParams(
       wheelDiameter: currentWheelDiameter,
@@ -748,9 +790,7 @@ class AppHeaderLogic {
       marqueeOpacity: marqueeOpacity,
       marqueeWidthFraction: marqueeWidthFraction,
       marqueeVelocity: marqueeVelocity,
-      marqueeText: (overallTransitionProgress < 0.1)
-          ? "" // The text during the transition
-          : colParams.marqueeText,
+      marqueeText: currentMarqueeDisplayText,
       navButtonRowAlignment: currentNavButtonRowAlignment,
       dotLogoAlignment: currentDotLogoAlignment,
       targetSection:
