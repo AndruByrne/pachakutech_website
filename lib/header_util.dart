@@ -21,6 +21,7 @@ class HeaderVisualParams {
   final double wheelDiameter;
   final Alignment wheelAlignment;
   final Alignment navButtonRowAlignment;
+  final Alignment dotLogoAlignment;
   final double wheelAngle1;
   final double wheelAngle2;
   final Color wheel1Color;
@@ -40,6 +41,7 @@ class HeaderVisualParams {
   HeaderVisualParams({
     required this.wheelDiameter,
     required this.wheelAlignment,
+    required this.dotLogoAlignment,
     required this.wheelAngle1,
     required this.wheelAngle2,
     required this.wheel1Color,
@@ -84,6 +86,7 @@ class HeaderVisualParams {
       // Simple switch, could be smarter
       navButtonRowAlignment:
           Alignment.lerp(a.navButtonRowAlignment, b.navButtonRowAlignment, t)!,
+      dotLogoAlignment: Alignment.lerp(a.dotLogoAlignment, b.dotLogoAlignment, t)!,
       targetSection: lerpedTargetSection,
       isCollapsedState: lerpedIsCollapsed,
     );
@@ -284,19 +287,13 @@ Widget buildAnimatedHeaderContent({
     child: Stack(
       alignment: Alignment.center,
       children: [
-        Align(
-            alignment: params.navButtonRowAlignment,
-            // The Align widget will provide a certain width to activatableRow.
-            // If activatableRow always tries to be full width, then we're back to the original problem.
-            //
-            // What if the Align's child is explicitly sized?
-            child: sizedAndAlignedBar),
+        Align( alignment: params.navButtonRowAlignment, child: sizedAndAlignedBar),
         Align(alignment: params.wheelAlignment, child: visualWheels),
         if (params.dotLogoScaleFactor > 0.001)
           Opacity(
-            opacity: 1 - params.navButtonOpacity,
+            opacity: 1 - params.marqueeOpacity,
             child: Align(
-              alignment: Alignment.center,
+              alignment: params.dotLogoAlignment,
               child: dotLogoWidget,
             ),
           ),
@@ -506,6 +503,7 @@ class AppHeaderMetrics {
       marqueeVelocity: 20.0,
       marqueeText: marqueeText,
       navButtonRowAlignment: Alignment.centerLeft,
+      dotLogoAlignment: Alignment.centerLeft,
       targetSection: targetSection,
       isCollapsedState: true,
     );
@@ -532,6 +530,7 @@ class AppHeaderMetrics {
         marqueeVelocity: 20.0,
         marqueeText: MARQUEE_DEFAULT_TEXT,
         navButtonRowAlignment: Alignment.centerRight,
+        dotLogoAlignment: Alignment.center,
         targetSection: null,
         // No target section in fullscreen home
         isCollapsedState: false,
@@ -608,6 +607,8 @@ class AppHeaderLogic {
       LAST_HALF_TURN_START_ANGLE; // Explicitly for clarity
   static const double LAST_HALF_TURN_DURATION =
       MAX_EFFECTIVE_WHEEL_ANGLE - LAST_HALF_TURN_START_ANGLE;
+  static const double TARGET_DOT_LOGO_TEXT_MATCH_SCALE = 0.3;
+  static const double DOT_LOGO_ANIMATION_PHASE_SPLIT_POINT = 0.5;
 
   static HeaderVisualParams getDynamicHeaderVisualParams(
       {required BuildContext context,
@@ -654,24 +655,6 @@ class AppHeaderLogic {
     Alignment currentWheelAlignment = Alignment.lerp(fsParams.wheelAlignment,
         colParams.wheelAlignment, overallTransitionProgress)!;
 
-    // Scale from 1.0 down to 0.0 (fully replaced by marquee) over the DOT_LOGO_SCALE_END_ANGLE
-    double dotLogoScaleProgress = 0.0;
-    if (currentWheelAngle1 <= DOT_LOGO_SCALE_END_ANGLE &&
-        DOT_LOGO_SCALE_END_ANGLE > 0) {
-      // This progress goes from 0 (start, full size) to 1 (at DOT_LOGO_SCALE_END_ANGLE, scaled down size)
-      dotLogoScaleProgress =
-          (currentWheelAngle1 / DOT_LOGO_SCALE_END_ANGLE).clamp(0.0, 1.0);
-    } else if (currentWheelAngle1 > DOT_LOGO_SCALE_END_ANGLE) {
-      dotLogoScaleProgress =
-          1.0; // Fully scaled down for the transition to marquee
-    }
-
-    const double intermediateDotLogoVisualScale = 0.6;
-    double currentDotLogoVisualScale = lerpDouble(
-        fsParams.dotLogoScaleFactor, // Should be 1.0 (full base size)
-        intermediateDotLogoVisualScale,
-        dotLogoScaleProgress)!;
-
     // --- lastHalfTurnLerp (for colors, button fade, marquee fade) ---
     double lastHalfTurnLerp = 0.0;
     if (currentWheelAngle1 >= MAX_EFFECTIVE_WHEEL_ANGLE) {
@@ -698,6 +681,33 @@ class AppHeaderLogic {
       }
     }
 
+    // --- Dot Logo Scale Calculation ---
+    // Initial scale down progress as wheel approaches LAST_HALF_TURN_START_ANGLE
+    double initialScaleProgress = 0.0;
+    if (DOT_LOGO_SCALE_END_ANGLE > 0 && currentWheelAngle1 <= DOT_LOGO_SCALE_END_ANGLE) {
+      initialScaleProgress = (currentWheelAngle1 / DOT_LOGO_SCALE_END_ANGLE).clamp(0.0, 1.0);
+    } else if (currentWheelAngle1 > DOT_LOGO_SCALE_END_ANGLE) {
+      initialScaleProgress = 1.0; // Fully progressed through initial scaling phase
+    }
+
+    double scaleBeforeLastHalfTurn = lerpDouble(
+        fsParams.dotLogoScaleFactor, // Typically 1.0
+        TARGET_DOT_LOGO_TEXT_MATCH_SCALE, // Scale towards this, or an intermediate value if you prefer
+        initialScaleProgress)!;
+
+    double dynamicScaleDuringLastHalfTurn = scaleBeforeLastHalfTurn * (1.0 - lastHalfTurnLerp);
+
+    double currentDotLogoDisplayScale = dynamicScaleDuringLastHalfTurn;
+    if (lastHalfTurnLerp < 1.0) { // Only apply floor if not fully faded/transformed
+      currentDotLogoDisplayScale = currentDotLogoDisplayScale.clamp(TARGET_DOT_LOGO_TEXT_MATCH_SCALE, fsParams.dotLogoScaleFactor);
+    }
+
+    Alignment currentDotLogoAlignment = Alignment.lerp(
+      fsParams.dotLogoAlignment, // Center
+      colParams.dotLogoAlignment,  // Far-left (or target)
+      Curves.easeInBack.transform(lastHalfTurnLerp), // Or another curve you like
+    )!;
+
     Color wheel1Color = Color.lerp(
         fsParams.wheel1Color, colParams.wheel1Color, lastHalfTurnLerp)!;
     Color wheel2Color = Color.lerp(
@@ -714,8 +724,6 @@ class AppHeaderLogic {
     Color navButtonColor = Color.lerp(
         fsParams.navButtonColor, colParams.navButtonColor, lastHalfTurnLerp)!;
     double marqueeOpacity = lastHalfTurnLerp;
-    double finalDotLogoScaleFactor =
-        currentDotLogoVisualScale * (1.0 - marqueeOpacity);
 
     double marqueeWidthFraction = lerpDouble(
         AppHeaderMetrics.getCollapsedLogoDiameter(context) /
@@ -729,7 +737,7 @@ class AppHeaderLogic {
       wheelDiameter: currentWheelDiameter,
       wheelAlignment: currentWheelAlignment,
       // This is now more precise
-      dotLogoScaleFactor: finalDotLogoScaleFactor,
+      dotLogoScaleFactor: currentDotLogoDisplayScale,
       wheelAngle1: currentWheelAngle1,
       wheelAngle2: currentWheelAngle2,
       wheel1Color: wheel1Color,
@@ -744,6 +752,7 @@ class AppHeaderLogic {
           ? "" // The text during the transition
           : colParams.marqueeText,
       navButtonRowAlignment: currentNavButtonRowAlignment,
+      dotLogoAlignment: currentDotLogoAlignment,
       targetSection:
           overallTransitionProgress == 1.0 ? targetSectionForCollapsed : null,
       isCollapsedState: overallTransitionProgress == 1.0,
