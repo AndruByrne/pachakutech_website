@@ -18,7 +18,7 @@ SliverChildBuilderDelegate mainContentBuilder(
         return SizedBox(
           height: kToolbarHeight,
           child: Container(
-            color: Colors.white38,
+            // color: Colors.white12,
           ),
         );
       }

@@ -293,12 +293,11 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           name: "MyHomePage.Navigation");
       await Scrollable.ensureVisible(
         sectionKey!.currentContext!,
-        duration: const Duration(milliseconds: 1200), // Your desired duration
+        duration: const Duration(milliseconds: 900), // Your desired duration
         curve: Curves.easeInOutCubic,
         alignment: alignment,
         alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
       );
-      await Future.delayed(const Duration(milliseconds: 50)); // Settle delay
       developer.log(
           "ScrollTo: EnsureVisible complete for ${sectionToNavigate.id} (direct).",
           name: "MyHomePage.Navigation");
@@ -338,10 +337,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       estimatedScrollOffset,
       duration: const Duration(milliseconds: 900),
       // Faster animation for the initial jump
-      curve: Curves.easeOut,
+      curve: Curves.decelerate,
     );
-    await Future.delayed(
-        const Duration(milliseconds: 100)); // Allow time for items to build
+    // await Future.delayed(
+    //     const Duration(milliseconds: 100)); // Allow time for items to build
 
     // Phase 3: Try Scrollable.ensureVisible again, hoping the item is now built
     if (mounted && sectionKey?.currentContext != null) {
@@ -350,13 +349,13 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           name: "MyHomePage.Navigation");
       await Scrollable.ensureVisible(
         sectionKey!.currentContext!,
-        duration: const Duration(milliseconds: 800),
+        duration: const Duration(milliseconds: 400),
         // Slightly shorter than initial target if combined
-        curve: Curves.easeInOutCubic,
+        curve: Curves.easeOutQuad,
         alignment: alignment,
         alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
       );
-      await Future.delayed(const Duration(milliseconds: 50)); // Settle delay
+      // await Future.delayed(const Duration(milliseconds: 50)); // Settle delay
       developer.log(
           "ScrollTo: EnsureVisible complete for ${sectionToNavigate.id} (after jump).",
           name: "MyHomePage.Navigation");
