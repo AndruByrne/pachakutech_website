@@ -45,7 +45,7 @@ class LinkEntryCard extends StatelessWidget {
               ? EntryContentLayoutStyle.compactLink
               : EntryContentLayoutStyle.staggeredGrid,
           // defaults for grid layout
-          defaultMainAxisCount: 2,
+          defaultCrossAxisCount: 2,
         ),
       ),
     );

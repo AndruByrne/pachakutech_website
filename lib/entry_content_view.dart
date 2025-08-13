@@ -105,7 +105,7 @@ class EntryContentView extends StatelessWidget {
   const EntryContentView({
     Key? key,
     required this.blogEntry,
-    this.defaultCrossAxisCount = 2,
+    required this.defaultCrossAxisCount,
     this.defaultMainAxisCount = 2,
     this.layoutStyle = EntryContentLayoutStyle.staggeredGrid, // Default style
   }) : super(key: key);
@@ -206,23 +206,27 @@ class EntryContentView extends StatelessWidget {
 // For now, let's keep them as they are if they define their own tile structure.
 
   StaggeredGridTile _buildStaggeredGridTileForBlock(
-      BuildContext context, BlogEntry_ContentBlock block) {
+      BuildContext context, BlogEntry_ContentBlock block, bool isSolo) {
     final hasTitle = block.hasTitle() && block.title.isNotEmpty;
     final hasImage = block.hasImageUrl() && block.imageUrl.isNotEmpty;
     final hasLink = block.hasLinkUrl() && block.linkUrl.isNotEmpty;
 
+    int adjustedCrossAxis =
+        isSolo ? defaultCrossAxisCount : (defaultCrossAxisCount / 2).ceil();
+
     // Case 1: Title, Image, and Link
     if (hasTitle && hasImage && hasLink) {
       return StaggeredGridTile.fit(
-        crossAxisCellCount: defaultCrossAxisCount,
+        crossAxisCellCount: adjustedCrossAxis,
         child: Card(
-            child: _buildStaggeredTileContent_TitleImageLink(context, block)),
+            child: _buildStaggeredTileContent_TitleImageLink(
+                context, block)),
       );
     }
     // Case 2: Image and Title (original logic had specific cell counts)
     else if (hasImage && hasTitle) {
       return StaggeredGridTile.fit(
-        crossAxisCellCount: 1, // Or defaultCrossAxisCount if it should be wider
+        crossAxisCellCount: adjustedCrossAxis, // Or defaultCrossAxisCount if it should be wider
         child:
             Card(child: _buildStaggeredTileContent_ImageTitle(context, block)),
       );
@@ -243,7 +247,7 @@ class EntryContentView extends StatelessWidget {
     // Case 4: Image and Link (No Title)
     else if (hasImage && hasLink) {
       return StaggeredGridTile.fit(
-        crossAxisCellCount: defaultCrossAxisCount,
+        crossAxisCellCount: adjustedCrossAxis,
         child: Card(
             child: _hyperlinkedImageForEntry(block.imageUrl, block.linkUrl)),
       );
@@ -252,7 +256,7 @@ class EntryContentView extends StatelessWidget {
     else if (hasImage) {
       return StaggeredGridTile.fit(
         // Assuming you want image to define height
-        crossAxisCellCount: defaultCrossAxisCount,
+        crossAxisCellCount: adjustedCrossAxis,
         child: Card(
           child: Image.network(
             block.imageUrl,
@@ -320,8 +324,8 @@ class EntryContentView extends StatelessWidget {
                       )))
               ] +
               blogEntry!.content
-                  .map((block) =>
-                      _buildStaggeredGridTileForBlock(context, block))
+                  .map((block) => _buildStaggeredGridTileForBlock(
+                      context, block, blogEntry!.content.length == 1))
                   .toList(),
         );
     }

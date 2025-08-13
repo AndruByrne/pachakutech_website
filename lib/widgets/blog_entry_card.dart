@@ -29,7 +29,6 @@ class BlogEntryCard extends StatelessWidget {
               child: EntryContentView(
                 blogEntry: blogEntry,
                 defaultCrossAxisCount: innerCrossAxisCount,
-                defaultMainAxisCount: 2,
               ),
             ),
           );
