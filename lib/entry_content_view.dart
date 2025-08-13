@@ -9,6 +9,8 @@ enum EntryContentLayoutStyle {
   compactLink,
 }
 
+const blockPadding = const EdgeInsets.all(8.0);
+
 StaggeredGridTile _wrapVideoLinkForEntry(
     String title, TextTheme textTheme, String? videoId) {
   if (videoId == null) {
@@ -31,11 +33,14 @@ StaggeredGridTile _wrapHyperlinkForEntry(
         String title, TextTheme textTheme, String linkUrl) =>
     StaggeredGridTile.fit(
       crossAxisCellCount: 1, // Default, can be overridden by specific cards
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: _addHyperlinkForEntry(
-              title.split('/'), textTheme, () => launchUrl(Uri.parse(linkUrl))),
+      child: Padding(
+        padding: blockPadding,
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: _addHyperlinkForEntry(title.split('/'), textTheme,
+                () => launchUrl(Uri.parse(linkUrl))),
+          ),
         ),
       ),
     );
@@ -69,15 +74,20 @@ TextSpan _wrapAsBodyTextSpan(String text) =>
 
 Widget _hyperlinkedImageForEntry(String imgUrl, String linkUrl) => Card(
       child: Padding(
-        padding: const EdgeInsets.all(4.0),
-        child: InkWell(
-          child: Image.network(
-            imgUrl,
-            fit: BoxFit.fitWidth,
-            errorBuilder: (context, error, stackTrace) =>
-                Center(child: Icon(Icons.broken_image)),
+        padding: blockPadding,
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(4.0),
+            child: InkWell(
+              child: Image.network(
+                imgUrl,
+                fit: BoxFit.fitWidth,
+                errorBuilder: (context, error, stackTrace) =>
+                    Center(child: Icon(Icons.broken_image)),
+              ),
+              onTap: () => launchUrl(Uri.parse(linkUrl)),
+            ),
           ),
-          onTap: () => launchUrl(Uri.parse(linkUrl)),
         ),
       ),
     );
@@ -164,47 +174,57 @@ class EntryContentView extends StatelessWidget {
 
   Widget _buildStaggeredTileContent_TitleImageLink(
       BuildContext context, BlogEntry_ContentBlock block) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            block.title,
-            style: Theme.of(context).textTheme.titleLarge,
-            textAlign: TextAlign.center,
-          ),
+    return Padding(
+      padding: blockPadding,
+      child: Card(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                block.title,
+                style: Theme.of(context).textTheme.titleLarge,
+                textAlign: TextAlign.center,
+              ),
+            ),
+            _hyperlinkedImageForEntry(block.imageUrl, block.linkUrl),
+          ],
         ),
-        _hyperlinkedImageForEntry(block.imageUrl, block.linkUrl),
-      ],
+      ),
     );
   }
 
   Widget _buildStaggeredTileContent_ImageTitle(
       BuildContext context, BlogEntry_ContentBlock block) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            block.title,
-            style: Theme.of(context).textTheme.titleSmall,
-            textAlign: TextAlign.center,
-          ),
+    return Padding(
+      padding: blockPadding,
+      child: Card(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                block.title,
+                style: Theme.of(context).textTheme.titleSmall,
+                textAlign: TextAlign.center,
+              ),
+            ),
+            // Image without link in this specific original branch
+            Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: Image.network(
+                block.imageUrl,
+                fit: BoxFit.fitWidth,
+                errorBuilder: (cx, err, stack) => Text(err.toString()),
+              ),
+            ),
+          ],
         ),
-        // Image without link in this specific original branch
-        Padding(
-          padding: const EdgeInsets.all(4.0),
-          child: Image.network(
-            block.imageUrl,
-            fit: BoxFit.fitWidth,
-            errorBuilder: (cx, err, stack) => Text(err.toString()),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -226,16 +246,13 @@ class EntryContentView extends StatelessWidget {
     if (hasTitle && hasImage && hasLink) {
       return StaggeredGridTile.fit(
         crossAxisCellCount: adjustedCrossAxis,
-        child: Card(
-            child: _buildStaggeredTileContent_TitleImageLink(context, block)),
+        child: _buildStaggeredTileContent_TitleImageLink(context, block),
       );
-    }
-    else if (hasImage && hasTitle) {
+    } else if (hasImage && hasTitle) {
       return StaggeredGridTile.fit(
         crossAxisCellCount: adjustedCrossAxis,
         // Or defaultCrossAxisCount if it should be wider
-        child:
-            Card(child: _buildStaggeredTileContent_ImageTitle(context, block)),
+        child: _buildStaggeredTileContent_ImageTitle(context, block),
       );
     }
     // Case 3: Title and Link (Video or simple link)
@@ -255,8 +272,7 @@ class EntryContentView extends StatelessWidget {
     else if (hasImage && hasLink) {
       return StaggeredGridTile.fit(
         crossAxisCellCount: adjustedCrossAxis,
-        child: Card(
-            child: _hyperlinkedImageForEntry(block.imageUrl, block.linkUrl)),
+        child: _hyperlinkedImageForEntry(block.imageUrl, block.linkUrl),
       );
     }
     // Case 5: Image Only
@@ -264,13 +280,16 @@ class EntryContentView extends StatelessWidget {
       return StaggeredGridTile.fit(
         // Assuming you want image to define height
         crossAxisCellCount: adjustedCrossAxis,
-        child: Card(
-          child: Padding(
-            padding: const EdgeInsets.all(4.0),
-            child: Image.network(
-              block.imageUrl,
-              fit: BoxFit.fitWidth,
-              errorBuilder: (cx, err, stack) => Text(err.toString()),
+        child: Padding(
+          padding: blockPadding,
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: Image.network(
+                block.imageUrl,
+                fit: BoxFit.fitWidth,
+                errorBuilder: (cx, err, stack) => Text(err.toString()),
+              ),
             ),
           ),
         ),
@@ -280,12 +299,15 @@ class EntryContentView extends StatelessWidget {
     else if (hasTitle) {
       return StaggeredGridTile.fit(
         crossAxisCellCount: block.title.length > 144 ? 2 : 1,
-        child: Card(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              block.title,
-              style: Theme.of(context).textTheme.bodyLarge,
+        child: Padding(
+          padding: blockPadding,
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                block.title,
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
             ),
           ),
         ),
