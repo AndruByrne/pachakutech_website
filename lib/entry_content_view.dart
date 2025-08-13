@@ -279,7 +279,7 @@ class EntryContentView extends StatelessWidget {
     // Case 6: Title Only
     else if (hasTitle) {
       return StaggeredGridTile.fit(
-        crossAxisCellCount: 2,
+        crossAxisCellCount: block.title.length > 144 ? 2 : 1,
         child: Card(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
