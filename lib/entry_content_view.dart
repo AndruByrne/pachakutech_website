@@ -219,14 +219,14 @@ class EntryContentView extends StatelessWidget {
       return StaggeredGridTile.fit(
         crossAxisCellCount: adjustedCrossAxis,
         child: Card(
-            child: _buildStaggeredTileContent_TitleImageLink(
-                context, block)),
+            child: _buildStaggeredTileContent_TitleImageLink(context, block)),
       );
     }
     // Case 2: Image and Title (original logic had specific cell counts)
     else if (hasImage && hasTitle) {
       return StaggeredGridTile.fit(
-        crossAxisCellCount: adjustedCrossAxis, // Or defaultCrossAxisCount if it should be wider
+        crossAxisCellCount: adjustedCrossAxis,
+        // Or defaultCrossAxisCount if it should be wider
         child:
             Card(child: _buildStaggeredTileContent_ImageTitle(context, block)),
       );
@@ -323,10 +323,17 @@ class EntryContentView extends StatelessWidget {
                         style: TextStyle(color: Colors.white),
                       )))
               ] +
-              blogEntry!.content
-                  .map((block) => _buildStaggeredGridTileForBlock(
-                      context, block, blogEntry!.content.length == 1))
-                  .toList(),
+              blogEntry!.content.expand<StaggeredGridTile>((block) {
+                final contentTile = _buildStaggeredGridTileForBlock(
+                    context, block, blogEntry!.content.length == 1);
+                final spacerTile = StaggeredGridTile.count(
+                    crossAxisCellCount: 1,
+                    mainAxisCellCount: 1,
+                    child: SizedBox.shrink());
+                return block != blogEntry!.content.last
+                    ? [contentTile, spacerTile]
+                    : [contentTile];
+              }).toList(),
         );
     }
   }
