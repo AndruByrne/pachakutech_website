@@ -69,14 +69,17 @@ TextSpan _wrapAsBodyTextSpan(String text) =>
     TextSpan(text: '$text '); // Added space for readability
 
 Widget _hyperlinkedImageForEntry(String imgUrl, String linkUrl) => Card(
-      child: InkWell(
-        child: Image.network(
-          imgUrl,
-          fit: BoxFit.fitWidth,
-          errorBuilder: (context, error, stackTrace) =>
-              Center(child: Icon(Icons.broken_image)),
+      child: Padding(
+        padding: const EdgeInsets.all(4.0),
+        child: InkWell(
+          child: Image.network(
+            imgUrl,
+            fit: BoxFit.fitWidth,
+            errorBuilder: (context, error, stackTrace) =>
+                Center(child: Icon(Icons.broken_image)),
+          ),
+          onTap: () => launchUrl(Uri.parse(linkUrl)),
         ),
-        onTap: () => launchUrl(Uri.parse(linkUrl)),
       ),
     );
 
@@ -145,11 +148,14 @@ class EntryContentView extends StatelessWidget {
             ),
           ),
           block.imageUrl.isNotEmpty
-              ? Image.network(
-                  block.imageUrl,
-                  height: 32,
-                  width: 32,
-                  fit: BoxFit.contain,
+              ? Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: Image.network(
+                    block.imageUrl,
+                    height: 32,
+                    width: 32,
+                    fit: BoxFit.contain,
+                  ),
                 )
               : linkRepresentation,
         ],
@@ -191,10 +197,13 @@ class EntryContentView extends StatelessWidget {
           ),
         ),
         // Image without link in this specific original branch
-        Image.network(
-          block.imageUrl,
-          fit: BoxFit.fitWidth,
-          errorBuilder: (cx, err, stack) => Text(err.toString()),
+        Padding(
+          padding: const EdgeInsets.all(4.0),
+          child: Image.network(
+            block.imageUrl,
+            fit: BoxFit.fitWidth,
+            errorBuilder: (cx, err, stack) => Text(err.toString()),
+          ),
         ),
       ],
     );
@@ -258,10 +267,13 @@ class EntryContentView extends StatelessWidget {
         // Assuming you want image to define height
         crossAxisCellCount: adjustedCrossAxis,
         child: Card(
-          child: Image.network(
-            block.imageUrl,
-            fit: BoxFit.fitWidth,
-            errorBuilder: (cx, err, stack) => Text(err.toString()),
+          child: Padding(
+            padding: const EdgeInsets.all(4.0),
+            child: Image.network(
+              block.imageUrl,
+              fit: BoxFit.fitWidth,
+              errorBuilder: (cx, err, stack) => Text(err.toString()),
+            ),
           ),
         ),
       );
