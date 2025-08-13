@@ -18,9 +18,8 @@ StaggeredGridTile _wrapVideoLinkForEntry(
         textTheme, // is a card
         'https://www.youtube.com/results?search_query=$title');
   }
-  return StaggeredGridTile.count(
+  return StaggeredGridTile.fit(
     crossAxisCellCount: 2,
-    mainAxisCellCount: 2,
     child: _hyperlinkedImageForEntry(
         //also a card
         'https://img.youtube.com/vi/$videoId/hqdefault.jpg',
@@ -231,7 +230,6 @@ class EntryContentView extends StatelessWidget {
             child: _buildStaggeredTileContent_TitleImageLink(context, block)),
       );
     }
-    // Case 2: Image and Title (original logic had specific cell counts)
     else if (hasImage && hasTitle) {
       return StaggeredGridTile.fit(
         crossAxisCellCount: adjustedCrossAxis,
