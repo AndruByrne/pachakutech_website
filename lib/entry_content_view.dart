@@ -352,6 +352,7 @@ class EntryContentView extends StatelessWidget {
                       child: Center(
                           child: Text(
                         blogEntry!.title,
+                        textAlign: TextAlign.center,
                         style: TextStyle(color: Colors.white),
                       )))
               ] +

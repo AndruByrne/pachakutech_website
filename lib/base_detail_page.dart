@@ -255,6 +255,7 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                                           titleSnapshot.hasData
                                               ? titleSnapshot.data ?? ''
                                               : '',
+                                          textAlign: TextAlign.center,
                                           style: Theme.of(context)
                                               .textTheme
                                               .titleLarge
