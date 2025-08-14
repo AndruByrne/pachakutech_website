@@ -340,11 +340,13 @@ Widget buildAnimatedHeaderContent({
           ),
         ),
         if (params.dotLogoScaleFactor > 0.001)
-          Opacity(
-            opacity: 1 - params.marqueeOpacity,
-            child: Align(
-              alignment: params.dotLogoAlignment,
-              child: dotLogoWidget,
+          IgnorePointer(
+            child: Opacity(
+              opacity: 1 - params.marqueeOpacity,
+              child: Align(
+                alignment: params.dotLogoAlignment,
+                child: dotLogoWidget,
+              ),
             ),
           ),
       ],
