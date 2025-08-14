@@ -51,24 +51,14 @@ class _EducationDetailPageState
     // Let's try making the card take up a significant portion, e.g., 80-90%
     // and let Align shift it left or right within the full list item width.
     var pageWidth = MediaQuery.of(context).size.width;
-    final double blogCardWidthFactor = pageWidth > 1000
-        ? 0.70
-        : pageWidth > 900
-            ? 0.75
-            : pageWidth > 800
-                ? .80
-                : pageWidth > 700
-                    ? .85
-                    : pageWidth > 600
-                        ? .90
-                        : 0.95;
+    final double blogCardWidthFactor = pageWidth > 600 ? 0.70 : 0.90;
     final double screenWidth = pageWidth;
     // If you want cards to have a max width:
     // final double maxCardWidth = 600.0;
     // final double actualCardWidth = min(screenWidth * blogCardWidthFactor, maxCardWidth);
 
     final linkCardWidthFactor =
-        blogCardWidthFactor * (screenWidth > 933 ? 2 / 3 : 1);
+        blogCardWidthFactor * (screenWidth > 966 ? 2 / 3 : 1);
 
     while (bIdx < blogEntries.length || lIdx < linkTreeEntries.length) {
       if (preferLinkNext && lIdx < linkTreeEntries.length) {
