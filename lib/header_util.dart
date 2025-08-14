@@ -611,7 +611,7 @@ class AppHeaderLogic {
       LAST_HALF_TURN_START_ANGLE; // Explicitly for clarity
   static const double LAST_HALF_TURN_DURATION =
       MAX_EFFECTIVE_WHEEL_ANGLE - LAST_HALF_TURN_START_ANGLE;
-  static const double TARGET_DOT_LOGO_TEXT_MATCH_SCALE = 0.3;
+  static const double TARGET_DOT_LOGO_TEXT_MATCH_SCALE = 0.2;
   static const double DOT_LOGO_ANIMATION_PHASE_SPLIT_POINT = 0.5;
 
   static String getWhitespaceForMarquee(double marqueeWidth) {
@@ -721,28 +721,29 @@ class AppHeaderLogic {
           1.0; // Fully progressed through initial scaling phase
     }
 
-    double scaleBeforeLastHalfTurn = lerpDouble(
+    double dotLogoScale = lerpDouble(
         fsParams.dotLogoScaleFactor, // Typically 1.0
         TARGET_DOT_LOGO_TEXT_MATCH_SCALE,
         // Scale towards this, or an intermediate value if you prefer
-        initialScaleProgress)!;
+        Curves.easeIn.transform(overallTransitionProgress))!;
 
-    double dynamicScaleDuringLastHalfTurn =
-        scaleBeforeLastHalfTurn * (1.0 - lastHalfTurnLerp);
-
-    double currentDotLogoDisplayScale = dynamicScaleDuringLastHalfTurn;
-    if (lastHalfTurnLerp < 1.0) {
-      // Only apply floor if not fully faded/transformed
-      currentDotLogoDisplayScale = currentDotLogoDisplayScale.clamp(
-          TARGET_DOT_LOGO_TEXT_MATCH_SCALE, fsParams.dotLogoScaleFactor);
-    }
-
-    Alignment currentDotLogoAlignment = Alignment.lerp(
-      fsParams.dotLogoAlignment, // Center
-      colParams.dotLogoAlignment, // Far-left (or target)
-      Curves.easeInBack
-          .transform(lastHalfTurnLerp), // Or another curve you like
+    Alignment bouncingDotLogoAlignment = Alignment.lerp(
+      fsParams.dotLogoAlignment,
+      Alignment(0.0, 0.0) - colParams.dotLogoAlignment,
+      Curves.linear.transform(overallTransitionProgress.clamp(0.0, 0.7)) * 2,
+      // BouncyOut().transform(overallTransitionProgress),
     )!;
+    Alignment currentDotLogoAlignment = Alignment.lerp(
+      fsParams.dotLogoAlignment,
+      colParams.dotLogoAlignment,
+      Curves.easeInQuad.transform(overallTransitionProgress) * 2,
+    )!;
+    // Alignment bouncingDotLogoAlignment = Alignment.lerp(
+    //     fsParams.dotLogoAlignment,
+    //     Alignment(0.0, 0.0) - colParams.dotLogoAlignment,
+    //     Curves.easeOutQuad.transform(lastHalfTurnLerp > 0
+    //         ? 1.0 - overallTransitionProgress
+    //         : overallTransitionProgress))!;
 
     Color wheel1Color = Color.lerp(
         fsParams.wheel1Color, colParams.wheel1Color, lastHalfTurnLerp)!;
@@ -779,7 +780,7 @@ class AppHeaderLogic {
       wheelDiameter: currentWheelDiameter,
       wheelAlignment: currentWheelAlignment,
       // This is now more precise
-      dotLogoScaleFactor: currentDotLogoDisplayScale,
+      dotLogoScaleFactor: dotLogoScale,
       wheelAngle1: currentWheelAngle1,
       wheelAngle2: currentWheelAngle2,
       wheel1Color: wheel1Color,
@@ -792,10 +793,27 @@ class AppHeaderLogic {
       marqueeVelocity: marqueeVelocity,
       marqueeText: currentMarqueeDisplayText,
       navButtonRowAlignment: currentNavButtonRowAlignment,
-      dotLogoAlignment: currentDotLogoAlignment,
+      dotLogoAlignment: currentDotLogoAlignment + bouncingDotLogoAlignment,
       targetSection:
           overallTransitionProgress == 1.0 ? targetSectionForCollapsed : null,
       isCollapsedState: overallTransitionProgress == 1.0,
     );
+  }
+}
+
+class BouncyOut extends Curve {
+  @override
+  double transformInternal(double t) {
+    if (t < 0.5) {
+      // First half of the animation, apply easeIn
+      // We need to remap t from [0, 0.5) to [0, 1) for Curves.easeIn
+      return Curves.linear.transform(t * 2.0) *
+          0.5; // Scale output back to [0, 0.5)
+    } else {
+      // Second half of the animation, apply elasticOut
+      // Remap t from [0.5, 1.0] to [0, 1) for Curves.elasticOut
+      // And scale output from [0,1] back to [0.5, 1.0]
+      return 0.5 + (Curves.linear.transform((t - 0.5) * 2.0) * 0.5);
+    }
   }
 }
