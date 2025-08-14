@@ -1,6 +1,6 @@
 // lib/header_util.dart (or your preferred path like lib/utils/app_header_utils.dart)
 import 'dart:developer' as developer;
-import 'dart:math';
+import 'dart:math' as math;
 import 'dart:ui' show lerpDouble; // Only lerpDouble is needed from dart:ui here
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart' show SvgPicture;
@@ -25,6 +25,7 @@ class HeaderVisualParams {
   final Alignment dotLogoAlignment;
   final Alignment mobileTitleAlignment;
   final Alignment aITitleAlignment;
+  final Alignment xrTitleAlignment;
   final double wheelAngle1;
   final double wheelAngle2;
   final Color wheel1Color;
@@ -34,6 +35,7 @@ class HeaderVisualParams {
   final double navButtonOpacity;
   final double bouncingTitleOpacity;
   final Color navButtonColor;
+  final double xrTitleOpacity;
   final double marqueeOpacity;
   final double marqueeWidthFraction;
   final double marqueeVelocity;
@@ -63,7 +65,9 @@ class HeaderVisualParams {
     required this.isCollapsedState,
     required this.mobileTitleAlignment,
     required this.aITitleAlignment,
+    required this.xrTitleAlignment,
     required this.bouncingTitleOpacity,
+    required this.xrTitleOpacity,
   });
 
   static HeaderVisualParams lerp(
@@ -99,6 +103,10 @@ class HeaderVisualParams {
           Alignment.lerp(a.aITitleAlignment, b.aITitleAlignment, t)!,
       mobileTitleAlignment:
           Alignment.lerp(a.mobileTitleAlignment, b.mobileTitleAlignment, t)!,
+      xrTitleAlignment:
+          Alignment.lerp(a.xrTitleAlignment, b.xrTitleAlignment, t)!,
+      xrTitleOpacity:
+          lerpDouble(a.bouncingTitleOpacity, b.bouncingTitleOpacity, t)!,
       bouncingTitleOpacity:
           lerpDouble(a.bouncingTitleOpacity, b.bouncingTitleOpacity, t)!,
       targetSection: lerpedTargetSection,
@@ -305,9 +313,43 @@ Widget buildAnimatedHeaderContent({
     child: Stack(
       alignment: Alignment.center,
       children: [
+        if (params.wheelAngle1 <= AppHeaderLogic.MAX_EFFECTIVE_WHEEL_ANGLE / 2)
+          Align(
+            alignment: params.xrTitleAlignment,
+            child: IgnorePointer(
+              child: Opacity(
+                opacity: params.xrTitleOpacity,
+                child: Text(
+                  'AR',
+                  style: TextStyle(
+                      fontFamily: 'Pachakutech',
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary),
+                ),
+              ),
+            ),
+          ),
         Align(
             alignment: params.navButtonRowAlignment, child: sizedAndAlignedBar),
         Align(alignment: params.wheelAlignment, child: visualWheels),
+        if (params.wheelAngle1 > AppHeaderLogic.MAX_EFFECTIVE_WHEEL_ANGLE / 2)
+          Align(
+            alignment: params.xrTitleAlignment,
+            child: IgnorePointer(
+              child: Opacity(
+                opacity: params.xrTitleOpacity,
+                child: Text(
+                  'XR',
+                  style: TextStyle(
+                      fontFamily: 'Pachakutech',
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary),
+                ),
+              ),
+            ),
+          ),
         Align(
           alignment: params.mobileTitleAlignment,
           child: IgnorePointer(
@@ -422,8 +464,9 @@ class AppHeaderMetrics {
 
   // --- Diameters ---
   static double getFullscreenWheelDiameter(BuildContext context) =>
-      min(getFullscreenHeaderHeight(context),
-          getFullscreenHeaderWidth(context)) * 0.95;
+      math.min(getFullscreenHeaderHeight(context),
+          getFullscreenHeaderWidth(context)) *
+      0.95;
 
   static double getCollapsedWheelDiameter(BuildContext context) =>
       getCollapsedHeaderHeight(context) * 0.8;
@@ -555,7 +598,9 @@ class AppHeaderMetrics {
       dotLogoAlignment: Alignment.centerLeft,
       aITitleAlignment: Alignment.topCenter,
       mobileTitleAlignment: Alignment.bottomCenter,
+      xrTitleAlignment: Alignment.centerLeft,
       bouncingTitleOpacity: 0.0,
+      xrTitleOpacity: 0.0,
       targetSection: targetSection,
       isCollapsedState: true,
     );
@@ -585,7 +630,9 @@ class AppHeaderMetrics {
         dotLogoAlignment: Alignment.center,
         aITitleAlignment: Alignment.center,
         mobileTitleAlignment: Alignment.center,
+        xrTitleAlignment: Alignment.centerLeft,
         bouncingTitleOpacity: 0.0,
+        xrTitleOpacity: 0.0,
         targetSection: null,
         // No target section in fullscreen home
         isCollapsedState: false,
@@ -779,11 +826,6 @@ class AppHeaderLogic {
         // Scale towards this, or an intermediate value if you prefer
         Curves.easeIn.transform(overallTransitionProgress))!;
 
-    var verticalTranslationCurveAITitle = Curves.easeOut;
-    var verticalTranslationCurveMobileTitle = Curves.easeOut;
-    var horizontalTranslationCurveLogo = Curves.easeOutExpo;
-    var horizontalTranslationCurveAITitle = Curves.easeOut;
-    var horizontalTranslationCurveMobileTitle = Curves.easeOutCubic;
     Alignment finalHalfTurnDotLogoAlignment = Alignment.lerp(
       fsParams.dotLogoAlignment,
       colParams.dotLogoAlignment,
@@ -792,33 +834,33 @@ class AppHeaderLogic {
     Alignment bouncingDotLogoAlignment = bounceOnCurve(
       fsParams.dotLogoAlignment,
       Alignment.center - colParams.dotLogoAlignment,
-      horizontalTranslationCurveLogo,
+      Curves.easeOutExpo,
       overallTransitionProgress,
     );
     Alignment bouncingAITitleAlignment = finalHalfTurnDotLogoAlignment +
         bounceOnCurve(
           fsParams.dotLogoAlignment,
           Alignment.center - colParams.dotLogoAlignment,
-          horizontalTranslationCurveAITitle,
+          Curves.easeOut,
           overallTransitionProgress,
         ) +
         bounceOnCurve(
           fsParams.aITitleAlignment,
           colParams.aITitleAlignment,
-          verticalTranslationCurveAITitle,
+          Curves.easeOut,
           overallTransitionProgress,
         );
     Alignment bouncingMobileTitleAlignment = finalHalfTurnDotLogoAlignment +
         bounceOnCurve(
           fsParams.dotLogoAlignment,
           Alignment.center - colParams.dotLogoAlignment,
-          horizontalTranslationCurveMobileTitle,
+          Curves.easeOutCubic,
           overallTransitionProgress,
         ) +
         bounceOnCurve(
           fsParams.mobileTitleAlignment,
           colParams.mobileTitleAlignment,
-          verticalTranslationCurveMobileTitle,
+          Curves.easeOut,
           overallTransitionProgress,
         );
     double bouncingTitleOpacity = lerpDouble(
@@ -827,6 +869,16 @@ class AppHeaderLogic {
         overallTransitionProgress > .5
             ? (1 - overallTransitionProgress) * 2
             : overallTransitionProgress * 2)!;
+    Alignment bouncingXRTitleAlignment = bounceOnCurve(
+      fsParams.xrTitleAlignment,
+      Alignment.center,
+      Curves.decelerate,
+      overallTransitionProgress,
+    );
+    double bouncingXRTitleOpacity = lerpDouble(
+        fsParams.bouncingTitleOpacity,
+        0.5, // Faint, to not overshadow the equally faint other titles
+        math.sin(overallTransitionProgress * 2 * math.pi).abs())!;
 
     Color wheel1Color = Color.lerp(
         fsParams.wheel1Color, colParams.wheel1Color, lastHalfTurnLerp)!;
@@ -880,6 +932,8 @@ class AppHeaderLogic {
           bouncingDotLogoAlignment + finalHalfTurnDotLogoAlignment,
       mobileTitleAlignment: bouncingMobileTitleAlignment,
       aITitleAlignment: bouncingAITitleAlignment,
+      xrTitleAlignment: bouncingXRTitleAlignment,
+      xrTitleOpacity: bouncingXRTitleOpacity,
       bouncingTitleOpacity: bouncingTitleOpacity,
       targetSection:
           overallTransitionProgress == 1.0 ? targetSectionForCollapsed : null,
@@ -887,13 +941,16 @@ class AppHeaderLogic {
     );
   }
 
-  static Alignment bounceOnCurve(Alignment sourceAlignment,
-      Alignment destAlignment, Cubic curve, double progress) {
-    return Alignment.lerp(
-      sourceAlignment,
-      destAlignment,
-      curve.transform(progress < 0.5 ? progress : 1 - progress),
-      // BouncyOut().transform(overallTransitionProgress),
-    )!;
-  }
+  static Alignment bounceOnCurve(
+    Alignment sourceAlignment,
+    Alignment destAlignment,
+    Curve curve,
+    double progress,
+  ) =>
+      Alignment.lerp(
+        sourceAlignment,
+        destAlignment,
+        curve.transform(progress < 0.5 ? progress : 1 - progress),
+        // BouncyOut().transform(overallTransitionProgress),
+      )!;
 }
