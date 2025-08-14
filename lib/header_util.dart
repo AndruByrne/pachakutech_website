@@ -215,7 +215,7 @@ Widget buildAnimatedHeaderContent({
     // fontWeight: FontWeight.bold,
     fontSize: MARQUEE_FONT_SIZE, // Adjust
     fontFamily: 'Pachakutech',
-    fontWeight: FontWeight.bold ,
+    fontWeight: FontWeight.bold,
     color: Theme.of(context).colorScheme.primary,
   );
   Widget marqueeWidget = Opacity(
@@ -732,13 +732,15 @@ class AppHeaderLogic {
     Alignment bouncingDotLogoAlignment = Alignment.lerp(
       fsParams.dotLogoAlignment,
       Alignment(0.0, 0.0) - colParams.dotLogoAlignment,
-      Curves.linear.transform(overallTransitionProgress.clamp(0.0, 0.7)) * 2,
+      Curves.easeOutExpo.transform(overallTransitionProgress < 0.5
+          ? overallTransitionProgress
+          : 1 - overallTransitionProgress),
       // BouncyOut().transform(overallTransitionProgress),
     )!;
     Alignment currentDotLogoAlignment = Alignment.lerp(
       fsParams.dotLogoAlignment,
       colParams.dotLogoAlignment,
-      Curves.easeInQuad.transform(overallTransitionProgress) * 2,
+      Curves.easeInQuad.transform(lastHalfTurnLerp),
     )!;
     // Alignment bouncingDotLogoAlignment = Alignment.lerp(
     //     fsParams.dotLogoAlignment,
@@ -751,8 +753,8 @@ class AppHeaderLogic {
         fsParams.wheel1Color, colParams.wheel1Color, lastHalfTurnLerp)!;
     Color wheel2Color = Color.lerp(
         fsParams.wheel2Color, colParams.wheel2Color, lastHalfTurnLerp)!;
-    Color backgroundColor = Color.lerp(
-        fsParams.backgroundColor, colParams.backgroundColor, lastHalfTurnLerp.clamp(0.15, 1.0))!;
+    Color backgroundColor = Color.lerp(fsParams.backgroundColor,
+        colParams.backgroundColor, lastHalfTurnLerp.clamp(0.15, 1.0))!;
     Alignment currentNavButtonRowAlignment = Alignment.lerp(
       fsParams.navButtonRowAlignment,
       colParams.navButtonRowAlignment,
@@ -795,7 +797,7 @@ class AppHeaderLogic {
       marqueeVelocity: marqueeVelocity,
       marqueeText: currentMarqueeDisplayText,
       navButtonRowAlignment: currentNavButtonRowAlignment,
-      dotLogoAlignment: currentDotLogoAlignment + bouncingDotLogoAlignment,
+      dotLogoAlignment: bouncingDotLogoAlignment + currentDotLogoAlignment,
       targetSection:
           overallTransitionProgress == 1.0 ? targetSectionForCollapsed : null,
       isCollapsedState: overallTransitionProgress == 1.0,
