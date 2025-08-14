@@ -306,7 +306,7 @@ class EntryContentView extends StatelessWidget {
               padding: const EdgeInsets.all(8.0),
               child: Text(
                 block.title,
-                style: Theme.of(context).textTheme.bodyLarge,
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
           ),
