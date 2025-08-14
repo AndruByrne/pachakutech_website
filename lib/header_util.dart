@@ -750,7 +750,7 @@ class AppHeaderLogic {
     Color wheel2Color = Color.lerp(
         fsParams.wheel2Color, colParams.wheel2Color, lastHalfTurnLerp)!;
     Color backgroundColor = Color.lerp(
-        fsParams.backgroundColor, colParams.backgroundColor, lastHalfTurnLerp)!;
+        fsParams.backgroundColor, colParams.backgroundColor, lastHalfTurnLerp.clamp(0.15, 1.0))!;
     Alignment currentNavButtonRowAlignment = Alignment.lerp(
       fsParams.navButtonRowAlignment,
       colParams.navButtonRowAlignment,
