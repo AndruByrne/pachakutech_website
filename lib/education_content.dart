@@ -25,9 +25,11 @@ class EducationDetailPage extends BlogContentDetailPage {
 class _EducationDetailPageState
     extends BlogContentDetailPageState<EducationDetailPage> {
   @override
-  Widget buildBlogContentGrid(BuildContext context,
-      List<BlogEntry> blogEntries,
-      List<BlogEntry> linkTreeEntries,) {
+  Widget buildBlogContentGrid(
+    BuildContext context,
+    List<BlogEntry> blogEntries,
+    List<BlogEntry> linkTreeEntries,
+  ) {
     print('EDU_GRID: Building with SliverList for alternating alignment.');
 
     if (blogEntries.isEmpty && linkTreeEntries.isEmpty) {
@@ -48,18 +50,25 @@ class _EducationDetailPageState
     // you could use a widthFactor of 1.0 and let Align do its job.
     // Let's try making the card take up a significant portion, e.g., 80-90%
     // and let Align shift it left or right within the full list item width.
-    final double cardWidthFactor = MediaQuery
-        .of(context)
-        .size
-        .width > 700 ? 0.70 : 0.85;
-    final double screenWidth = MediaQuery
-        .of(context)
-        .size
-        .width;
+    var pageWidth = MediaQuery.of(context).size.width;
+    final double blogCardWidthFactor = pageWidth > 1000
+        ? 0.70
+        : pageWidth > 900
+            ? 0.75
+            : pageWidth > 800
+                ? .80
+                : pageWidth > 700
+                    ? .85
+                    : pageWidth > 600
+                        ? .90
+                        : 0.95;
+    final double screenWidth = pageWidth;
     // If you want cards to have a max width:
     // final double maxCardWidth = 600.0;
-    // final double actualCardWidth = min(screenWidth * cardWidthFactor, maxCardWidth);
+    // final double actualCardWidth = min(screenWidth * blogCardWidthFactor, maxCardWidth);
 
+    final linkCardWidthFactor =
+        blogCardWidthFactor * (screenWidth > 933 ? 2 / 3 : 1);
 
     while (bIdx < blogEntries.length || lIdx < linkTreeEntries.length) {
       if (preferLinkNext && lIdx < linkTreeEntries.length) {
@@ -68,7 +77,7 @@ class _EducationDetailPageState
             context: context,
             card: LinkEntryCard(blogEntry: linkTreeEntries[lIdx++]),
             alignment: Alignment.centerLeft,
-            widthFactor: cardWidthFactor * 2 / 3,
+            widthFactor: linkCardWidthFactor,
             // screenWidth: screenWidth, // If using fixed width + alignment
             // itemWidth: actualCardWidth,  // If using fixed width + alignment
           ),
@@ -80,32 +89,34 @@ class _EducationDetailPageState
             context: context,
             card: BlogEntryCard(blogEntry: blogEntries[bIdx++]),
             alignment: Alignment.centerRight,
-            widthFactor: cardWidthFactor,
+            widthFactor: blogCardWidthFactor,
             // screenWidth: screenWidth,
             // itemWidth: actualCardWidth,
           ),
         );
         if (lIdx < linkTreeEntries.length) preferLinkNext = true;
-      } else if (lIdx < linkTreeEntries.length) { // Remaining links
+      } else if (lIdx < linkTreeEntries.length) {
+        // Remaining links
         interleavedItems.add(
           _buildAlignedListItem(
             context: context,
             card: LinkEntryCard(blogEntry: linkTreeEntries[lIdx++]),
             alignment: Alignment.centerLeft,
             // Or maintain last preferLinkNext state
-            widthFactor: cardWidthFactor * 2 / 3,
+            widthFactor: linkCardWidthFactor,
             // screenWidth: screenWidth,
             // itemWidth: actualCardWidth,
           ),
         );
-      } else if (bIdx < blogEntries.length) { // Remaining blogs
+      } else if (bIdx < blogEntries.length) {
+        // Remaining blogs
         interleavedItems.add(
           _buildAlignedListItem(
             context: context,
             card: BlogEntryCard(blogEntry: blogEntries[bIdx++]),
             alignment: Alignment.centerRight,
             // Or maintain last preferLinkNext state
-            widthFactor: cardWidthFactor,
+            widthFactor: blogCardWidthFactor,
             // screenWidth: screenWidth,
             // itemWidth: actualCardWidth,
           ),
@@ -122,7 +133,7 @@ class _EducationDetailPageState
     // Use SliverList with a delegate
     return SliverList(
       delegate: SliverChildBuilderDelegate(
-            (BuildContext context, int index) {
+        (BuildContext context, int index) {
           // Add some padding around each list item if desired
           return Padding(
             padding: const EdgeInsets.symmetric(

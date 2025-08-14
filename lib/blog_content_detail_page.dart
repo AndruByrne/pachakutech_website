@@ -71,9 +71,7 @@ abstract class BlogContentDetailPageState<T extends BlogContentDetailPage>
       crossAxisCount: crossAxisCount,
       mainAxisSpacing: 8.0,
       crossAxisSpacing: 8.0,
-      itemBuilder: (context, index) {
-        return items[index];
-      },
+      itemBuilder: (context, index) => items[index],
       childCount: items.length,
     );
   }
