@@ -31,7 +31,9 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
   late ValueNotifier<double> _detailPageScrollNotifier;
   Map<AppSection?, double> _buttonCenterOffsetsX = {};
   final TextStyle _navButtonTextStyle = const TextStyle(
-      fontFamily: 'Pachakutech', fontSize: NAV_BUTTON_FONT_SIZE);
+      fontFamily: 'Pachakutech',
+      fontSize: NAV_BUTTON_FONT_SIZE + 2,
+      fontWeight: FontWeight.bold);
   double _maxButtonTextWidth = 0;
 
   /// Provides the path to the background image asset for this detail page.

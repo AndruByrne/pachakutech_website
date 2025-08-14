@@ -412,7 +412,7 @@ class AppHeaderMetrics {
   }
 
   static double getButtonContentWidth(String text, TextStyle style) =>
-      calculateTextWidth(text, style) + (3 * NAV_BUTTON_HORIZONTAL_PADDING);
+      calculateTextWidth(text, style) + (2 * NAV_BUTTON_HORIZONTAL_PADDING);
 
   static Alignment getWheelAlignmentForSection(
     BuildContext context,

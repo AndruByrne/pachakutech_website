@@ -73,7 +73,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   double _uniformButtonSlotWidth = 0;
   late Future<String> _tickerFuture;
   final TextStyle _navButtonTextStyle = const TextStyle(
-      fontFamily: 'Pachakutech', fontSize: NAV_BUTTON_FONT_SIZE);
+      fontFamily: 'Pachakutech', fontSize: NAV_BUTTON_FONT_SIZE + 2);
   String _whitespaceForMarquee = '';
 
   @override
