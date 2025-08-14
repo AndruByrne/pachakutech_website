@@ -63,8 +63,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     for (var section in AppSection.values) section: GlobalKey()
   };
   bool _showAuthorUI = false;
-  final double _initialScrollOffset = 436.0;
-  bool _hasScrolledInitially = false;
 
   // nav flags
   AppSection? _pendingNavigationToSection;
@@ -94,21 +92,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     _tickerFuture = ContentRepository(db: widget.db)
         .fetchHeaderTickers()
         .then((tickers) => tickers['home']);
-    // Schedule the initial scroll after the first frame
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Ensure the widget is still mounted and controller has clients
-      if (mounted && _mainScrollController.hasClients && !_hasScrolledInitially) {
-        // Option A: Jump directly (no animation)
-        // _mainScrollController.jumpTo(_initialScrollOffset);
-
-        // Option B: Animate to the position (smoother, but user sees it)
-        _mainScrollController.jumpTo( _initialScrollOffset, );
-        setState(() { // If jumpTo doesn't trigger a rebuild that updates your UI based on offset
-          _hasScrolledInitially = true;
-        });
-        _handleScroll(); // Manually call to update notifier if needed immediately
-      }
-    });
   }
 
   @override
