@@ -215,6 +215,7 @@ Widget buildAnimatedHeaderContent({
     // fontWeight: FontWeight.bold,
     fontSize: MARQUEE_FONT_SIZE, // Adjust
     fontFamily: 'Pachakutech',
+    fontWeight: FontWeight.bold ,
     color: Theme.of(context).colorScheme.primary,
   );
   Widget marqueeWidget = Opacity(
@@ -595,6 +596,7 @@ Widget createNavButtonForSection({
                 style: TextStyle(
                     fontFamily: 'Pachakutech',
                     fontSize: NAV_BUTTON_FONT_SIZE,
+                    fontWeight: FontWeight.bold,
                     color: Theme.of(context).primaryColor),
                 textAlign: TextAlign.center,
               ),
