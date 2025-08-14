@@ -423,7 +423,7 @@ class AppHeaderMetrics {
   // --- Diameters ---
   static double getFullscreenWheelDiameter(BuildContext context) =>
       min(getFullscreenHeaderHeight(context),
-          getFullscreenHeaderWidth(context));
+          getFullscreenHeaderWidth(context)) * 0.95;
 
   static double getCollapsedWheelDiameter(BuildContext context) =>
       getCollapsedHeaderHeight(context) * 0.8;
