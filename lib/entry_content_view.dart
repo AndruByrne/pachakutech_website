@@ -358,7 +358,10 @@ class EntryContentView extends StatelessWidget {
               ] +
               blogEntry!.content.expand<StaggeredGridTile>((block) {
                 final contentTile = _buildStaggeredGridTileForBlock(
-                    context, block, blogEntry!.content.length == 1);
+                    context,
+                    block,
+                    blogEntry!.content.length == 1 ||
+                        MediaQuery.of(context).size.width < 600);
                 final spacerTile = StaggeredGridTile.count(
                     crossAxisCellCount: 1,
                     mainAxisCellCount: 1,
