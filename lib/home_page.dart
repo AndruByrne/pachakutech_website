@@ -408,7 +408,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 ? _mainScrollController.offset
                 : 0.0,
             targetSectionForCollapsed: null,
-            currentMarqueeText: _whitespaceForMarquee +
+            currentMarqueeText:
                 (tickerSnapshot.hasData ? tickerSnapshot.data ?? '' : ''),
             // currentMarqueeText: '',
             // Pass the resolved text
@@ -490,7 +490,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                   targetSectionForCollapsed: null,
                   // Home target
                   currentMarqueeText: _whitespaceForMarquee,
-                      // (tickerSnapshot.hasData ? tickerSnapshot.data ?? '' : ''),
                   buttonCenterOffsetsX: _buttonCenterOffsetsX,
                 );
               }
