@@ -1,4 +1,5 @@
 // lib/header_util.dart (or your preferred path like lib/utils/app_header_utils.dart)
+import 'dart:developer' as developer;
 import 'dart:ui' show lerpDouble; // Only lerpDouble is needed from dart:ui here
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart' show SvgPicture;
@@ -21,6 +22,8 @@ class HeaderVisualParams {
   final Alignment wheelAlignment;
   final Alignment navButtonRowAlignment;
   final Alignment dotLogoAlignment;
+  final Alignment mobileTitleAlignment;
+  final Alignment aITitleAlignment;
   final double wheelAngle1;
   final double wheelAngle2;
   final Color wheel1Color;
@@ -28,6 +31,7 @@ class HeaderVisualParams {
   final Color backgroundColor;
   final double dotLogoScaleFactor;
   final double navButtonOpacity;
+  final double bouncingTitleOpacity;
   final Color navButtonColor;
   final double marqueeOpacity;
   final double marqueeWidthFraction;
@@ -56,6 +60,9 @@ class HeaderVisualParams {
     required this.navButtonRowAlignment,
     this.targetSection,
     required this.isCollapsedState,
+    required this.mobileTitleAlignment,
+    required this.aITitleAlignment,
+    required this.bouncingTitleOpacity,
   });
 
   static HeaderVisualParams lerp(
@@ -87,6 +94,12 @@ class HeaderVisualParams {
           Alignment.lerp(a.navButtonRowAlignment, b.navButtonRowAlignment, t)!,
       dotLogoAlignment:
           Alignment.lerp(a.dotLogoAlignment, b.dotLogoAlignment, t)!,
+      aITitleAlignment:
+          Alignment.lerp(a.aITitleAlignment, b.aITitleAlignment, t)!,
+      mobileTitleAlignment:
+          Alignment.lerp(a.mobileTitleAlignment, b.mobileTitleAlignment, t)!,
+      bouncingTitleOpacity:
+          lerpDouble(a.bouncingTitleOpacity, b.bouncingTitleOpacity, t)!,
       targetSection: lerpedTargetSection,
       isCollapsedState: lerpedIsCollapsed,
     );
@@ -294,6 +307,38 @@ Widget buildAnimatedHeaderContent({
         Align(
             alignment: params.navButtonRowAlignment, child: sizedAndAlignedBar),
         Align(alignment: params.wheelAlignment, child: visualWheels),
+        Align(
+          alignment: params.mobileTitleAlignment,
+          child: IgnorePointer(
+            child: Opacity(
+              opacity: params.bouncingTitleOpacity,
+              child: Text(
+                'mobile client engineering',
+                style: TextStyle(
+                    fontFamily: 'Pachakutech',
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary),
+              ),
+            ),
+          ),
+        ),
+        Align(
+          alignment: params.aITitleAlignment,
+          child: IgnorePointer(
+            child: Opacity(
+              opacity: params.bouncingTitleOpacity,
+              child: Text(
+                'AI management solutions',
+                style: TextStyle(
+                    fontFamily: 'Pachakutech',
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary),
+              ),
+            ),
+          ),
+        ),
         if (params.dotLogoScaleFactor > 0.001)
           Opacity(
             opacity: 1 - params.marqueeOpacity,
@@ -309,7 +354,6 @@ Widget buildAnimatedHeaderContent({
   return headerContent;
 }
 
-// In header_util.dart
 Widget globalFlightShuttleBuilderInternal({
   required BuildContext flightContext,
   required Animation<double> animation,
@@ -326,18 +370,11 @@ Widget globalFlightShuttleBuilderInternal({
           HeaderVisualParams interpolatedDisplayParams;
 
           if (flightDirection == HeroFlightDirection.push) {
-            // PUSH: Animate from Start (Home/Expanded) to End (Detail/Collapsed)
             interpolatedDisplayParams = HeaderVisualParams.lerp(
                 paramsAtAnimationStart, paramsAtAnimationEnd, t);
           } else {
-            // HeroFlightDirection.pop
-            // POP:
-            // Raw interpolated params go from Start (Detail/Collapsed) to End (Home/Expanded)
-            // for POP, we want to lerp from paramsAtAnimationEnd (Home/Expanded)
-            // to paramsAtAnimationStart (Detail/Collapsed) using t.
             interpolatedDisplayParams = HeaderVisualParams.lerp(
                 paramsAtAnimationEnd,
-                // Treat POP's destination (Home/Expanded) as the visual start
                 paramsAtAnimationStart,
                 // Treat POP's source (Detail/Collapsed) as the visual end
                 t); // Use t directly (0 to 1)
@@ -509,6 +546,9 @@ class AppHeaderMetrics {
       marqueeText: marqueeText,
       navButtonRowAlignment: Alignment.centerLeft,
       dotLogoAlignment: Alignment.centerLeft,
+      aITitleAlignment: Alignment.topCenter,
+      mobileTitleAlignment: Alignment.bottomCenter,
+      bouncingTitleOpacity: 0.0,
       targetSection: targetSection,
       isCollapsedState: true,
     );
@@ -536,6 +576,9 @@ class AppHeaderMetrics {
         marqueeText: '',
         navButtonRowAlignment: Alignment.centerRight,
         dotLogoAlignment: Alignment.center,
+        aITitleAlignment: Alignment.center,
+        mobileTitleAlignment: Alignment.center,
+        bouncingTitleOpacity: 0.0,
         targetSection: null,
         // No target section in fullscreen home
         isCollapsedState: false,
@@ -729,25 +772,54 @@ class AppHeaderLogic {
         // Scale towards this, or an intermediate value if you prefer
         Curves.easeIn.transform(overallTransitionProgress))!;
 
-    Alignment bouncingDotLogoAlignment = Alignment.lerp(
-      fsParams.dotLogoAlignment,
-      Alignment(0.0, 0.0) - colParams.dotLogoAlignment,
-      Curves.easeOutExpo.transform(overallTransitionProgress < 0.5
-          ? overallTransitionProgress
-          : 1 - overallTransitionProgress),
-      // BouncyOut().transform(overallTransitionProgress),
-    )!;
-    Alignment currentDotLogoAlignment = Alignment.lerp(
+    var verticalTranslationCurveAITitle = Curves.easeOut;
+    var verticalTranslationCurveMobileTitle = Curves.easeOut;
+    var horizontalTranslationCurveLogo = Curves.easeOutExpo;
+    var horizontalTranslationCurveAITitle = Curves.easeOut;
+    var horizontalTranslationCurveMobileTitle = Curves.easeOutCubic;
+    Alignment finalHalfTurnDotLogoAlignment = Alignment.lerp(
       fsParams.dotLogoAlignment,
       colParams.dotLogoAlignment,
       Curves.easeInQuad.transform(lastHalfTurnLerp),
     )!;
-    // Alignment bouncingDotLogoAlignment = Alignment.lerp(
-    //     fsParams.dotLogoAlignment,
-    //     Alignment(0.0, 0.0) - colParams.dotLogoAlignment,
-    //     Curves.easeOutQuad.transform(lastHalfTurnLerp > 0
-    //         ? 1.0 - overallTransitionProgress
-    //         : overallTransitionProgress))!;
+    Alignment bouncingDotLogoAlignment = bounceOnCurve(
+      fsParams.dotLogoAlignment,
+      Alignment.center - colParams.dotLogoAlignment,
+      horizontalTranslationCurveLogo,
+      overallTransitionProgress,
+    );
+    Alignment bouncingAITitleAlignment = finalHalfTurnDotLogoAlignment +
+        bounceOnCurve(
+          fsParams.dotLogoAlignment,
+          Alignment.center - colParams.dotLogoAlignment,
+          horizontalTranslationCurveAITitle,
+          overallTransitionProgress,
+        ) +
+        bounceOnCurve(
+          fsParams.aITitleAlignment,
+          colParams.aITitleAlignment,
+          verticalTranslationCurveAITitle,
+          overallTransitionProgress,
+        );
+    Alignment bouncingMobileTitleAlignment = finalHalfTurnDotLogoAlignment +
+        bounceOnCurve(
+          fsParams.dotLogoAlignment,
+          Alignment.center - colParams.dotLogoAlignment,
+          horizontalTranslationCurveMobileTitle,
+          overallTransitionProgress,
+        ) +
+        bounceOnCurve(
+          fsParams.mobileTitleAlignment,
+          colParams.mobileTitleAlignment,
+          verticalTranslationCurveMobileTitle,
+          overallTransitionProgress,
+        );
+    double bouncingTitleOpacity = lerpDouble(
+        fsParams.bouncingTitleOpacity,
+        1.0,
+        overallTransitionProgress > .5
+            ? (1 - overallTransitionProgress) * 2
+            : overallTransitionProgress * 2)!;
 
     Color wheel1Color = Color.lerp(
         fsParams.wheel1Color, colParams.wheel1Color, lastHalfTurnLerp)!;
@@ -797,27 +869,24 @@ class AppHeaderLogic {
       marqueeVelocity: marqueeVelocity,
       marqueeText: currentMarqueeDisplayText,
       navButtonRowAlignment: currentNavButtonRowAlignment,
-      dotLogoAlignment: bouncingDotLogoAlignment + currentDotLogoAlignment,
+      dotLogoAlignment:
+          bouncingDotLogoAlignment + finalHalfTurnDotLogoAlignment,
+      mobileTitleAlignment: bouncingMobileTitleAlignment,
+      aITitleAlignment: bouncingAITitleAlignment,
+      bouncingTitleOpacity: bouncingTitleOpacity,
       targetSection:
           overallTransitionProgress == 1.0 ? targetSectionForCollapsed : null,
       isCollapsedState: overallTransitionProgress == 1.0,
     );
   }
-}
 
-class BouncyOut extends Curve {
-  @override
-  double transformInternal(double t) {
-    if (t < 0.5) {
-      // First half of the animation, apply easeIn
-      // We need to remap t from [0, 0.5) to [0, 1) for Curves.easeIn
-      return Curves.linear.transform(t * 2.0) *
-          0.5; // Scale output back to [0, 0.5)
-    } else {
-      // Second half of the animation, apply elasticOut
-      // Remap t from [0.5, 1.0] to [0, 1) for Curves.elasticOut
-      // And scale output from [0,1] back to [0.5, 1.0]
-      return 0.5 + (Curves.linear.transform((t - 0.5) * 2.0) * 0.5);
-    }
+  static Alignment bounceOnCurve(Alignment sourceAlignment,
+      Alignment destAlignment, Cubic curve, double progress) {
+    return Alignment.lerp(
+      sourceAlignment,
+      destAlignment,
+      curve.transform(progress < 0.5 ? progress : 1 - progress),
+      // BouncyOut().transform(overallTransitionProgress),
+    )!;
   }
 }
