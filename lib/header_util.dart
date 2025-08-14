@@ -1,5 +1,6 @@
 // lib/header_util.dart (or your preferred path like lib/utils/app_header_utils.dart)
 import 'dart:developer' as developer;
+import 'dart:math';
 import 'dart:ui' show lerpDouble; // Only lerpDouble is needed from dart:ui here
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart' show SvgPicture;
@@ -403,6 +404,9 @@ class AppHeaderMetrics {
   static double getFullscreenHeaderHeight(BuildContext context) =>
       MediaQuery.of(context).size.height * 0.95;
 
+  static double getFullscreenHeaderWidth(BuildContext context) =>
+      MediaQuery.of(context).size.width * 0.95;
+
   static double getCollapsedHeaderHeight(BuildContext context) =>
       kToolbarHeight + MediaQuery.of(context).padding.top;
 
@@ -418,7 +422,8 @@ class AppHeaderMetrics {
 
   // --- Diameters ---
   static double getFullscreenWheelDiameter(BuildContext context) =>
-      getFullscreenHeaderHeight(context) * 0.9;
+      min(getFullscreenHeaderHeight(context),
+          getFullscreenHeaderWidth(context));
 
   static double getCollapsedWheelDiameter(BuildContext context) =>
       getCollapsedHeaderHeight(context) * 0.8;
