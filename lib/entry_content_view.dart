@@ -148,10 +148,23 @@ class EntryContentView extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(4.0),
                 child: Center(
-                  child: _addHyperlinkForEntry(
-                      blockTitle.split('/'),
-                      Theme.of(context).textTheme,
-                      () => launchUrl(Uri.parse(linkUrl))),
+                  child: linkUrl.isNotEmpty
+                      ? _addHyperlinkForEntry(
+                          blockTitle.split('/'),
+                          Theme.of(context).textTheme,
+                          () => launchUrl(Uri.parse(linkUrl)))
+                      : Padding(
+                          padding: blockPadding,
+                          child: Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                block.title,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                          ),
+                        ),
                 ),
               ),
             ),
@@ -335,9 +348,9 @@ class EntryContentView extends StatelessWidget {
         return Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: blogEntry!.content.map((block) {
-            return _buildCompactLinkView(context, block);
-          }).toList(),
+          children: blogEntry!.content
+              .map((block) => _buildCompactLinkView(context, block))
+              .toList(),
         );
 
       case EntryContentLayoutStyle.staggeredGrid:
