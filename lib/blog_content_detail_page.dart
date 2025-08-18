@@ -51,7 +51,7 @@ abstract class BlogContentDetailPageState<T extends BlogContentDetailPage>
     List<Widget> interleavedItems = [];
     int bIdx = 0;
     int lIdx = 0;
-    bool preferLinkNext = true; // Start with link on the left, for example
+    bool preferLinkNext = false; // Start with link on the left, for example
 
     // Determine the width factor for the cards
     // You might want this to be a bit less than 1.0 to show the "alignment"
