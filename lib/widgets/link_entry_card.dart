@@ -37,7 +37,7 @@ class LinkEntryCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(0.0),
+        padding: const EdgeInsets.all(8.0),
         // Slightly more padding for compact view
         child: EntryContentView(
           blogEntry: blogEntry,
