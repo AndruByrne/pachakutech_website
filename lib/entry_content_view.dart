@@ -124,7 +124,7 @@ class EntryContentView extends StatelessWidget {
 
   Widget _buildCompactLinkView(
       BuildContext context, BlogEntry_ContentBlock block) {
-    // This assumes 'block' has a title and a link.
+    // This assumes 'block' has a title and test for a link.
     final String linkUrl = block.linkUrl;
     final String blockTitle = block.hasTitle() ? block.title : linkUrl;
 
@@ -140,47 +140,51 @@ class EntryContentView extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.all(4.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(4.0),
-                child: Center(
-                  child: linkUrl.isNotEmpty
-                      ? _addHyperlinkForEntry(
-                          blockTitle.split('/'),
-                          Theme.of(context).textTheme,
-                          () => launchUrl(Uri.parse(linkUrl)))
-                      : Padding(
-                          padding: blockPadding,
-                          child: Card(
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text(
-                                block.title,
-                                style: Theme.of(context).textTheme.bodyMedium,
+      child: Center(
+        child: Row(
+          // mainAxisSize: MainAxisSize.max,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: Center(
+                    child: linkUrl.isNotEmpty
+                        ? _addHyperlinkForEntry(
+                            blockTitle.split('/'),
+                            Theme.of(context).textTheme,
+                            () => launchUrl(Uri.parse(linkUrl)))
+                        : Padding(
+                            padding: blockPadding,
+                            child: Card(
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  block.title,
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
                               ),
                             ),
                           ),
-                        ),
+                  ),
                 ),
               ),
             ),
-          ),
-          block.imageUrl.isNotEmpty
-              ? Padding(
-                  padding: const EdgeInsets.all(4.0),
-                  child: Image.network(
-                    block.imageUrl,
-                    height: 32,
-                    width: 32,
-                    fit: BoxFit.contain,
-                  ),
-                )
-              : linkRepresentation,
-        ],
+            if (block.linkUrl.isNotEmpty)
+              block.imageUrl.isNotEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: Image.network(
+                        block.imageUrl,
+                        height: 32,
+                        width: 32,
+                        fit: BoxFit.contain,
+                      ),
+                    )
+                  : linkRepresentation,
+          ],
+        ),
       ),
     );
   }
