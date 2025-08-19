@@ -135,7 +135,7 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                             alignment: Alignment.center,
                           )
                         : periodicGradientBackground(
-                            Theme.of(context).colorScheme.secondary),
+                            Theme.of(context).colorScheme.onSecondaryContainer),
                   ),
                 ),
 
@@ -242,7 +242,8 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                           },
                           buttonCenterOffsetsX: _buttonCenterOffsetsX,
                           uniformButtonSlotWidth: _maxButtonTextWidth,
-                          goingToAbout: widget.appSection == AppSection.about_us,
+                          goingToAbout:
+                              widget.appSection == AppSection.about_us,
                         ),
                       ),
                     ),
@@ -258,7 +259,6 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                                       padding: const EdgeInsets.all(8.0),
                                       child: Center(
                                         child: Text(
-                                          // 'titleCopyText',
                                           titleSnapshot.hasData
                                               ? titleSnapshot.data ?? ''
                                               : '',
@@ -266,7 +266,11 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                                           style: Theme.of(context)
                                               .textTheme
                                               .titleLarge
-                                              ?.copyWith(color: Colors.white),
+                                              ?.copyWith(
+                                                  color: widget.appSection ==
+                                                          AppSection.about_us
+                                                      ? Colors.green
+                                                      : Colors.white),
                                         ),
                                       ),
                                     )),

@@ -30,22 +30,37 @@ class _AboutUsPageState extends BaseDetailPageState<AboutUsPage> {
   @override
   List<Widget> buildScrollableContent(BuildContext context) => [
         SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Center(
-                child: FutureBuilder(
-                    future: _tickerFuture,
-                    builder: (context, asyncSnapshot) {
-                      return Text(
-                        asyncSnapshot.hasData ? asyncSnapshot.data ?? '' : '',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green),
-                      );
-                    })),
-          ),
+          child: LayoutBuilder(builder: (context, constraints) {
+            final screenHeight = MediaQuery.of(context).size.height;
+            final availableHeight = constraints.maxHeight.isFinite
+                ? constraints.maxHeight
+                : screenHeight;
+            final middleThirdHeight = availableHeight / 3;
+
+            return Padding(
+              padding: const EdgeInsets.all(86.0),
+              child: Container(
+                width: constraints.maxWidth,
+                child: Center(
+                    child: ConstrainedBox(
+                  constraints:
+                      BoxConstraints(maxWidth: constraints.maxWidth * .4),
+                  child: FutureBuilder(
+                      future: _tickerFuture,
+                      builder: (context, asyncSnapshot) {
+                        return Text(
+                          asyncSnapshot.hasData ? asyncSnapshot.data ?? '' : '',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green),
+                        );
+                      }),
+                )),
+              ),
+            );
+          }),
         ),
       ];
 

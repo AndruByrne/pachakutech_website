@@ -34,7 +34,7 @@ SliverChildBuilderDelegate mainContentBuilder(
           titleWidget: CardTitle(
             title: section.title,
             ticker: '',
-            image: 'pach_at_gmail.png',
+            image: 'assets/pach_gmail.png',
           ),
           onTap: () => onCardTap(section),
         );
