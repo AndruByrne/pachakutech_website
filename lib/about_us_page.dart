@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:pachakutech_website/app_sections.dart';
 import 'package:pachakutech_website/base_detail_page.dart';
 import 'blog_content_detail_page.dart';
@@ -42,22 +43,25 @@ class _AboutUsPageState extends BaseDetailPageState<AboutUsPage> {
               child: Container(
                 width: constraints.maxWidth,
                 child: Center(
-                    child: ConstrainedBox(
-                  constraints:
-                      BoxConstraints(maxWidth: constraints.maxWidth * .4),
-                  child: FutureBuilder(
-                      future: _tickerFuture,
-                      builder: (context, asyncSnapshot) {
-                        return Text(
-                          asyncSnapshot.hasData ? asyncSnapshot.data ?? '' : '',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green),
-                        );
-                      }),
-                )),
+                    child: InkWell(
+                      onTap: () => context.pop(),
+                      child: ConstrainedBox(
+                                        constraints:
+                        BoxConstraints(maxWidth: constraints.maxWidth * .4),
+                                        child: FutureBuilder(
+                        future: _tickerFuture,
+                        builder: (context, asyncSnapshot) {
+                          return Text(
+                            asyncSnapshot.hasData ? asyncSnapshot.data ?? '' : '',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green),
+                          );
+                        }),
+                                      ),
+                    )),
               ),
             );
           }),
