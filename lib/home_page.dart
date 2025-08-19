@@ -150,7 +150,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
     String path = '/${section.id}';
     context.push(path, extra: {
-      'scrollOffset': currentScrollOffset, // TODO: this needs to be updated (or the shuttle params do)
+      'scrollOffset': currentScrollOffset,
       'targetSection': section,
       // Pass the target section for Hero animation hints
     });
