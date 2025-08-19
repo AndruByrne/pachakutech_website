@@ -137,6 +137,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         });
 
   void _handleSectionButtonTap(AppSection section) async {
+    await scrollTo(section);
+
     final double currentScrollOffset = _mainScrollController.hasClients &&
             _mainScrollController.position.haveDimensions
         ? _mainScrollController.offset
@@ -146,11 +148,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         "Section button tapped: ${section.title}. Passing scrollOffset: $currentScrollOffset",
         name: "MyHomePageState.Navigation");
 
-    await scrollTo(section);
-
     String path = '/${section.id}';
     context.push(path, extra: {
-      'scrollOffset': currentScrollOffset,
+      'scrollOffset': currentScrollOffset, // TODO: this needs to be updated (or the shuttle params do)
       'targetSection': section,
       // Pass the target section for Hero animation hints
     });
