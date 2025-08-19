@@ -30,7 +30,7 @@ enum AppSection {
     linktreeCollection: 'edu_links',
   ),
   about_us(
-    id: 'about',
+    id: 'abt',
     title: 'Happy Customers',
     imageAsset: '',
     bloggingCollection: '',

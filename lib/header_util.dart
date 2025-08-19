@@ -123,6 +123,7 @@ Widget buildAnimatedHeaderContent({
   required ValueChanged<AppSection> onSectionTap,
   required Map<AppSection?, double> buttonCenterOffsetsX,
   required double uniformButtonSlotWidth,
+  required bool goingToAbout,
 }) {
   (AppSection.values.length - 1) * NAV_BUTTON_SPACING; // Spaces between buttons
   final int numButtons = AppSection.values.length + 1 - 1;
@@ -209,7 +210,7 @@ Widget buildAnimatedHeaderContent({
   );
 
   List<Widget> navButtons =
-      [null, ...AppSection.values.getRange(0, AppSection.values.length - 1)]
+      [null, ...AppSection.values.getRange(0, AppSection.values.length - (goingToAbout?0:1))]
           .map((section) => Padding(
                 padding: EdgeInsets.only(right: NAV_BUTTON_SPACING),
                 child: createNavButtonForSection(
@@ -438,6 +439,7 @@ Widget globalFlightShuttleBuilderInternal({
               // Shuttle Dummy
               buttonCenterOffsetsX: buttonCenterOffsetsX,
               uniformButtonSlotWidth: maxButtonTextWidth,
+              goingToAbout: paramsAtAnimationEnd.targetSection == AppSection.about_us,
             ),
           );
         });

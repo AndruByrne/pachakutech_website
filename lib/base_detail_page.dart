@@ -242,6 +242,7 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                           },
                           buttonCenterOffsetsX: _buttonCenterOffsetsX,
                           uniformButtonSlotWidth: _maxButtonTextWidth,
+                          goingToAbout: widget.appSection == AppSection.about_us,
                         ),
                       ),
                     ),

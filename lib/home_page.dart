@@ -422,6 +422,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             onSectionTap: _handleSectionButtonTap,
             buttonCenterOffsetsX: _buttonCenterOffsetsX,
             uniformButtonSlotWidth: _uniformButtonSlotWidth,
+            goingToAbout: false,
           );
 
           Widget headerContentWithNudgeDetector = GestureDetector(
