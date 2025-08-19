@@ -124,8 +124,8 @@ Widget buildAnimatedHeaderContent({
   required Map<AppSection?, double> buttonCenterOffsetsX,
   required double uniformButtonSlotWidth,
 }) {
-  (AppSection.values.length) * NAV_BUTTON_SPACING; // Spaces between buttons
-  final int numButtons = AppSection.values.length + 1;
+  (AppSection.values.length - 1) * NAV_BUTTON_SPACING; // Spaces between buttons
+  final int numButtons = AppSection.values.length + 1 - 1;
   final double totalWidthOfButtonSlotsOnly =
       numButtons * uniformButtonSlotWidth;
   final double totalWidthOfSpacingBetweenButtons =
@@ -208,29 +208,30 @@ Widget buildAnimatedHeaderContent({
     child: Image.asset('assets/pachakutech_dot_logo_alpha.png'),
   );
 
-  List<Widget> navButtons = [null, ...AppSection.values]
-      .map((section) => Padding(
-            padding: EdgeInsets.only(right: NAV_BUTTON_SPACING),
-            child: createNavButtonForSection(
-                context: context,
-                section: section,
-                currentParams: params,
-                onTap: () {
-                  if (section == null) {
-                    if (onHomeTap != null) {
-                      onHomeTap();
-                    } else {
-                      print(
-                          '[buildAnimatedHeaderContent] WARNING: onHomeTap is NULL!');
-                    }
-                  } else {
-                    onSectionTap(section);
-                  }
-                },
-                buttonSlotWidth: uniformButtonSlotWidth,
-                isTargetForWheels: (params.targetSection == section)),
-          ))
-      .toList();
+  List<Widget> navButtons =
+      [null, ...AppSection.values.getRange(0, AppSection.values.length - 1)]
+          .map((section) => Padding(
+                padding: EdgeInsets.only(right: NAV_BUTTON_SPACING),
+                child: createNavButtonForSection(
+                    context: context,
+                    section: section,
+                    currentParams: params,
+                    onTap: () {
+                      if (section == null) {
+                        if (onHomeTap != null) {
+                          onHomeTap();
+                        } else {
+                          print(
+                              '[buildAnimatedHeaderContent] WARNING: onHomeTap is NULL!');
+                        }
+                      } else {
+                        onSectionTap(section);
+                      }
+                    },
+                    buttonSlotWidth: uniformButtonSlotWidth,
+                    isTargetForWheels: (params.targetSection == section)),
+              ))
+          .toList();
 
   // --- Marquee ---
   final marqueeTextStyle = TextStyle(
@@ -486,8 +487,9 @@ class AppHeaderMetrics {
   static const double WHEEL_ANGLE_HOME =
       AppHeaderLogic.MAX_EFFECTIVE_WHEEL_ANGLE; // 584.0
   static const double WHEEL_ANGLE_EVAL = 539.0;
-  static const double WHEEL_ANGLE_EDU = 494.0;
-  static const double WHEEL_ANGLE_ELEV = 449.0;
+  static const double WHEEL_ANGLE_ELEV = 494.0;
+  static const double WHEEL_ANGLE_EDU = 449.0;
+  static const double WHEEL_ANGLE_ABOUT = 404.0;
 
   static double calculateTextWidth(String text, TextStyle style) {
     final TextPainter textPainter = TextPainter(
@@ -574,6 +576,9 @@ class AppHeaderMetrics {
         case AppSection.elevation:
           targetWheelAngle1 = WHEEL_ANGLE_ELEV;
           break;
+        case AppSection.about_us:
+          targetWheelAngle1 = WHEEL_ANGLE_ABOUT;
+          break;
         default: // Should not happen
           targetWheelAngle1 = WHEEL_ANGLE_HOME;
       }
@@ -648,7 +653,7 @@ class AppHeaderMetrics {
 
     final List<AppSection?> allButtonSlots = [
       null,
-      ...AppSection.values
+      ...AppSection.values,
     ]; // Home + other sections
 
     for (var section in allButtonSlots) {
@@ -658,8 +663,12 @@ class AppHeaderMetrics {
     return offsets;
   }
 
-  static double getMaxButtonTextWidth(TextStyle textStyle) =>
-      [HOME_BUTTON_TEXT, ...AppSection.values.map((s) => s.id)]
+  static double getMaxButtonTextWidth(TextStyle textStyle) => [
+        HOME_BUTTON_TEXT,
+        ...AppSection.values
+            .getRange(0, AppSection.values.length - 1)
+            .map((s) => s.id)
+      ]
           .map((id) => getButtonContentWidth(id, textStyle))
           .reduce((v, e) => v > e ? v : e);
 }

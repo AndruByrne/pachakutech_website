@@ -23,22 +23,23 @@ SliverChildBuilderDelegate mainContentBuilder(
         );
       }
       final itemIndex = index ~/ 2;
-      final bool isConsultingCard = itemIndex == displayableSections.length;
+      final bool isConsultingCard = itemIndex == displayableSections.length-1;
 
       if (itemIndex > displayableSections.length) return null;
 
+      final AppSection section = displayableSections[itemIndex];
       if (isConsultingCard) {
         return ConsultingCard(
           height: sectionHeight,
           titleWidget: CardTitle(
-            title: 'Happy Customers',
+            title: section.title,
             ticker: '',
             image: 'pach_at_gmail.png',
           ),
+          onTap: () => onCardTap(section),
         );
       }
 
-      final AppSection section = displayableSections[itemIndex];
       return ContentSectionCard(
         key: sectionItemKeys[section],
         titleWidget: FutureBuilder(
@@ -54,6 +55,6 @@ SliverChildBuilderDelegate mainContentBuilder(
         id: section.id,
       );
     },
-    childCount: ((displayableSections.length + 1) * 2),
+    childCount: ((displayableSections.length) * 2),
   );
 }

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pachakutech_website/app_sections.dart';
+import 'package:pachakutech_website/section_card.dart';
 import 'content_repo.dart';
 import 'header_util.dart';
 import 'hero_util.dart';
@@ -127,11 +128,14 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
                     tag: sectionHeroTag + sectionId,
                     createRectTween: (Rect? begin, Rect? end) =>
                         CenterExpansionRectTween(begin: begin, end: end),
-                    child: Image.asset(
-                      backgroundImageAsset,
-                      fit: BoxFit.cover,
-                      alignment: Alignment.center,
-                    ),
+                    child: backgroundImageAsset.isNotEmpty
+                        ? Image.asset(
+                            backgroundImageAsset,
+                            fit: BoxFit.cover,
+                            alignment: Alignment.center,
+                          )
+                        : periodicGradientBackground(
+                            Theme.of(context).colorScheme.secondary),
                   ),
                 ),
 

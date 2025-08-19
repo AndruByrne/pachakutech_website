@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import './education_content.dart';
 import './evaluation_content.dart';
 import './elevation_content.dart';
+import 'about_us_page.dart';
 // These are circular, but Dart allows this if the types can be resolved at compile time
 
 enum AppSection {
@@ -27,6 +28,13 @@ enum AppSection {
     imageAsset: 'assets/education.jpg',
     bloggingCollection: 'edu_blog',
     linktreeCollection: 'edu_links',
+  ),
+  about_us(
+    id: 'about',
+    title: 'Happy Customers',
+    imageAsset: '',
+    bloggingCollection: '',
+    linktreeCollection: '',
   );
 
   const AppSection({
@@ -81,6 +89,14 @@ enum AppSection {
           articleId: articleId,
           homePageScrollOffset: homePageScrollOffset,
         );
+      case AppSection.about_us:
+        return AboutUsPage(
+          db: FirebaseFirestore.instance,
+          articleId: articleId,
+          homePageScrollOffset: homePageScrollOffset,
+        );
+      default:
+        throw Exception('Unknown AppSection: $this');
     }
   }
 }
