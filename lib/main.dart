@@ -62,7 +62,7 @@ var goRouterSingleton = GoRouter(
             path: section.routePath,
             pageBuilder: (context, state) {
               final params = state.extra as Map<String, dynamic>?;
-              final scrollOffset = params?['scrollOffset'] as double? ?? 0.0;
+              final scrollOffset = params?['scrollOffset'] as double? ?? 800.0;
               Widget pageWidget = section.buildDetailPage(
                 articleId: null, // For overview
                 homePageScrollOffset: scrollOffset,
@@ -76,7 +76,8 @@ var goRouterSingleton = GoRouter(
             pageBuilder: (context, state) {
               final articleId = state.pathParameters['articleId']!;
               final params = state.extra as Map<String, dynamic>?;
-              final scrollOffset = params?['scrollOffset'] as double? ?? 0.0;
+              // It may be that this value is only interpreted by the header layout
+              final scrollOffset = params?['scrollOffset'] as double? ?? 800.0;
               Widget pageWidget = section.buildDetailPage(
                 articleId: articleId,
                 homePageScrollOffset: scrollOffset,
