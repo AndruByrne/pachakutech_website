@@ -488,10 +488,10 @@ class AppHeaderMetrics {
   // Target angles for sections when collapsed
   static const double WHEEL_ANGLE_HOME =
       AppHeaderLogic.MAX_EFFECTIVE_WHEEL_ANGLE; // 584.0
-  static const double WHEEL_ANGLE_EVAL = 539.0;
-  static const double WHEEL_ANGLE_ELEV = 494.0;
-  static const double WHEEL_ANGLE_EDU = 449.0;
-  static const double WHEEL_ANGLE_ABOUT = 404.0;
+  static const double WHEEL_ANGLE_FIRST = 539.0;
+  static const double WHEEL_ANGLE_SECOND = 494.0;
+  static const double WHEEL_ANGLE_THIRD = 449.0;
+  static const double WHEEL_ANGLE_FOURTH = 404.0;
 
   static double calculateTextWidth(String text, TextStyle style) {
     final TextPainter textPainter = TextPainter(
@@ -570,16 +570,19 @@ class AppHeaderMetrics {
       // A specific section (Eval, Edu, Elev) is active
       switch (targetSection) {
         case AppSection.evaluation:
-          targetWheelAngle1 = WHEEL_ANGLE_EVAL;
+          targetWheelAngle1 = WHEEL_ANGLE_THIRD;
           break;
         case AppSection.education:
-          targetWheelAngle1 = WHEEL_ANGLE_EDU;
+          targetWheelAngle1 = WHEEL_ANGLE_SECOND;
           break;
-        case AppSection.elevation:
-          targetWheelAngle1 = WHEEL_ANGLE_ELEV;
+        case AppSection.extranet:
+          targetWheelAngle1 = WHEEL_ANGLE_FIRST;
           break;
+        // case AppSection.elevation:
+        //   targetWheelAngle1 = WHEEL_ANGLE_ELEV;
+        //   break;
         case AppSection.about_us:
-          targetWheelAngle1 = WHEEL_ANGLE_ABOUT;
+          targetWheelAngle1 = WHEEL_ANGLE_FOURTH;
           break;
         default: // Should not happen
           targetWheelAngle1 = WHEEL_ANGLE_HOME;

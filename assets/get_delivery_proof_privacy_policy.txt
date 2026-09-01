@@ -1,0 +1,13 @@
+1. Introduction Get Delivery Proof (the "App") is a professional tool designed for employees and authorized personnel of our business customers (the "Employer") to perform location-based tasks, including but not limited to deliveries, patrols, and audits. This Privacy Policy explains how data is collected, used, and managed when you use the App.
+2. Data Collection and Usage The App collects the following information to facilitate business operations:
+• Location Data: While performing tasks, the App may collect your precise geographic location. This usually occurs when you take a photo within the App to document a task.
+• Images: Photos taken through the App are captured for professional documentation as directed by your Employer.
+• Device Information: We may collect basic device information to ensure App compatibility and performance.
+3. Data Storage and Transmission Images and associated location data are initially saved locally on your device for processing. Once a network connection is available, this data is uploaded to a secure, dedicated environment on our servers assigned to your Employer. This information is then made available to your Employer’s designated managers for review and verification of tasks.
+4. Data Ownership and Retention
+• Employment Context: This App is intended for use solely at the direction of your Employer. All data captured—including photos and location metadata—is the property of the Employer as part of your professional duties.
+• Deletion: You may log out of the App or delete it from your device at any time. However, deleting the App does not remove data previously uploaded to the Employer’s secure server environment, as that data remains part of the Employer's business records.
+5. Third-Party Sharing We do not sell your data to third parties. Data is shared only with your Employer and, where necessary, with service providers who help maintain our secure server infrastructure. We may disclose information if required by law.
+6. Security We implement industry-standard security measures to protect data during transmission and storage. Access to uploaded data is restricted to authorized personnel within your Employer's organization.
+7. Consent By using this App, you consent to the collection of location data and images as described in this policy for the purpose of fulfilling your professional responsibilities.
+8. Contact Us If you have questions regarding this Privacy Policy, please contact your Employer’s system administrator or reach out to us at:

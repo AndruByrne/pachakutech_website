@@ -1,0 +1,11 @@
+Starting the app:
+  Launch app from iOS or Android launcher. If you have not done so already, enter the organization code your manager has given you.
+  Enter your user credentials on the next screen to login.
+Uploads Screen:
+  The top of this screen shows delivery records you have made recently and their upload status; dragging your finger down the screen will force the upload process to occur.
+  The bottom part of this screen shows the delivery records you have successfully uploaded; storage is eventually consistent.
+  The floating action button on the bottom right will bring you the camera screen.
+Camera Screen:
+  This screen is where you can record your delivery or audit by tapping the floating action button on the bottom right to take a picture.
+  The first time you use this feature, you must grant access to the phone's location in order to include it in your record: press the "Fix" button in the pop-up message to resolve permission or status errors.
+Logout: In the upper right are controls to reset account information.

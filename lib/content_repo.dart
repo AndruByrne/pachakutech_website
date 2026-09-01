@@ -7,7 +7,8 @@ class ContentRepository {
 
   ContentRepository({required FirebaseFirestore db}) : _db = db;
 
-  Future<Map<String, dynamic>> fetchTickerMessages() async { // For the content card tickers
+  Future<Map<String, dynamic>> fetchTickerMessages() async {
+    // For the content card tickers
     try {
       final snapshot = await _db.collection('tickers').get();
       return snapshot.docs.map((doc) => doc.get('sections')).first;
@@ -17,7 +18,8 @@ class ContentRepository {
     }
   }
 
-  Future<Map<String, dynamic>> fetchSectionIntros() async { // For the Section title (top card)
+  Future<Map<String, dynamic>> fetchSectionIntros() async {
+    // For the Section title (top card)
     try {
       final snapshot = await _db.collection('section_intros').get();
       return snapshot.docs.map((doc) => doc.get('sections')).first;
@@ -28,15 +30,13 @@ class ContentRepository {
   }
 
   Future<Map<String, dynamic>> fetchHeaderTickers() async {
-   try{
-     final snapshot = await _db.collection('header_tickers').get();
-     return snapshot.docs.map((doc) => doc.get('sections')).first;
-   }
-   catch(e){
-     print("Error fetching header tickers: $e");
-     return {};
-   }
-
+    try {
+      final snapshot = await _db.collection('header_tickers').get();
+      return snapshot.docs.map((doc) => doc.get('sections')).first;
+    } catch (e) {
+      print("Error fetching header tickers: $e");
+      return {};
+    }
   }
 
   Future<List<BlogEntry>> fetchBlogEntries(
@@ -79,9 +79,32 @@ class ContentRepository {
     }
   }
 
+  // In content_repo.dart
+  Future<BlogEntry?> fetchSingleBlogEntry({
+    required String articleId,
+    required AppSection section,
+  }) async {
+    print('Fetching Single Blog Entry ');
+    if (!section.hasBlogContent) return null;
+    final docRef = _db.collection(section.bloggingCollection).doc(articleId);
+    final docSnapshot = await docRef.get();
+    if (!docSnapshot.exists) return null;
+    final dataMap = docSnapshot.data()!;
+    final String jsonStringFromFirestore = dataMap['entry'] as String;
+    try {
+      var blogEntry = BlogEntry.fromJson(jsonStringFromFirestore);
+      print('Got Blog Entry: $blogEntry');
+      return blogEntry;
+    } catch (e) {
+      print(
+          "Error parsing BlogEntry.fromJson for doc ${docSnapshot.id}: $e. JSON string was: $jsonStringFromFirestore");
+      return BlogEntry();
+    }
+  }
+
   Future<List<BlogEntry>> fetchLinkTree(
       {required AppSection section, String? articleId}) async {
-    if (!section.hasBlogContent) {
+    if (!section.hasLinktreeContent) {
       return [];
     }
     var collectionName = section.linktreeCollection;

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pachakutech_website/app_sections.dart';
 import 'package:pachakutech_website/base_detail_page.dart';
-import 'blog_content_detail_page.dart';
 
 class AboutUsPage extends BaseDetailPage {
   // The appSection is now defined here and passed to the super constructor

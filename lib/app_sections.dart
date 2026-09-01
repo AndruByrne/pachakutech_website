@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:pachakutech_website/extranet_idea_page.dart';
 
 import './education_content.dart';
 import './evaluation_content.dart';
@@ -8,26 +9,33 @@ import 'about_us_page.dart';
 // These are circular, but Dart allows this if the types can be resolved at compile time
 
 enum AppSection {
-  evaluation(
-    id: 'eval',
-    title: 'Evaluation & Exploration',
-    imageAsset: 'assets/exploration.jpg',
-    bloggingCollection: 'eval_blog',
-    linktreeCollection: 'eval_links',
-  ),
-  elevation(
-    id: 'elev',
-    title: 'Elevation',
-    imageAsset: 'assets/elevation.jpg',
+  extranet(
+    id: 'xrnet',
+    title: 'eXtRaNET',
+    imageAsset: 'assets/xrnet_map.png',
     bloggingCollection: '',
     linktreeCollection: '',
   ),
+  // elevation(
+  //   id: 'elev',
+  //   title: 'Elevation',
+  //   imageAsset: 'assets/elevation.jpg',
+  //   bloggingCollection: 'elev_blog',
+  //   linktreeCollection: '',
+  // ),
   education(
     id: 'edu',
     title: 'Education',
     imageAsset: 'assets/education.jpg',
     bloggingCollection: 'edu_blog',
     linktreeCollection: 'edu_links',
+  ),
+  evaluation(
+    id: 'eval',
+    title: 'Evaluation & Exploration',
+    imageAsset: 'assets/exploration.jpg',
+    bloggingCollection: 'eval_blog',
+    linktreeCollection: 'eval_links',
   ),
   about_us(
     id: 'abt',
@@ -83,8 +91,14 @@ enum AppSection {
           articleId: articleId,
           homePageScrollOffset: homePageScrollOffset,
         );
-      case AppSection.elevation:
-        return ElevationDetailPage(
+      // case AppSection.elevation:
+      //   return ElevationDetailPage(
+      //     db: FirebaseFirestore.instance,
+      //     articleId: articleId,
+      //     homePageScrollOffset: homePageScrollOffset,
+      //   );
+      case AppSection.extranet:
+        return ExtranetIdeaPage(
           db: FirebaseFirestore.instance,
           articleId: articleId,
           homePageScrollOffset: homePageScrollOffset,

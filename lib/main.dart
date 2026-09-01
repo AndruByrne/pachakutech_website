@@ -6,7 +6,9 @@ import 'package:pachakutech_website/app_sections.dart';
 import 'package:url_strategy/url_strategy.dart';
 
 import 'car_crush_privacy_policy_page.dart';
+import 'get_delivery_proof_privacy_policy.dart';
 import 'firebase_options.dart';
+import 'get_delivery_proof_tech_assistance.dart';
 import 'home_page.dart';
 
 const transitionDuration = Duration(milliseconds: 900);
@@ -55,6 +57,12 @@ var goRouterSingleton = GoRouter(
       GoRoute(
           path: '/car_crush_privacy_policy',
           builder: (context, state) => const CarCrushPrivacyPolicyPage()),
+      GoRoute(
+          path: '/get_delivery_proof_privacy_policy',
+          builder: (context, state) => const GetDeliveryProofPrivacyPolicyPage()),
+      GoRoute(
+          path: '/get_delivery_proof_tech_assistance',
+          builder: (context, state) => const GetDeliveryProofTechAssistancePage()),
       ...AppSection.values.expand<RouteBase>((section) {
         return [
           // Route for the section overview (e.g., /edu)
