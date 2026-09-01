@@ -1,0 +1,4 @@
+Add privacy page for delivery app
+improve personal statement
+- place it in front page, maybe description of services offered?
+
