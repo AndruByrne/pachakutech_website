@@ -569,13 +569,13 @@ class AppHeaderMetrics {
     } else {
       // A specific section (Eval, Edu, Elev) is active
       switch (targetSection) {
-        case AppSection.evaluation:
+        case AppSection.education:
           targetWheelAngle1 = WHEEL_ANGLE_THIRD;
           break;
-        case AppSection.education:
+        case AppSection.extranet:
           targetWheelAngle1 = WHEEL_ANGLE_SECOND;
           break;
-        case AppSection.extranet:
+        case AppSection.presence:
           targetWheelAngle1 = WHEEL_ANGLE_FIRST;
           break;
         // case AppSection.elevation:

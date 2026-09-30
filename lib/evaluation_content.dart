@@ -6,19 +6,20 @@ import 'package:pachakutech_website/widgets/blog_entry_card.dart';
 import 'proto/blog_entry.pb.dart';
 import 'content_repo.dart';
 
-class EvaluationDetailPage extends BlogContentDetailPage {
-
-  EvaluationDetailPage({
-    super.key,
-    required super.db,
-    required super.articleId,
-    required super.homePageScrollOffset,
-  })  : super(appSection: AppSection.evaluation);
-
-  @override
-  State<EvaluationDetailPage> createState() => _EvaluationDetailPageState();
-}
-
-class _EvaluationDetailPageState
-    extends BlogContentDetailPageState<EvaluationDetailPage> {
-}
+// class EvaluationDetailPage extends BlogContentDetailPage {
+//
+//   EvaluationDetailPage({
+//     super.key,
+//     required super.db,
+//     required super.articleId,
+//     required super.homePageScrollOffset,
+//   })  : super(appSection: AppSection.evaluation);
+//
+//   @override
+//   State<EvaluationDetailPage> createState() => _EvaluationDetailPageState();
+// }
+//
+// class _EvaluationDetailPageState
+//     extends BlogContentDetailPageState<EvaluationDetailPage> {
+// }
+//

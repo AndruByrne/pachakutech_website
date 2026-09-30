@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:pachakutech_website/extranet_idea_page.dart';
+import 'package:pachakutech_website/presence_idea_page.dart';
 
 import './education_content.dart';
 import './evaluation_content.dart';
@@ -9,6 +10,13 @@ import 'about_us_page.dart';
 // These are circular, but Dart allows this if the types can be resolved at compile time
 
 enum AppSection {
+  presence(
+    id: 'presence',
+    title: 'Situated Presence Runtime',
+    imageAsset: 'assets/bambu.jpg',
+    bloggingCollection: '',
+    linktreeCollection: '',
+  ),
   extranet(
     id: 'xrnet',
     title: 'eXtRaNET',
@@ -30,13 +38,13 @@ enum AppSection {
     bloggingCollection: 'edu_blog',
     linktreeCollection: 'edu_links',
   ),
-  evaluation(
-    id: 'eval',
-    title: 'Evaluation & Exploration',
-    imageAsset: 'assets/exploration.jpg',
-    bloggingCollection: 'eval_blog',
-    linktreeCollection: 'eval_links',
-  ),
+  // evaluation(
+  //   id: 'eval',
+  //   title: 'Evaluation & Exploration',
+  //   imageAsset: 'assets/exploration.jpg',
+  //   bloggingCollection: 'eval_blog',
+  //   linktreeCollection: 'eval_links',
+  // ),
   about_us(
     id: 'abt',
     title: 'Happy Customers',
@@ -85,12 +93,18 @@ enum AppSection {
           articleId: articleId,
           homePageScrollOffset: homePageScrollOffset,
         );
-      case AppSection.evaluation:
-        return EvaluationDetailPage(
+      case AppSection.presence:
+        return PresenceIdeaPage(
           db: FirebaseFirestore.instance,
           articleId: articleId,
           homePageScrollOffset: homePageScrollOffset,
         );
+      // case AppSection.evaluation:
+      //   return EvaluationDetailPage(
+      //     db: FirebaseFirestore.instance,
+      //     articleId: articleId,
+      //     homePageScrollOffset: homePageScrollOffset,
+      //   );
       // case AppSection.elevation:
       //   return ElevationDetailPage(
       //     db: FirebaseFirestore.instance,
