@@ -80,6 +80,8 @@ abstract class BaseDetailPageState<T extends BaseDetailPage> extends State<T> {
     print('handling cutome back nav');
     if (Navigator.of(context).canPop()) {
       Navigator.of(context).pop();
+    } else {
+      context.go('/');
     }
   }
 

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:pachakutech_website/app_sections.dart';
 import 'package:pachakutech_website/content_repo.dart';
 import 'package:pachakutech_website/header_util.dart';
+import 'base_detail_page.dart';
 import 'home_content.dart';
 import 'dart:developer' as developer;
 import 'package:go_router/go_router.dart';
@@ -448,17 +449,20 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
               if (flightDirection == HeroFlightDirection.push) {
                 // PUSH: Home (fromHeroCtx) to Detail (toHeroCtx)
-                paramsFrom =
-                    currentHeaderVisualParams; // State at the moment of push
+                //Logging disputes this when starting on a detail page e.g. pachakutech.com/xrnet
+                paramsFrom = currentHeaderVisualParams; // State at the moment of push
 
                 developer.log('[Hero] pushing to detail using home shuttle');
 
-                final GoRouterState state =
-                    GoRouterState.of(fromHeroCtx); // or flightCtx
-                final Map<String, dynamic>? extra =
-                    state.extra as Map<String, dynamic>?;
-                final AppSection? targetSection =
-                    extra?['targetSection'] as AppSection?;
+                AppSection? targetSection;
+                try {
+                  // Safely try to find the target section if your DetailPage stores it
+                  final detailPage = toHeroCtx.findAncestorWidgetOfExactType<BaseDetailPage>();
+                  targetSection = detailPage?.appSection;
+                } catch (e) {
+                  developer.log('[Hero] error accessing detail while going to detail');
+                  targetSection = AppSection.about_us;
+                }
 
                 paramsTo = AppHeaderMetrics.getCollapsedHeaderVisualParams(
                   toHeroCtx,
@@ -470,13 +474,18 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 // POP: Detail (fromHeroCtx) to Home (toHeroCtx)
                 // `fromHeroCtx` is DetailPage. We need its collapsed params.
                 developer.log('[Hero] popping to home using home shuttle');
-                final GoRouterState state = GoRouterState.of(
-                    context); // Get state from DetailPage context
-                final Map<String, dynamic>? extra =
-                    state.extra as Map<String, dynamic>?;
-                final AppSection? detailPageSection =
-                    extra?['targetSection'] as AppSection?;
-                // You might need a more robust way to get the detail page's ticker if it's dynamic
+
+                AppSection? detailPageSection;
+                try {
+                  // Peek at the widget we are leaving to see what section it was
+                  final detailPage = fromHeroCtx.findAncestorWidgetOfExactType<BaseDetailPage>();
+                  detailPageSection = detailPage?.appSection;
+                } catch (e) {
+                  developer.log('[Hero] Error peeking at detail page: $e');
+                  detailPageSection = AppSection.about_us;
+                }
+
+                // We might need a more robust way to get the detail page's ticker if it's dynamic
                 paramsFrom = AppHeaderMetrics.getCollapsedHeaderVisualParams(
                   fromHeroCtx, // Detail's context
                   targetSection: detailPageSection,
